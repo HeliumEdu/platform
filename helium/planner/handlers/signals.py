@@ -15,7 +15,8 @@ from helium.planner.models import Category, Course, CourseGroup, Event, Homework
     Resource, ResourceGroup, Note, Reminder
 from helium.planner.services import coursescheduleservice
 from helium.planner.tasks import recalculate_category_grades_for_course, recalculate_category_grade, \
-    adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade
+    adjust_reminder_times, recalculate_course_grades_for_course_group, recalculate_course_grade, \
+    recalculate_course_group_gpa
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,11 @@ def _mark_user_data_deleted(instance):
         pass
     except Exception:
         logger.warning("Failed to update last_deletion_at after delete.", exc_info=True)
+
+
+@receiver(post_save, sender=CourseGroup)
+def save_course_group(sender, instance, **kwargs):
+    recalculate_course_group_gpa.apply(args=(instance.pk,))
 
 
 @receiver(post_save, sender=Course)

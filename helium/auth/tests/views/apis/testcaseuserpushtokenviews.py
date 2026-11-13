@@ -9,6 +9,7 @@ from rest_framework.test import APITestCase
 
 from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.helpers import commonhelper
 
 
 def given_push_tokens_registered_in_order(user, count):
@@ -36,8 +37,7 @@ class TestCasePushTokenViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_push_tokens(self):
         user1 = userhelper.given_a_user_exists()

@@ -12,6 +12,10 @@ class OAuthScopeSerializer(serializers.Serializer):
 
     description = serializers.CharField(help_text='What the scope allows, shown to the user.')
 
+    required = serializers.BooleanField(
+        help_text='Whether granting the scope is required. The User chooses whether to grant one that isn\'t; offer it '
+                  'unselected.')
+
 
 class OAuthAuthorizationSerializer(serializers.Serializer):
     client_name = serializers.CharField(help_text='The name of the client requesting access.')
@@ -29,6 +33,11 @@ class OAuthAuthorizationSerializer(serializers.Serializer):
 
 class OAuthDecisionSerializer(serializers.Serializer):
     allow = serializers.BooleanField(help_text='`true` to approve the request, `false` to deny it.')
+
+    scopes = serializers.ListField(
+        child=serializers.CharField(), required=False,
+        help_text='When approving, the requested scopes the User approved: every `required` scope, plus the others '
+                  'they selected. Omit to approve only the `required` scopes.')
 
 
 class OAuthRedirectSerializer(serializers.Serializer):

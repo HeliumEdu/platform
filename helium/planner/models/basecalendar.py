@@ -1,8 +1,11 @@
+from zoneinfo import ZoneInfo
+
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import models
 
 from helium.common.models import BaseModel
+from helium.common.utils import datetimeutils
 
 
 class BaseCalendar(BaseModel):
@@ -33,6 +36,14 @@ class BaseCalendar(BaseModel):
     url = models.URLField(max_length=3000, help_text='An optional URL that the calendar item references.',
                           blank=True, null=True)
 
+    recurrence_rule = models.CharField(
+        help_text='iCal RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats it from `start`, or null.',
+        max_length=500, blank=True, null=True)
+
+    exception_dates = models.JSONField(
+        help_text='List of ISO-8601 datetimes of occurrences to skip (iCal EXDATE).',
+        blank=True, null=True)
+
     class Meta:
         abstract = True
         ordering = ('start', 'title')
@@ -48,3 +59,14 @@ class BaseCalendar(BaseModel):
     @property
     def calendar_item_type(self) -> int:
         raise NotImplementedError
+
+    def occurrences(self, not_before=None):
+        """
+        Lazily expand this repeating item into its ``(start, end)`` occurrences, in the user's time zone. See
+        :func:`helium.common.utils.datetimeutils.expand_recurrence`.
+
+        :param not_before: Aware datetime; occurrences starting before it are not yielded, or None.
+        """
+        return datetimeutils.expand_recurrence(self.recurrence_rule, self.start, self.end,
+                                               ZoneInfo(self.get_user().settings.time_zone), all_day=self.all_day,
+                                               exception_dates=self.exception_dates, not_before=not_before)

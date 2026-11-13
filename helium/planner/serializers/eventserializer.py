@@ -7,14 +7,11 @@ from rest_framework import serializers
 from helium.common import enums
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.serializers.validation import validate_start_before_end
-from helium.common.utils.validators import (
-    normalize_recurrence_rule_for_user,
-    validate_hex_color,
-    validate_recurrence_rule,
-)
+from helium.common.utils.validators import validate_hex_color, validate_recurrence_rule
 from helium.planner.models import Event
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
+from helium.planner.services import recurrenceservice
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +24,8 @@ class EventSerializer(serializers.ModelSerializer):
 
     color = serializers.CharField(max_length=7, validators=[validate_hex_color], read_only=True, required=False)
     location = serializers.CharField(read_only=True, required=False, allow_null=True)
-    exception_dates = ExceptionDatesField(required=False, allow_null=True)
+    exception_dates = ExceptionDatesField(required=False, allow_null=True,
+                                          help_text=Event._meta.get_field('exception_dates').help_text)
     notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
     calendar_item_type = serializers.ChoiceField(choices=enums.CALENDAR_ITEM_TYPE_CHOICES, read_only=True,
                                                  help_text='Which kind of calendar item this is; a client can key rendering off it without inspecting the URL it came from.')
@@ -53,16 +51,12 @@ class EventSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        if 'recurrence_rule' in validated_data:
-            validated_data['recurrence_rule'] = normalize_recurrence_rule_for_user(
-                validated_data['recurrence_rule'], validated_data.get('start'), validated_data['user'])
+        recurrenceservice.prepare_write(validated_data, validated_data['user'])
 
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if 'recurrence_rule' in validated_data:
-            validated_data['recurrence_rule'] = normalize_recurrence_rule_for_user(
-                validated_data['recurrence_rule'], validated_data.get('start', instance.start), instance.user)
+        recurrenceservice.prepare_write(validated_data, instance.user, instance)
 
         return super().update(instance, validated_data)
 

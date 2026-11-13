@@ -17,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
 from helium.auth.utils.userutils import is_staff_user, rollup_power_users
+from helium.common import enums
 from helium.common.periodic import register_periodic
 from helium.common.services import analyticsservice, cumulativeuserservice, metricsampleservice
 from helium.common.utils import commonutils, metricutils, redisutils, taskutils
@@ -522,6 +523,10 @@ def emit_nightly_metrics(self):
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
                     ).filter(_changed_since_example_import('course__course_group__user')))),
+                    ('gpa', Exists(CourseGroup.objects.filter(
+                        user=OuterRef('pk'),
+                        example_schedule=False,
+                    ).exclude(gpa=enums.NO_GRADE).filter(_changed_since_example_import('user')))),
                     ('external_calendars', Exists(ExternalCalendar.objects.filter(
                         user=OuterRef('pk'),
                         example_schedule=False,

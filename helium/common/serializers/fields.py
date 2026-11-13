@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 class ExceptionDatesField(serializers.ListField):
     """
-    Serializer field for the planner ``Event.exception_dates`` JSONField column.
+    Serializer field for a JSON list of iCal EXDATE datetimes, like ``Event.exception_dates``.
     Wraps a :class:`TzAwareDateTimeField` so per-item parsing, validation, and
     output formatting all flow through the same DRF DateTimeField machinery as
     every other datetime in the API — meaning the wire form is uniformly

@@ -39,9 +39,12 @@ OAUTH_SCOPE_ENDPOINTS = {
         ('planner_events_list', 'GET'),
         ('planner_resource_grades', 'GET'),
         ('planner_resource_grades_needed', 'GET'),
-        ('planner_notes_list', 'GET'),
         ('planner_resourcegroups_list', 'GET'),
         ('planner_resources_list', 'GET'),
+    },
+    'planner:notes:read': {
+        ('auth_user_detail', 'GET'),
+        ('planner_notes_list', 'GET'),
     },
     'planner:import': {
         ('auth_user_detail', 'GET'),
@@ -114,7 +117,8 @@ def describe_authorization(request) -> dict:
 
     :param request: the current django.http.HttpRequest, with the OAuth parameters in its query string and the user
         as `request.user`.
-    :return: the client's name, where it redirects, and the requested scopes with their descriptions.
+    :return: the client's name, where it redirects, and the requested scopes with their descriptions and whether
+        each is required.
     :raises ValidationError: when the request is invalid. When the client may be told, `redirect_uri` is the error
         redirect to send the user to.
     """
@@ -132,7 +136,8 @@ def describe_authorization(request) -> dict:
     return {
         'client_name': application.name,
         'redirect_uri': credentials['redirect_uri'],
-        'scopes': [{'scope': scope, 'description': descriptions[scope]} for scope in scopes],
+        'scopes': [{'scope': scope, 'description': descriptions[scope],
+                    'required': scope not in settings.OAUTH_OPTIONAL_SCOPES} for scope in scopes],
     }
 
 
@@ -173,14 +178,15 @@ def connected_apps(user) -> list[dict]:
         apps.append({
             'id': application.pk,
             'name': application.name,
-            'scopes': [{'scope': scope, 'description': descriptions.get(scope, scope)}
+            'scopes': [{'scope': scope, 'description': descriptions.get(scope, scope),
+                        'required': scope not in settings.OAUTH_OPTIONAL_SCOPES}
                        for scope in (token.scope.split() if token else [])],
             'last_used_at': token.created if token else None,
         })
     return sorted(apps, key=lambda app: app['last_used_at'] or timezone.now(), reverse=True)
 
 
-def decide_authorization(request, allow) -> str:
+def decide_authorization(request, allow, approved_scopes=None) -> str:
     """
     Complete an authorization request as the user decided: issue an authorization code to the client, or tell it
     access was denied.
@@ -188,9 +194,11 @@ def decide_authorization(request, allow) -> str:
     :param request: the current django.http.HttpRequest, with the OAuth parameters in its query string and the
         consenting user as `request.user`.
     :param allow: whether the user approved.
+    :param approved_scopes: the requested scopes the user approved, which must include every requested scope that
+        isn't optional. When omitted, the user approved every requested scope except the optional ones.
     :return: the URL to send the user to, back at the client.
-    :raises ValidationError: when the request is invalid. When the client may be told, `redirect_uri` is the error
-        redirect to send the user to.
+    :raises ValidationError: when the request is invalid, or `approved_scopes` isn't a valid choice from the
+        requested scopes. When the client may be told, `redirect_uri` is the error redirect to send the user to.
     :raises ConsentAccountChangedError: when approving a request that was described to a different user.
     """
     core = get_oauthlib_core()
@@ -198,6 +206,7 @@ def decide_authorization(request, allow) -> str:
         scopes, credentials = core.validate_authorization_request(request)
         if allow:
             _require_described_to(request)
+            scopes = _granted_scopes(scopes, approved_scopes)
         resources = _requested_resources(request, credentials)
         if resources:
             credentials['resource'] = resources
@@ -214,7 +223,8 @@ def decide_authorization(request, allow) -> str:
         error.oauthlib_error.description = 'The user denied access.'
         return _error_redirect(error, request)
 
-    logger.info(f'OAuth authorization granted by user {request.user.pk} to client {credentials["client_id"]}')
+    logger.info(f'OAuth authorization granted by user {request.user.pk} to client {credentials["client_id"]} '
+                f'for scopes {" ".join(scopes)}')
     metricutils.increment('action.oauth.authorized', user=request.user)
 
     return uri
@@ -236,6 +246,25 @@ def record_token_issued(token, request) -> None:
 
     UserClientActivity.objects.get_or_create(user=user, date=timezone.now().date(),
                                              client=UserClientActivity.CLIENT_CONNECTOR)
+
+
+def _granted_scopes(requested, approved) -> list[str]:
+    if approved is None:
+        granted = [scope for scope in requested if scope not in settings.OAUTH_OPTIONAL_SCOPES]
+    else:
+        unrequested = sorted(set(approved) - set(requested))
+        if unrequested:
+            raise ValidationError({'scopes': [f"Not requested by the client: {', '.join(unrequested)}."]})
+        declined_required = sorted(scope for scope in requested
+                                   if scope not in settings.OAUTH_OPTIONAL_SCOPES and scope not in approved)
+        if declined_required:
+            raise ValidationError({'scopes': [f"Required by the client: {', '.join(declined_required)}."]})
+        granted = [scope for scope in requested if scope in approved]
+
+    if not granted:
+        raise ValidationError({'scopes': ['Approve at least one scope.']})
+
+    return granted
 
 
 def _require_s256(credentials) -> None:

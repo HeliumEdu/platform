@@ -17,6 +17,17 @@ class TestCaseImportICSViews(APITestCase):
         with open(path, 'rb') as fp:
             return self.client.post(reverse('importexport_import_ics'), {'file[]': [fp], **fields})
 
+    def _post_inline_ics(self, events, course):
+        calendar = ('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//test//EN\r\n' + events + 'END:VCALENDAR\r\n').encode()
+        return self.client.post(reverse('importexport_import_ics'),
+                                {'file[]': [SimpleUploadedFile('calendar.ics', calendar)], 'target_type': 'course',
+                                 'course': course.pk})
+
+    def _given_course(self, end_date=datetime.date(2017, 5, 8)):
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user, end_date=end_date)
+        return coursehelper.given_course_exists(course_group, end_date=end_date)
+
     def test_import_ics_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -132,7 +143,7 @@ class TestCaseImportICSViews(APITestCase):
         self.assertEqual(0, len(Course.objects.for_user(user.pk)))
         self.assertEqual(0, len(Homework.objects.for_user(user.pk)))
 
-    def test_import_ics_recurring_expands_into_assignments(self):
+    def test_import_ics_recurring_creates_a_repeating_assignment(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -143,12 +154,12 @@ class TestCaseImportICSViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(4, response.data['homework'])
-        homework = Homework.objects.for_user(user.pk).order_by('start')
-        self.assertEqual(4, len(homework))
+        self.assertEqual(1, response.data['homework'])
+        homework = Homework.objects.get(course=course)
+        self.assertEqual((homework.title, homework.recurrence_rule), ('Weekly Quiz', 'FREQ=WEEKLY;COUNT=4;BYDAY=TU'))
         self.assertEqual([datetime.date(2017, 1, 10), datetime.date(2017, 1, 17),
                           datetime.date(2017, 1, 24), datetime.date(2017, 1, 31)],
-                         [h.start.date() for h in homework])
+                         [start.date() for start, _ in homework.occurrences()])
 
     def test_import_ics_recurring_assignments_land_in_uncategorized(self):
         # GIVEN
@@ -161,7 +172,7 @@ class TestCaseImportICSViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(4, response.data['homework'])
+        self.assertEqual(1, response.data['homework'])
         uncategorized = Category.objects.get(course=course, title='Uncategorized')
         homework = Homework.objects.for_user(user.pk)
         self.assertTrue(all(h.category_id == uncategorized.pk for h in homework))
@@ -292,3 +303,103 @@ class TestCaseImportICSViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('details', response.data)
         self.assertEqual(0, len(Event.objects.all()))
+
+    def test_import_ics_recurring_exdates_become_skipped_occurrences(self):
+        # GIVEN
+        course = self._given_course()
+
+        # WHEN
+        response = self._post_inline_ics(
+            'BEGIN:VEVENT\r\nUID:quiz\r\nSUMMARY:Quiz\r\nDTSTART:20170110T140000Z\r\nDTEND:20170110T150000Z\r\n'
+            'RRULE:FREQ=WEEKLY;COUNT=4\r\nEXDATE:20170117T140000Z\r\nEND:VEVENT\r\n', course)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['homework'], 1)
+        homework = Homework.objects.get(course=course)
+        self.assertEqual([datetime.datetime.fromisoformat(iso) for iso in homework.exception_dates],
+                         [datetime.datetime(2017, 1, 17, 14, tzinfo=datetime.timezone.utc)])
+        self.assertEqual([start.date() for start, _ in homework.occurrences()],
+                         [datetime.date(2017, 1, 10), datetime.date(2017, 1, 24), datetime.date(2017, 1, 31)])
+
+    def test_import_ics_open_ended_repeat_ends_at_the_class_last_day(self):
+        # GIVEN
+        course = self._given_course()
+
+        # WHEN
+        response = self._post_inline_ics(
+            'BEGIN:VEVENT\r\nUID:quiz\r\nSUMMARY:Quiz\r\nDTSTART:20170110T140000Z\r\nDTEND:20170110T150000Z\r\n'
+            'RRULE:FREQ=WEEKLY;BYDAY=TU\r\nEND:VEVENT\r\n', course)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['homework'], 1)
+        homework = Homework.objects.get(course=course)
+        self.assertEqual(homework.recurrence_rule, 'FREQ=WEEKLY;BYDAY=TU;UNTIL=20170509T065959Z')
+        starts = [start for start, _ in homework.occurrences()]
+        self.assertEqual((len(starts), starts[-1]), (17, datetime.datetime(2017, 5, 2, 13, tzinfo=datetime.timezone.utc)))
+
+    def test_import_ics_rdate_extras_are_standalone_assignments(self):
+        # GIVEN
+        course = self._given_course()
+
+        # WHEN
+        response = self._post_inline_ics(
+            'BEGIN:VEVENT\r\nUID:quiz\r\nSUMMARY:Quiz\r\nDTSTART:20170110T140000Z\r\nDTEND:20170110T150000Z\r\n'
+            'RRULE:FREQ=WEEKLY;COUNT=2\r\nRDATE:20170301T140000Z\r\nEND:VEVENT\r\n', course)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['homework'], 2)
+        extra = Homework.objects.get(course=course, start=datetime.datetime(2017, 3, 1, 14, tzinfo=datetime.timezone.utc))
+        self.assertIsNone(extra.recurrence_rule)
+        series = Homework.objects.get(course=course, recurrence_rule__isnull=False)
+        self.assertEqual(len(list(series.occurrences())), 2)
+
+    def test_import_ics_over_the_cap_names_the_entry_and_saves_nothing(self):
+        # GIVEN
+        course = self._given_course(end_date=datetime.date(2019, 1, 1))
+
+        # WHEN
+        response = self._post_inline_ics(
+            'BEGIN:VEVENT\r\nUID:ok\r\nSUMMARY:Weekly quiz\r\nDTSTART:20170110T140000Z\r\n'
+            'DTEND:20170110T150000Z\r\nRRULE:FREQ=WEEKLY;COUNT=3\r\nEND:VEVENT\r\n'
+            'BEGIN:VEVENT\r\nUID:log\r\nSUMMARY:Daily log\r\nDTSTART:20170110T140000Z\r\n'
+            'DTEND:20170110T150000Z\r\nRRULE:FREQ=DAILY\r\nEND:VEVENT\r\n', course)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data['homework']), '"Daily log": It repeats more than 366 times.')
+        self.assertFalse(Homework.objects.filter(course=course).exists())
+
+    def test_import_ics_unexpandable_rule_falls_back_to_one_assignment(self):
+        # GIVEN
+        course = self._given_course()
+
+        # WHEN
+        response = self._post_inline_ics(
+            'BEGIN:VEVENT\r\nUID:odd\r\nSUMMARY:Odd\r\nDTSTART:20170110T140000Z\r\nDTEND:20170110T150000Z\r\n'
+            'RRULE:FREQ=WEEKLY;BYDAY=XX\r\nEND:VEVENT\r\n', course)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['homework'], 1)
+        only = Homework.objects.get(course=course)
+        self.assertEqual((only.start, only.recurrence_rule),
+                         (datetime.datetime(2017, 1, 10, 14, tzinfo=datetime.timezone.utc), None))
+
+    def test_import_ics_recurring_description_links_a_note_to_the_series(self):
+        # GIVEN
+        course = self._given_course()
+
+        # WHEN
+        response = self._post_inline_ics(
+            'BEGIN:VEVENT\r\nUID:quiz\r\nSUMMARY:Quiz\r\nDESCRIPTION:Bring a calculator\r\n'
+            'DTSTART:20170110T140000Z\r\nDTEND:20170110T150000Z\r\nRRULE:FREQ=WEEKLY;COUNT=3\r\nEND:VEVENT\r\n',
+            course)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        notes = list(Homework.objects.get(course=course).notes_set.all())
+        self.assertEqual(len(notes), 1)
+        self.assertEqual(notes[0].content['ops'][0]['insert'].strip(), 'Bring a calculator')

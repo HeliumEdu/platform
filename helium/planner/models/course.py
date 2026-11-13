@@ -2,6 +2,7 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from helium.common import enums
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import random_color
 from helium.common.utils.validators import validate_and_normalize_date_csv, validate_hex_color
@@ -16,7 +17,8 @@ class Course(BaseModel):
                             max_length=255, blank=True, default='')
 
     credits = models.DecimalField(
-        help_text='A decimal corresponding to credit hours. If unknown or the syllabus doesn\'t specify, use `"0.00"`.',
+        help_text='A decimal corresponding to credit hours, weighting the class in its group\'s `gpa`. If unknown or '
+                  'the syllabus doesn\'t specify, use `"0.00"`.',
         max_digits=4, decimal_places=2,
         validators=[MinValueValidator(0), MaxValueValidator(99)])
 
@@ -30,7 +32,12 @@ class Course(BaseModel):
         help_text='Whether the course is online.',
         default=False)
 
-    current_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)
+    current_grade = models.DecimalField(max_digits=7, default=enums.NO_GRADE, decimal_places=4)
+
+    grade_point = models.DecimalField(
+        help_text="The grade point `current_grade` earns on the group's `grade_scale`, or `-1` when ungraded or the "
+                  "group has no grade scale.",
+        max_digits=5, default=enums.NO_GRADE, decimal_places=2)
 
     trend = models.FloatField(default=None, blank=True, null=True)
 

@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones sync-assets test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish promote start-frontend stop-frontend test-with-frontend
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones sync-shared-constants sync-assets test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish promote start-frontend stop-frontend test-with-frontend
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -68,6 +68,13 @@ build-migrations: install-dev
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		ENVIRONMENT=local python manage.py makemigrations; \
+	)
+
+sync-shared-constants: install-dev
+	@( \
+		set -e; \
+		source $(PLATFORM_VENV)/bin/activate; \
+		python bin/sync-shared-constants.py; \
 	)
 
 refresh-timezones: install-dev

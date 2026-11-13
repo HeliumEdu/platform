@@ -7,6 +7,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
+from helium.common import enums
 from helium.common.permissions import IsOwner
 from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.filters import CategoryFilter
@@ -31,7 +32,7 @@ class UserCategoriesApiListView(HeliumAPIView, ListModelMixin):
             return Category.objects.for_user(user.pk).select_related('course').annotate(
                 annotated_num_homework=Count('homework'),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True)),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'))
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED))
             )
         else:
             return Category.objects.none()
@@ -60,7 +61,7 @@ class CourseGroupCourseCategoriesApiListView(HeliumAPIView, ListModelMixin, Crea
             return Category.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('course').annotate(
                 annotated_num_homework=Count('homework'),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True)),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'))
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED))
             )
         else:
             return Category.objects.none()
@@ -127,7 +128,7 @@ class CourseGroupCourseCategoriesApiDetailView(PreconditionMixin, HeliumAPIView,
             return Category.objects.for_user(user.pk).for_course(self.kwargs['course']).select_related('course').annotate(
                 annotated_num_homework=Count('homework'),
                 annotated_num_homework_completed=Count('homework', filter=Q(homework__completed=True)),
-                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'))
+                annotated_num_homework_graded=Count('homework', filter=Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED))
             )
         else:
             return Category.objects.none()

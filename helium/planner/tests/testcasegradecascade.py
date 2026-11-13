@@ -68,9 +68,8 @@ class TestCaseGradeCascade(APITestCase):
     def test_deleting_a_category_leaves_its_course_grade_correct(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        kept = categoryhelper.given_category_exists(course, title='kept', weight=50)
+        course_group, course, kept = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'title': 'kept', 'weight': 50})
         dropped = categoryhelper.given_category_exists(course, title='dropped', weight=50)
         for _ in range(3):
             homeworkhelper.given_homework_exists(course, category=kept, current_grade='90/100',
@@ -133,9 +132,8 @@ class TestCaseGradeCascade(APITestCase):
     def test_moving_homework_between_categories_leaves_both_correct(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        source = categoryhelper.given_category_exists(course, title='source', weight=50)
+        course_group, course, source = coursehelper.given_course_with_category_exists(
+            user, category_kwargs={'title': 'source', 'weight': 50})
         target = categoryhelper.given_category_exists(course, title='target', weight=50)
         moved = homeworkhelper.given_homework_exists(course, category=source,
                                                      current_grade='10/100', completed=True)

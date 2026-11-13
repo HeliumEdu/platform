@@ -6,6 +6,7 @@ from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveMode
     DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 
+from helium.common import enums
 from helium.common.permissions import IsOwner
 from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.handlers.signals import suppress_cascade_recalculation
@@ -30,7 +31,7 @@ class CourseGroupsApiListView(HeliumAPIView, ListModelMixin, CreateModelMixin):
             return user.course_groups.all().annotate(
                 annotated_num_homework=Count('courses__homework', distinct=True),
                 annotated_num_homework_completed=Count('courses__homework', filter=Q(courses__homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('courses__homework', filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade='-1/100'), distinct=True)
+                annotated_num_homework_graded=Count('courses__homework', filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade=enums.UNGRADED), distinct=True)
             )
         else:
             return CourseGroup.objects.none()
@@ -80,7 +81,7 @@ class CourseGroupsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelM
             return user.course_groups.all().annotate(
                 annotated_num_homework=Count('courses__homework', distinct=True),
                 annotated_num_homework_completed=Count('courses__homework', filter=Q(courses__homework__completed=True), distinct=True),
-                annotated_num_homework_graded=Count('courses__homework', filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade='-1/100'), distinct=True)
+                annotated_num_homework_graded=Count('courses__homework', filter=Q(courses__homework__completed=True) & ~Q(courses__homework__current_grade=enums.UNGRADED), distinct=True)
             )
         else:
             return CourseGroup.objects.none()

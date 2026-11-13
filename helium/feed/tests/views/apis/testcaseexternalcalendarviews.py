@@ -28,8 +28,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_externalcalendars(self):
         # GIVEN
@@ -136,8 +135,7 @@ class TestCaseExternalCalendarViews(APITestCase):
 
         # THEN
         self.assertTrue(ExternalCalendar.objects.filter(pk=external_calendar.pk, user_id=user1.pk).exists())
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_404_NOT_FOUND)
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN

@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 
 from dateutil import parser
 
@@ -9,7 +10,8 @@ def given_homework_exists(course, title='💻 Test Homework', all_day=False, sho
                           start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=datetime.timezone.utc),
                           end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=datetime.timezone.utc),
                           priority=65, url='', current_grade='-1/100',
-                          completed=False, category=None, resources=None):
+                          completed=False, category=None, resources=None, recurrence_rule=None,
+                          exception_dates=None):
     if resources is None:
         resources = []
 
@@ -23,12 +25,22 @@ def given_homework_exists(course, title='💻 Test Homework', all_day=False, sho
                                        current_grade=current_grade,
                                        completed=completed,
                                        category=category,
-                                       course=course)
+                                       course=course,
+                                       recurrence_rule=recurrence_rule,
+                                       exception_dates=exception_dates)
 
     for resource in resources:
         homework.resources.add(resource)
 
     return homework
+
+
+def given_weekly_homework_exists(course, start=None, duration=datetime.timedelta(hours=1),
+                                 recurrence_rule='FREQ=WEEKLY;BYDAY=MO', **kwargs):
+    start = start or datetime.datetime(2030, 4, 1, 9, 0,
+                                       tzinfo=ZoneInfo(course.course_group.user.settings.time_zone))
+    return given_homework_exists(course, start=start, end=start + duration, recurrence_rule=recurrence_rule,
+                                 **kwargs)
 
 
 def verify_homework_matches_data(test_case, homework, data):

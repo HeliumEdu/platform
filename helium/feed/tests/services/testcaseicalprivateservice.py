@@ -245,9 +245,8 @@ class TestCaseEventsToPrivateIcalFeed(TestCase):
         for zone_name in ('Asia/Tokyo', 'America/Chicago'):
             with self.subTest(zone=zone_name):
                 # GIVEN
-                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com')
-                user.settings.time_zone = zone_name
-                user.settings.save()
+                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com',
+                                                      time_zone=zone_name)
                 local_midnight = datetime.datetime(2017, 5, 8, tzinfo=ZoneInfo(zone_name))
                 skipped = (local_midnight + datetime.timedelta(weeks=1)).astimezone(datetime.timezone.utc)
                 eventhelper.given_event_exists(user, all_day=True, start=local_midnight,
@@ -261,3 +260,26 @@ class TestCaseEventsToPrivateIcalFeed(TestCase):
                 # THEN
                 self.assertIn(b'RRULE:FREQ=WEEKLY;COUNT=3;BYDAY=MO', feed)
                 self.assertIn(b'EXDATE;VALUE=DATE:20170515', feed)
+
+
+class TestCaseHomeworkToPrivateIcalFeed(TestCase):
+    def test_repeating_all_day_homework_exports_rrule_and_local_exdate(self):
+        for zone_name in ('Asia/Tokyo', 'America/Chicago'):
+            with self.subTest(zone=zone_name):
+                # GIVEN
+                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com',
+                                                      time_zone=zone_name)
+                course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+                local_midnight = datetime.datetime(2017, 4, 3, tzinfo=ZoneInfo(zone_name))
+                skipped = (local_midnight + datetime.timedelta(weeks=1)).astimezone(datetime.timezone.utc)
+                homeworkhelper.given_homework_exists(course, all_day=True, start=local_midnight,
+                                                     end=local_midnight + datetime.timedelta(days=1),
+                                                     recurrence_rule='FREQ=WEEKLY;COUNT=3;BYDAY=MO',
+                                                     exception_dates=[skipped.isoformat()])
+
+                # WHEN
+                feed = icalprivateservice.homework_to_private_ical_feed(user)
+
+                # THEN
+                self.assertIn(b'RRULE:FREQ=WEEKLY;COUNT=3;BYDAY=MO', feed)
+                self.assertIn(b'EXDATE;VALUE=DATE:20170410', feed)

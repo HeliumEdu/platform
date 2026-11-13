@@ -22,7 +22,8 @@ class Reminder(BaseModel):
 
     start_of_range = models.DateTimeField(
         help_text='Datetime the reminder fires. Server-derived from the parent '
-                  '(`event` / `homework` / `course`) start time minus `offset * offset_type`. Read-only.',
+                  '(`event` / `homework` / `course`) start time minus `offset * offset_type`; for a `course` or '
+                  'a repeating `homework` or `event`, the start of its next class or occurrence. Read-only.',
         null=True, blank=True)
 
     offset = models.PositiveIntegerField(help_text='How far before the parent start time to fire, measured in '
@@ -98,7 +99,49 @@ class Reminder(BaseModel):
 
     @property
     def repeating(self) -> bool:
-        return self.course_id is not None
+        return self.course_id is not None or self.targets_repeating_item
+
+    @property
+    def calendar_item(self):
+        return self.homework or self.event
+
+    @property
+    def targets_repeating_item(self) -> bool:
+        return self.calendar_item is not None and bool(self.calendar_item.recurrence_rule)
+
+    def occurrence_bounds(self):
+        """
+        Return the ``(start, end)`` of the Homework or Event occurrence this reminder refers to. A reminder on a
+        repeating item refers to the occurrence it was armed for; any other refers to its parent's own times.
+        """
+        calendar_item = self.calendar_item
+        if not (self.targets_repeating_item and self.start_of_range):
+            return calendar_item.start, calendar_item.end
+
+        start = self.start_of_range + datetimeutils.offset_to_timedelta(self.offset, self.offset_type)
+        tz = ZoneInfo(calendar_item.get_user().settings.time_zone)
+        return start, datetimeutils.occurrence_end(calendar_item.start, calendar_item.end, start, tz,
+                                                   calendar_item.all_day)
+
+    def next_occurrence_start(self, after_datetime=None):
+        """
+        Return the start of the repeating item's occurrence this reminder should next fire for, or None when the
+        series has no such occurrence left.
+
+        With ``after_datetime`` (the occurrence that just fired) the search begins strictly after it. Otherwise
+        it finds the first occurrence whose reminder time has not expired past the send window, and that this
+        reminder's series has not already fired for, so an occurrence is never reminded of twice.
+        """
+        offset_delta = datetimeutils.offset_to_timedelta(self.offset, self.offset_type)
+
+        if after_datetime is None:
+            after_datetime = self._last_fired_occurrence_start(offset_delta)
+        not_before = timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES) + offset_delta
+        if after_datetime is not None:
+            not_before = max(not_before, after_datetime + timedelta(microseconds=1))
+
+        return next((occurrence_start for occurrence_start, _ in self.calendar_item.occurrences(not_before=not_before)),
+                    None)
 
     def get_user(self):
         return self.user
@@ -198,14 +241,20 @@ class Reminder(BaseModel):
         included.
 
         Course reminders retain the sent=False gate because their recalculation logic is
-        being refactored separately.
+        being refactored separately. Reminders on a repeating item follow the same gate: an unsent one
+        tracks the next upcoming occurrence, and a sent one stays as the record of the occurrence it fired for.
 
         For course reminders with no qualifying future occurrence, start_of_range is set to
         None — the series becomes inactive until the course schedule changes, at which point
         the adjust_reminder_times signal triggers a fresh recalculation.
         """
-        if self.homework or self.event:
-            calendar_item = self.homework or self.event
+        if self.targets_repeating_item:
+            if not self.sent:
+                next_start = self.next_occurrence_start()
+                self.start_of_range = ((next_start or self.calendar_item.start)
+                                       - datetimeutils.offset_to_timedelta(self.offset, self.offset_type))
+        elif self.calendar_item:
+            calendar_item = self.calendar_item
             offset_delta = datetimeutils.offset_to_timedelta(self.offset, self.offset_type)
             new_start_of_range = calendar_item.start - offset_delta
             if self.pk and self.sent and new_start_of_range != self.start_of_range:
@@ -222,3 +271,14 @@ class Reminder(BaseModel):
                     self.start_of_range = None
 
         super().save(*args, **kwargs)
+
+    def _last_fired_occurrence_start(self, offset_delta):
+        last_fired = (Reminder.objects
+                      .filter(event_id=self.event_id, homework_id=self.homework_id, user_id=self.user_id,
+                              type=self.type, offset=self.offset,
+                              offset_type=self.offset_type, sent=True, start_of_range__isnull=False)
+                      .exclude(pk=self.pk)
+                      .order_by('-start_of_range')
+                      .values_list('start_of_range', flat=True)
+                      .first())
+        return last_fired + offset_delta if last_fired else None

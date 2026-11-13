@@ -4,21 +4,26 @@ import re
 import sys
 from zoneinfo import ZoneInfo
 
+from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrulestr
 from django.core.exceptions import ValidationError
 
+from helium.common import enums
 from helium.common.utils import commonutils
 
 # Reference dtstart used solely to satisfy rrulestr() during validation. The actual
-# series anchor at runtime is the parent Event's `start`, not this constant.
+# series anchor at runtime is the repeating item's own `start`, not this constant.
 _RRULE_VALIDATION_DTSTART = datetime.datetime(2000, 1, 1)
 
-WEEKDAY_TO_ICAL = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
+_ICAL_TO_WEEKDAY = {code: weekday for weekday, code in enums.WEEKDAY_TO_ICAL.items()}
 _UNSUPPORTED_RRULE_FREQS = frozenset({'HOURLY', 'MINUTELY', 'SECONDLY'})
-_UNSUPPORTED_RRULE_PARTS = frozenset({'BYWEEKNO', 'BYYEARDAY', 'WKST'})
+_UNSUPPORTED_RRULE_PARTS = frozenset({'BYHOUR', 'BYMINUTE', 'BYSECOND', 'BYWEEKNO', 'BYYEARDAY', 'WKST'})
 _ORDINAL_WEEKDAY = re.compile(r'^([+-]?\d{1,2})(MO|TU|WE|TH|FR|SA|SU)$')
 _SFCALENDAR_SINGLE_VALUE_PARTS = ('BYDAY', 'BYMONTHDAY', 'BYMONTH', 'BYSETPOS')
 _SFCALENDAR_SET_POSITIONS = frozenset({1, 2, 3, 4, -1, -2})
+_GREGORIAN_CYCLE_YEARS = 400
+_MIN_GRADE_SCALE_BANDS = 2
+_MAX_GRADE_SCALE_BANDS = 20
 
 
 def validate_fraction(value):
@@ -51,6 +56,25 @@ def validate_fraction(value):
 def validate_hex_color(value):
     if not re.match(r'^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$', value):
         raise ValidationError('The value must be a valid hex color code.')
+
+
+def validate_grade_scale(grade_scale):
+    if not grade_scale:
+        return
+    if not _MIN_GRADE_SCALE_BANDS <= len(grade_scale) <= _MAX_GRADE_SCALE_BANDS:
+        raise ValidationError(
+            f'A grade scale must have between {_MIN_GRADE_SCALE_BANDS} and {_MAX_GRADE_SCALE_BANDS} bands.')
+    if grade_scale[0]['min_grade'] != 0:
+        raise ValidationError("The first band's 'min_grade' must be 0.")
+
+    min_grades = [band['min_grade'] for band in grade_scale]
+    if any(lower >= upper for lower, upper in zip(min_grades, min_grades[1:])):
+        raise ValidationError("Each band's 'min_grade' must be greater than the band before it.")
+
+    grade_points = [band['grade_point'] for band in grade_scale]
+    steps = list(zip(grade_points, grade_points[1:]))
+    if not (all(lower <= upper for lower, upper in steps) or all(lower >= upper for lower, upper in steps)):
+        raise ValidationError("The bands' 'grade_point' values must only rise or only fall.")
 
 
 def validate_quill_delta(value):
@@ -112,11 +136,15 @@ def infer_byday_for_weekly_rrule(value, dtstart):
     if parts.get('FREQ') != 'WEEKLY' or 'BYDAY' in parts:
         return value
 
-    day_code = WEEKDAY_TO_ICAL[dtstart.weekday()]
+    day_code = enums.WEEKDAY_TO_ICAL[dtstart.weekday()]
     return f'{prefix}{rule_body};BYDAY={day_code}'
 
 
-def _parse_recurrence_rule(value):
+def parse_recurrence_rule(value):
+    """
+    Split an RRULE into its optional ``RRULE:`` prefix and its uppercased parts, e.g.
+    ``('', {'FREQ': 'WEEKLY', 'BYDAY': 'MO'})``.
+    """
     prefix = value[:6] if value.upper().startswith('RRULE:') else ''
     parts = {}
     for part in value[len(prefix):].split(';'):
@@ -126,7 +154,8 @@ def _parse_recurrence_rule(value):
     return prefix, parts
 
 
-def _join_recurrence_rule(prefix, parts):
+def join_recurrence_rule(prefix, parts):
+    """Join a :func:`parse_recurrence_rule` result back into an RRULE string."""
     return prefix + ';'.join(f'{k}={v}' for k, v in parts.items())
 
 
@@ -135,6 +164,16 @@ def _split_ordinal_byday(parts):
     if ordinal and 'BYSETPOS' not in parts:
         parts['BYDAY'] = ordinal.group(2)
         parts['BYSETPOS'] = str(int(ordinal.group(1)))
+
+
+def _shift_until(until, delta):
+    for pattern in ('%Y%m%dT%H%M%SZ', '%Y%m%dT%H%M%S', '%Y%m%d'):
+        try:
+            parsed = datetime.datetime.strptime(until, pattern)
+        except ValueError:
+            continue
+        return (parsed + delta).strftime(pattern)
+    return until
 
 
 def normalize_recurrence_rule(value, local_start):
@@ -151,10 +190,10 @@ def normalize_recurrence_rule(value, local_start):
     if not value:
         return value
 
-    prefix, parts = _parse_recurrence_rule(value)
+    prefix, parts = parse_recurrence_rule(value)
     freq = parts.get('FREQ')
     if freq == 'WEEKLY':
-        return infer_byday_for_weekly_rrule(_join_recurrence_rule(prefix, parts), local_start)
+        return infer_byday_for_weekly_rrule(join_recurrence_rule(prefix, parts), local_start)
     if freq not in ('MONTHLY', 'YEARLY'):
         return value
 
@@ -164,7 +203,68 @@ def normalize_recurrence_rule(value, local_start):
             parts.setdefault('BYMONTH', str(local_start.month))
         parts['BYMONTHDAY'] = str(local_start.day)
 
-    return _join_recurrence_rule(prefix, parts)
+    return join_recurrence_rule(prefix, parts)
+
+
+def shift_recurrence_rule(value, old_local_start, new_local_start):
+    """
+    Move a rule's anchored parts along with its series start, so moving ``old_local_start`` to
+    ``new_local_start`` moves the whole series rather than leaving a rule pinned to the old weekday or day.
+
+    Each ``BYDAY`` weekday shifts by the weekday change, and a ``BYMONTHDAY`` or ``BYMONTH`` that matched the old
+    start follows it. Parts that did not anchor on the old start (e.g. ``BYMONTHDAY=-1``) and rules without a
+    start-derived part are returned unchanged. ``UNTIL`` moves by the same wall-clock distance.
+    """
+    if not value:
+        return value
+
+    prefix, parts = parse_recurrence_rule(value)
+
+    weekday_shift = new_local_start.weekday() - old_local_start.weekday()
+    if weekday_shift and parts.get('BYDAY'):
+        parts['BYDAY'] = ','.join(
+            enums.WEEKDAY_TO_ICAL[(_ICAL_TO_WEEKDAY[code] + weekday_shift) % 7] if code in _ICAL_TO_WEEKDAY else code
+            for code in parts['BYDAY'].split(','))
+
+    if parts.get('BYMONTHDAY') == str(old_local_start.day):
+        parts['BYMONTHDAY'] = str(new_local_start.day)
+    if parts.get('BYMONTH') == str(old_local_start.month):
+        parts['BYMONTH'] = str(new_local_start.month)
+
+    if parts.get('UNTIL'):
+        parts['UNTIL'] = _shift_until(parts['UNTIL'], new_local_start - old_local_start)
+
+    return join_recurrence_rule(prefix, parts)
+
+
+def shift_recurrence_rule_for_user(value, old_start, new_start, user):
+    """Shift ``value`` (see ``shift_recurrence_rule``) between two series starts as read in ``user``'s time zone."""
+    if not value or not old_start or not new_start:
+        return value
+    tz = ZoneInfo(user.settings.time_zone)
+    return shift_recurrence_rule(value, old_start.astimezone(tz), new_start.astimezone(tz))
+
+
+def occurs_within_horizon(rule, dtstart):
+    """
+    Return whether ``rule`` from ``dtstart`` has an occurrence within ``enums.RECURRENCE_HORIZON_YEARS``, ignoring its
+    ``COUNT`` and ``UNTIL``.
+
+    dateutil only stops at ``COUNT`` or ``UNTIL`` once a rule produces a date, so a rule that never does (e.g.
+    ``FREQ=DAILY;BYMONTH=2;BYMONTHDAY=30``) is searched through year 9999. The Gregorian calendar repeats every 400
+    years, weekdays included, so the same question is asked of the rule moved to just before that limit, where the
+    search ends within a cycle.
+
+    :param rule: The RRULE string, bare or ``RRULE:`` prefixed.
+    :param dtstart: The series' first occurrence start, naive wall clock or aware.
+    """
+    _, parts = parse_recurrence_rule(rule)
+    parts.pop('COUNT', None)
+    parts.pop('UNTIL', None)
+    cycles = (datetime.MAXYEAR - enums.RECURRENCE_HORIZON_YEARS - dtstart.year) // _GREGORIAN_CYCLE_YEARS
+    probe_start = dtstart.replace(year=dtstart.year + cycles * _GREGORIAN_CYCLE_YEARS, tzinfo=None)
+    first = next(iter(rrulestr(join_recurrence_rule('', parts), dtstart=probe_start)), None)
+    return first is not None and first < probe_start + relativedelta(years=enums.RECURRENCE_HORIZON_YEARS)
 
 
 def _validate_sfcalendar_monthly_or_yearly(freq, parts):
@@ -215,18 +315,19 @@ def validate_recurrence_rule(value):
     Validate that ``value`` is a parseable RFC 5545 RRULE string (e.g. ``FREQ=WEEKLY;BYDAY=MO``).
 
     Accepts both bare rule bodies and the ``RRULE:`` prefixed form. A reference dtstart is
-    supplied to ``rrulestr`` only to satisfy parsing — the real series anchor is the parent
-    Event's ``start``.
+    supplied to ``rrulestr`` only to satisfy parsing — the real series anchor is the repeating
+    item's ``start``.
 
     Rejects properties that are valid per RFC 5545 but not rendered correctly by SfCalendar:
-    FREQ=HOURLY/MINUTELY/SECONDLY (silently produces no instances), BYWEEKNO and BYYEARDAY
-    (silently ignored → wrong dates), WKST (silently ignored → wrong week boundaries), and the
-    monthly and yearly shapes ``normalize_recurrence_rule`` cannot rewrite into ones it expands.
+    FREQ=HOURLY/MINUTELY/SECONDLY (silently produces no instances), BYHOUR/BYMINUTE/BYSECOND
+    (repeats within a day, which it can't show), BYWEEKNO and BYYEARDAY (silently ignored → wrong
+    dates), WKST (silently ignored → wrong week boundaries), and the monthly and yearly shapes
+    ``normalize_recurrence_rule`` cannot rewrite into ones it expands.
     """
     if value is None or value == '':
         return
 
-    _, parts = _parse_recurrence_rule(value)
+    _, parts = parse_recurrence_rule(value)
 
     freq = parts.get('FREQ', '')
     if freq in _UNSUPPORTED_RRULE_FREQS:
@@ -240,6 +341,9 @@ def validate_recurrence_rule(value):
         rrulestr(value, dtstart=_validation_dtstart_for(parts))
     except (ValueError, TypeError) as ex:
         raise ValidationError(f'Invalid RRULE: {ex}')
+
+    if not occurs_within_horizon(value, _RRULE_VALIDATION_DTSTART):
+        raise ValidationError(f'Invalid RRULE: it has no dates within {enums.RECURRENCE_HORIZON_YEARS} years.')
 
     if freq in ('MONTHLY', 'YEARLY'):
         _validate_sfcalendar_monthly_or_yearly(freq, parts)

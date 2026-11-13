@@ -1,8 +1,11 @@
 import datetime
 
+from dateutil.relativedelta import relativedelta
+from dateutil.rrule import rrulestr
 from django.utils import timezone
 
 from helium.common import enums
+from helium.common.utils.validators import join_recurrence_rule, occurs_within_horizon, parse_recurrence_rule
 
 
 def local_midnight_as_utc(date, tz):
@@ -59,6 +62,156 @@ def event_in_range(event, _from, to):
         return False
 
     return True
+
+
+def occurrence_end(first_start, first_end, occurrence_start, tz, all_day=False):
+    """
+    Return the end of the occurrence starting at ``occurrence_start`` in a series whose first occurrence runs
+    ``first_start`` to ``first_end``. A timed occurrence keeps the first one's duration; an all-day occurrence
+    keeps its span of local dates, ending on the exclusive next local midnight, as a fixed 24 hours would drift on
+    a DST day.
+
+    :param first_start: The aware first occurrence start.
+    :param first_end: The aware first occurrence end.
+    :param occurrence_start: The aware start of the occurrence to end.
+    :param tz: A `tzinfo` (e.g. `ZoneInfo`), the zone the series is expanded in.
+    :param all_day: Whether the series is all-day.
+    :return: The aware UTC end of the occurrence.
+    """
+    if not all_day:
+        return occurrence_start.astimezone(datetime.timezone.utc) + (first_end - first_start)
+
+    span_days = max((first_end.astimezone(tz).date() - first_start.astimezone(tz).date()).days, 1)
+    return local_midnight_as_utc(occurrence_start.astimezone(tz).date() + datetime.timedelta(days=span_days), tz)
+
+
+def expand_recurrence(rule, start, end, tz, all_day=False, exception_dates=None, not_before=None):
+    """
+    Lazily expand an RRULE series into its ``(start, end)`` occurrences as aware UTC datetimes, in series order.
+
+    Occurrences keep their wall-clock time in ``tz`` across DST. An all-day series expands on local dates; see
+    :func:`occurrence_end` for how each ``end`` is derived. An occurrence is skipped when an exception falls on
+    its local date. A date-only ``UNTIL`` includes that whole local day, as SfCalendar reads it. Expansion
+    stops at ``enums.RECURRENCE_HORIZON_YEARS`` from now, and a series with no occurrence within
+    ``enums.RECURRENCE_HORIZON_YEARS`` of its start yields nothing.
+
+    :param rule: The RRULE string, bare or ``RRULE:`` prefixed.
+    :param start: The aware first occurrence start.
+    :param end: The aware first occurrence end.
+    :param tz: A `tzinfo` (e.g. `ZoneInfo`), the zone the series is expanded in.
+    :param all_day: Whether the series is all-day.
+    :param exception_dates: ISO-8601 datetimes (iCal EXDATE) whose local date is skipped, or None.
+    :param not_before: Aware datetime; occurrences starting before it are not yielded, or None.
+    :return: A generator of ``(start, end)`` UTC tuples.
+    """
+    local_start = start.astimezone(tz)
+    skipped_dates = {datetime.datetime.fromisoformat(iso).astimezone(tz).date() for iso in exception_dates or []}
+
+    _, parts = parse_recurrence_rule(rule)
+    until = parts.get('UNTIL', '')
+    if len(until) == len('YYYYMMDD'):
+        parts['UNTIL'] = f'{until}T235959'
+    dtstart = local_start if until.endswith('Z') else local_start.replace(tzinfo=None)
+    if not occurs_within_horizon(rule, dtstart):
+        return
+    horizon = timezone.now() + relativedelta(years=enums.RECURRENCE_HORIZON_YEARS)
+
+    for occurrence in rrulestr(join_recurrence_rule('', parts), dtstart=dtstart):
+        occurrence = occurrence.replace(tzinfo=tz) if occurrence.tzinfo is None else occurrence.astimezone(tz)
+        if occurrence > horizon:
+            return
+        if occurrence.date() in skipped_dates:
+            continue
+
+        if all_day:
+            occurrence_start = local_midnight_as_utc(occurrence, tz)
+        else:
+            occurrence_start = occurrence.astimezone(datetime.timezone.utc)
+
+        if not_before is None or occurrence_start >= not_before:
+            yield occurrence_start, occurrence_end(start, end, occurrence_start, tz, all_day)
+
+
+def shifted_series_bounds(series_start, occurrence_start, new_start, new_end, tz, all_day=False):
+    """
+    Return where a series starting at ``series_start`` starts and ends once one of its occurrences moves from
+    ``occurrence_start`` to ``new_start``..``new_end``: the same number of local days later, at the new wall-clock
+    time, with the new duration (all day, the new span of dates).
+
+    :param series_start: The aware series start.
+    :param occurrence_start: The aware start of the occurrence that moved.
+    :param new_start: The aware new start of that occurrence.
+    :param new_end: The aware new end of that occurrence.
+    :param tz: A `tzinfo` (e.g. `ZoneInfo`), the zone the series is expanded in.
+    :param all_day: Whether the series is all-day.
+    :return: The aware UTC ``(start, end)`` of the series.
+    """
+    new_local = new_start.astimezone(tz)
+    day_shift = (new_local.date() - occurrence_start.astimezone(tz).date()).days
+    series_date = series_start.astimezone(tz).date() + datetime.timedelta(days=day_shift)
+
+    if all_day:
+        start = local_midnight_as_utc(series_date, tz)
+    else:
+        start = local_time_as_utc(series_date, new_local.time(), tz)
+    return start, occurrence_end(new_start, new_end, start, tz, all_day)
+
+
+def shift_exception_dates(exception_dates, old_start, new_start, tz):
+    """
+    Move a series' exception dates by the wall-clock distance its start moved in ``tz``, so each still lands on the
+    same occurrence of the moved series.
+
+    :param exception_dates: ISO-8601 datetimes (iCal EXDATE), or None.
+    :param old_start: The aware series start before the move.
+    :param new_start: The aware series start after the move.
+    :param tz: A `tzinfo` (e.g. `ZoneInfo`), the zone the series is expanded in.
+    :return: The shifted dates as ``Z``-suffixed ISO-8601 strings, or None when given none.
+    """
+    if not exception_dates:
+        return exception_dates
+
+    delta = wall_clock_distance(old_start, new_start, tz)
+    shifted = []
+    for iso in exception_dates:
+        local = datetime.datetime.fromisoformat(iso).astimezone(tz).replace(tzinfo=None) + delta
+        shifted.append(as_utc_iso(local.replace(tzinfo=tz)))
+    return shifted
+
+
+def wall_clock_distance(old, new, tz):
+    """
+    Return how far the wall clock moves in ``tz`` from ``old`` to ``new``, which across a DST change differs from
+    the elapsed time by the change.
+
+    :param old: An aware datetime.
+    :param new: An aware datetime.
+    :param tz: A `tzinfo` (e.g. `ZoneInfo`) the wall clock is read in.
+    :return: The `timedelta` between the two wall-clock readings.
+    """
+    return new.astimezone(tz).replace(tzinfo=None) - old.astimezone(tz).replace(tzinfo=None)
+
+
+def end_of_day_until(date, tz):
+    """
+    Format the end of ``date`` in ``tz`` as an iCal ``UNTIL`` value, the last moment a series may occur that day.
+
+    :param date: A `date`.
+    :param tz: A `tzinfo` (e.g. `ZoneInfo`), the zone the series is expanded in.
+    :return: e.g. "20261218T075959Z".
+    """
+    end = local_time_as_utc(date, datetime.time(23, 59, 59), tz)
+    return end.strftime('%Y%m%dT%H%M%SZ')
+
+
+def as_utc_iso(instant):
+    """
+    Format an aware datetime as the ``Z``-suffixed ISO-8601 UTC string the API stores and serves.
+
+    :param instant: An aware datetime.
+    :return: e.g. "2026-09-07T16:00:00Z".
+    """
+    return instant.astimezone(datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
 
 
 def earliest_local_date():

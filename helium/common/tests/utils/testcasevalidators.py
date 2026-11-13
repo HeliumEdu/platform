@@ -7,6 +7,8 @@ from helium.auth.tests.helpers import userhelper
 from helium.common.utils import validators
 from helium.common.utils.validators import (
     infer_byday_for_weekly_rrule,
+    occurs_within_horizon,
+    shift_recurrence_rule,
     validate_fraction,
     validate_quill_delta,
     validate_recurrence_rule,
@@ -128,6 +130,17 @@ class TestCaseValidateRecurrenceRule(TestCase):
         with self.assertRaises(ValidationError):
             validate_recurrence_rule('FREQ=WEEKLY;BYDAY=MO;WKST=SU')
 
+    def test_repeating_more_than_once_a_day_rejected(self):
+        for rule in ('FREQ=DAILY;BYHOUR=9,14', 'FREQ=DAILY;BYMINUTE=0,30', 'FREQ=DAILY;BYSECOND=0,30',
+                     'FREQ=WEEKLY;BYDAY=MO;BYHOUR=9'):
+            with self.subTest(rule=rule):
+                # WHEN
+                with self.assertRaises(ValidationError) as raised:
+                    validate_recurrence_rule(rule)
+
+                # THEN
+                self.assertIn('is not supported', raised.exception.messages[0])
+
     def test_monthly_and_yearly_rules_sfcalendar_expands_pass(self):
         for rule in ('FREQ=MONTHLY;BYMONTHDAY=15', 'FREQ=MONTHLY;BYMONTHDAY=-1', 'FREQ=MONTHLY;BYMONTHDAY=31',
                      'FREQ=MONTHLY;BYDAY=TU;BYSETPOS=2', 'FREQ=MONTHLY;BYDAY=FR;BYSETPOS=-1',
@@ -163,12 +176,55 @@ class TestCaseValidateRecurrenceRule(TestCase):
                 # THEN
                 self.assertTrue(raised.exception.messages)
 
+    def test_rule_with_no_dates_is_rejected(self):
+        # WHEN
+        with self.assertRaises(ValidationError) as raised:
+            validate_recurrence_rule('FREQ=DAILY;BYMONTH=2;BYMONTHDAY=30')
+
+        # THEN
+        self.assertEqual(raised.exception.messages, ['Invalid RRULE: it has no dates within 5 years.'])
+
     def test_daily_and_weekly_rules_unaffected_by_monthly_and_yearly_checks(self):
         for rule in ('FREQ=DAILY', 'FREQ=DAILY;INTERVAL=2;COUNT=10', 'FREQ=WEEKLY',
                      'FREQ=WEEKLY;BYDAY=MO,WE,FR', 'FREQ=WEEKLY;INTERVAL=2;BYDAY=TU'):
             with self.subTest(rule=rule):
                 # WHEN
                 validate_recurrence_rule(rule)
+
+
+class TestCaseOccursWithinHorizon(TestCase):
+    def test_rule_that_never_produces_a_date_answers_quickly(self):
+        # GIVEN
+        started = datetime.datetime.now()
+
+        # WHEN
+        occurs = occurs_within_horizon('FREQ=DAILY;BYMONTH=2;BYMONTHDAY=30;UNTIL=20270101T000000',
+                                       datetime.datetime(2026, 9, 1, 9))
+
+        # THEN
+        self.assertFalse(occurs)
+        self.assertLess(datetime.datetime.now() - started, datetime.timedelta(seconds=1))
+
+    def test_leap_day_rule_occurs_from_a_start_three_years_before_one(self):
+        # WHEN
+        occurs = occurs_within_horizon('FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29', datetime.datetime(2025, 3, 1, 9))
+
+        # THEN
+        self.assertTrue(occurs)
+
+    def test_rule_whose_first_date_is_past_the_horizon_does_not_occur(self):
+        # WHEN
+        occurs = occurs_within_horizon('FREQ=MONTHLY;BYMONTH=2;BYDAY=5MO', datetime.datetime(2026, 9, 1, 9))
+
+        # THEN
+        self.assertFalse(occurs)
+
+    def test_count_and_until_are_ignored(self):
+        # WHEN
+        occurs = occurs_within_horizon('FREQ=WEEKLY;BYDAY=MO;COUNT=1;UNTIL=20000101', datetime.datetime(2026, 9, 1, 9))
+
+        # THEN
+        self.assertTrue(occurs)
 
 
 class TestCasePrepareRecurrenceRule(TestCase):
@@ -204,9 +260,8 @@ class TestCaseNormalizeRecurrenceRuleForUser(TestCase):
                                     ('America/Los_Angeles', 'FREQ=MONTHLY;BYMONTHDAY=13')):
             with self.subTest(zone=zone_name):
                 # GIVEN
-                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com')
-                user.settings.time_zone = zone_name
-                user.settings.save()
+                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com',
+                                                      time_zone=zone_name)
                 start = datetime.datetime(2026, 10, 13, 23, 30, tzinfo=datetime.timezone.utc)
 
                 # WHEN
@@ -327,3 +382,85 @@ class TestCaseInferBydayForWeeklyRrule(TestCase):
             infer_byday_for_weekly_rrule('RRULE:FREQ=WEEKLY', datetime.datetime(2025, 9, 1)),
             'RRULE:FREQ=WEEKLY;BYDAY=MO',
         )
+
+
+class TestCaseShiftRecurrenceRule(TestCase):
+    def test_weekly_weekdays_shift_with_the_start_and_wrap_the_week(self):
+        # GIVEN
+        old_start = datetime.datetime(2026, 9, 12, 9, 0)
+        new_start = datetime.datetime(2026, 9, 13, 9, 0)
+
+        # WHEN
+        shifted = shift_recurrence_rule('FREQ=WEEKLY;BYDAY=TU,SA', old_start, new_start)
+
+        # THEN
+        self.assertEqual(shifted, 'FREQ=WEEKLY;BYDAY=WE,SU')
+
+    def test_same_weekday_leaves_byday_unchanged(self):
+        # GIVEN
+        old_start = datetime.datetime(2026, 9, 7, 9, 0)
+        new_start = datetime.datetime(2026, 9, 14, 15, 0)
+
+        # WHEN
+        shifted = shift_recurrence_rule('FREQ=WEEKLY;BYDAY=MO,WE', old_start, new_start)
+
+        # THEN
+        self.assertEqual(shifted, 'FREQ=WEEKLY;BYDAY=MO,WE')
+
+    def test_monthday_and_month_that_matched_the_start_follow_it(self):
+        # GIVEN
+        old_start = datetime.datetime(2026, 9, 15, 9, 0)
+        new_start = datetime.datetime(2026, 10, 17, 9, 0)
+
+        # WHEN
+        shifted = shift_recurrence_rule('FREQ=YEARLY;BYMONTH=9;BYMONTHDAY=15', old_start, new_start)
+
+        # THEN
+        self.assertEqual(shifted, 'FREQ=YEARLY;BYMONTH=10;BYMONTHDAY=17')
+
+    def test_last_day_of_month_is_left_alone(self):
+        # GIVEN
+        old_start = datetime.datetime(2026, 9, 30, 9, 0)
+        new_start = datetime.datetime(2026, 10, 2, 9, 0)
+
+        # WHEN
+        shifted = shift_recurrence_rule('FREQ=MONTHLY;BYMONTHDAY=-1', old_start, new_start)
+
+        # THEN
+        self.assertEqual(shifted, 'FREQ=MONTHLY;BYMONTHDAY=-1')
+
+    def test_ordinal_weekday_codes_are_left_alone(self):
+        # GIVEN
+        old_start = datetime.datetime(2026, 9, 8, 9, 0)
+        new_start = datetime.datetime(2026, 9, 9, 9, 0)
+
+        # WHEN
+        shifted = shift_recurrence_rule('FREQ=MONTHLY;BYDAY=2TU', old_start, new_start)
+
+        # THEN
+        self.assertEqual(shifted, 'FREQ=MONTHLY;BYDAY=2TU')
+
+    def test_until_moves_by_the_same_distance_in_each_format(self):
+        # GIVEN
+        old_start = datetime.datetime(2026, 9, 7, 9, 0)
+        new_start = datetime.datetime(2026, 9, 9, 10, 30)
+        for until, expected in (('20261201T235959Z', '20261204T012959Z'),
+                                ('20261201T235959', '20261204T012959'),
+                                ('20261201', '20261203')):
+            with self.subTest(until=until):
+                # WHEN
+                shifted = shift_recurrence_rule(f'FREQ=DAILY;UNTIL={until}', old_start, new_start)
+
+                # THEN
+                self.assertEqual(shifted, f'FREQ=DAILY;UNTIL={expected}')
+
+    def test_rrule_prefix_preserved(self):
+        # GIVEN
+        old_start = datetime.datetime(2026, 9, 7, 9, 0)
+        new_start = datetime.datetime(2026, 9, 8, 9, 0)
+
+        # WHEN
+        shifted = shift_recurrence_rule('RRULE:FREQ=WEEKLY;BYDAY=MO', old_start, new_start)
+
+        # THEN
+        self.assertEqual(shifted, 'RRULE:FREQ=WEEKLY;BYDAY=TU')

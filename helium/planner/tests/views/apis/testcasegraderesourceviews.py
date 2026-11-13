@@ -1,9 +1,13 @@
+import datetime
+
 from dateutil import parser
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common import enums
+from helium.common.tests.helpers import commonhelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, categoryhelper, homeworkhelper
 
 
@@ -22,8 +26,7 @@ class TestCaseGradeResourceViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_grades(self):
         # GIVEN
@@ -174,6 +177,29 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(100, response.data['assignment']['points_possible'])
         self.assertIsNone(response.data['total_weight_accounted_for'])
 
+    def test_needed_grade_weighted_solves_for_the_last_remaining_occurrence_of_a_repeating_homework(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+        homework = categoryhelper.given_category_exists(course, title='Homework', weight=60)
+        exams = categoryhelper.given_category_exists(course, title='Exams', weight=40)
+        homeworkhelper.given_homework_exists(course, category=homework, completed=True, current_grade='45/50')
+        homeworkhelper.given_homework_exists(course, category=exams, completed=True, current_grade='40/50')
+        series = homeworkhelper.given_homework_exists(course, title='Unit exam', category=exams,
+                                                      recurrence_rule='FREQ=WEEKLY;BYDAY=MO;COUNT=2',
+                                                      exception_dates=['2017-05-08T16:00:00Z'])
+
+        # WHEN
+        response = self.client.get(reverse('planner_resource_grades_needed'),
+                                   {'course': course.pk, 'target': exams.pk, 'desired_grade': 85})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual('achievable', response.data['state'])
+        self.assertEqual(series.pk, response.data['assignment']['id'])
+        self.assertAlmostEqual(76.25, response.data['assignment']['needed_points'], places=4)
+        self.assertEqual(100, response.data['assignment']['points_possible'])
+
     def test_needed_grade_points_based_solves_for_the_chosen_assignment(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -259,3 +285,85 @@ class TestCaseGradeResourceViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_grades_includes_gpa(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        graded = coursehelper.given_graded_course_exists(course_group, 85, credits=3)
+        ungraded = coursehelper.given_course_exists(course_group, credits=4)
+
+        # WHEN
+        response = self.client.get(reverse('planner_resource_grades'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course_group_data = response.data['course_groups'][0]
+        self.assertEqual(course_group_data['gpa'], 3.0)
+        self.assertEqual(course_group_data['grade_scale'],
+                         enums.GRADE_SCALE_TEMPLATES[enums.GRADE_SCALE_4_0]['scale'])
+        self.assertTrue(course_group_data['in_cumulative_gpa'])
+        courses = {course['id']: course for course in course_group_data['courses']}
+        self.assertEqual(courses[graded.pk]['credits'], 3)
+        self.assertEqual(courses[graded.pk]['grade_point'], 3.0)
+        self.assertEqual(courses[ungraded.pk]['grade_point'], -1)
+        self.assertEqual(response.data['cumulative_gpa'], 3.0)
+
+    def test_cumulative_gpa_pools_classes_of_groups_on_the_most_recent_scale(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        fall = coursegrouphelper.given_course_group_exists(user, title='Fall', start_date=datetime.date(2017, 8, 21))
+        spring = coursegrouphelper.given_course_group_exists(user, title='Spring', start_date=datetime.date(2018, 1, 8))
+        abroad = coursegrouphelper.given_course_group_exists(user, title='Abroad',
+                                                             start_date=datetime.date(2017, 5, 1),
+                                                             grade_scale_template=enums.GRADE_SCALE_4_5)
+        example = coursegrouphelper.given_course_group_exists(user, title='Example',
+                                                              start_date=datetime.date(2019, 1, 1),
+                                                              example_schedule=True)
+        coursehelper.given_graded_course_exists(fall, 95, credits=3)
+        coursehelper.given_graded_course_exists(spring, 85, credits=1)
+        coursehelper.given_graded_course_exists(abroad, 60, credits=4)
+        coursehelper.given_graded_course_exists(example, 60, credits=4)
+
+        # WHEN
+        response = self.client.get(reverse('planner_resource_grades'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course_groups = {course_group['title']: course_group for course_group in response.data['course_groups']}
+        self.assertEqual(course_groups['Fall']['gpa'], 4.0)
+        self.assertEqual(course_groups['Spring']['gpa'], 3.0)
+        self.assertEqual({title: course_group['in_cumulative_gpa'] for title, course_group in course_groups.items()},
+                         {'Fall': True, 'Spring': True, 'Abroad': False, 'Example': False})
+        self.assertEqual({title: course_group['example_schedule'] for title, course_group in course_groups.items()},
+                         {'Fall': False, 'Spring': False, 'Abroad': False, 'Example': True})
+        self.assertEqual(response.data['cumulative_gpa'], 3.75)
+
+    def test_cumulative_gpa_without_groups(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.get(reverse('planner_resource_grades'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['course_groups'], [])
+        self.assertEqual(response.data['cumulative_gpa'], -1)
+
+    def test_no_gpa_without_credits(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        graded = coursehelper.given_graded_course_exists(course_group, 85)
+
+        # WHEN
+        response = self.client.get(reverse('planner_resource_grades'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course_group_data = response.data['course_groups'][0]
+        self.assertEqual(course_group_data['gpa'], -1)
+        self.assertEqual(course_group_data['courses'][0]['id'], graded.pk)
+        self.assertEqual(course_group_data['courses'][0]['grade_point'], 3.0)
+        self.assertEqual(response.data['cumulative_gpa'], -1)

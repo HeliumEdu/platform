@@ -1,8 +1,6 @@
 import datetime
 import io
 import json
-import os
-import tempfile
 import zipfile
 from unittest import mock
 from zoneinfo import ZoneInfo
@@ -18,11 +16,13 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.common.tests.helpers import commonhelper
+from helium.common.utils import gradeutils
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, ResourceGroup, Resource, Event, \
     Homework, Reminder, Note
-from helium.importexport.tests.helpers import exampleschedulehelper
+from helium.importexport.tests.helpers import exampleschedulehelper, importexporthelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     resourcegrouphelper, resourcehelper, eventhelper, homeworkhelper, attachmenthelper, reminderhelper, notehelper
 
@@ -39,13 +39,10 @@ class TestCaseImportExportViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def _import_sample_twice(self, as_zip=False):
-        with open(os.path.join(os.path.dirname(__file__),
-                               os.path.join('../../resources', 'sample.json')), 'rb') as fp:
-            content = fp.read()
+        content = importexporthelper.given_resource_upload('sample.json').read()
 
         if as_zip:
             buffer = io.BytesIO()
@@ -56,8 +53,7 @@ class TestCaseImportExportViews(APITestCase):
             filename = 'sample.json'
 
         # Uploaded twice so the key IDs do not line up and the remapping is properly tested
-        return [self.client.post(reverse('importexport_import'),
-                                 {'file[]': [SimpleUploadedFile(filename, content)]})
+        return [importexporthelper.post_import_upload(self.client, SimpleUploadedFile(filename, content))
                 for _ in range(2)]
 
     def _verify_sample_import(self, user, response1, response2):
@@ -271,11 +267,7 @@ class TestCaseImportExportViews(APITestCase):
         }
 
         # WHEN
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(import_data, f)
-            f.flush()
-            with open(f.name, 'rb') as fp:
-                response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        response = importexporthelper.post_import(self.client, import_data)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -304,11 +296,7 @@ class TestCaseImportExportViews(APITestCase):
         }
 
         # WHEN
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(import_data, f)
-            f.flush()
-            with open(f.name, 'rb') as fp:
-                response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        response = importexporthelper.post_import(self.client, import_data)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -334,44 +322,20 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Invalid JSON', response.data['details'])
-        self.assertEqual(ExternalCalendar.objects.count(), 0)
-        self.assertEqual(CourseGroup.objects.count(), 0)
-        self.assertEqual(Course.objects.count(), 0)
-        self.assertEqual(CourseSchedule.objects.count(), 0)
-        self.assertEqual(Category.objects.count(), 0)
-        self.assertEqual(ResourceGroup.objects.count(), 0)
-        self.assertEqual(Resource.objects.count(), 0)
-        self.assertEqual(Event.objects.count(), 0)
-        self.assertEqual(Homework.objects.count(), 0)
-        self.assertEqual(Reminder.objects.count(), 0)
+        importexporthelper.verify_nothing_imported(self)
 
     def test_import_multiple_files_rejected(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        sample_path = os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'sample.json'))
+        uploads = [importexporthelper.given_resource_upload('sample.json') for _ in range(2)]
 
         # WHEN
-        with open(sample_path) as fp1, open(sample_path) as fp2:
-            data = {
-                'file[]': [fp1, fp2]
-            }
-            response = self.client.post(
-                reverse('importexport_import'),
-                data)
+        response = self.client.post(reverse('importexport_import'), {'file[]': uploads})
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['details'], 'Upload exactly one file per request.')
-        self.assertEqual(ExternalCalendar.objects.count(), 0)
-        self.assertEqual(CourseGroup.objects.count(), 0)
-        self.assertEqual(Course.objects.count(), 0)
-        self.assertEqual(CourseSchedule.objects.count(), 0)
-        self.assertEqual(Category.objects.count(), 0)
-        self.assertEqual(ResourceGroup.objects.count(), 0)
-        self.assertEqual(Resource.objects.count(), 0)
-        self.assertEqual(Event.objects.count(), 0)
-        self.assertEqual(Homework.objects.count(), 0)
-        self.assertEqual(Reminder.objects.count(), 0)
+        importexporthelper.verify_nothing_imported(self)
 
     def test_import_no_files_rejected(self):
         # GIVEN
@@ -392,28 +356,13 @@ class TestCaseImportExportViews(APITestCase):
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
-        with open(os.path.join(os.path.dirname(__file__), os.path.join('../../resources', 'invalidsample.json'))) as fp:
-            data = {
-                'file[]': [fp]
-            }
-            response = self.client.post(
-                reverse('importexport_import'),
-                data)
+        response = importexporthelper.post_import_resource(self.client, 'invalidsample.json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('homework', response.data)
         self.assertIn('Unresolved `course`', str(response.data['homework']))
-        self.assertEqual(ExternalCalendar.objects.count(), 0)
-        self.assertEqual(CourseGroup.objects.count(), 0)
-        self.assertEqual(Course.objects.count(), 0)
-        self.assertEqual(CourseSchedule.objects.count(), 0)
-        self.assertEqual(Category.objects.count(), 0)
-        self.assertEqual(ResourceGroup.objects.count(), 0)
-        self.assertEqual(Resource.objects.count(), 0)
-        self.assertEqual(Event.objects.count(), 0)
-        self.assertEqual(Homework.objects.count(), 0)
-        self.assertEqual(Reminder.objects.count(), 0)
+        importexporthelper.verify_nothing_imported(self)
 
     def test_export_success(self):
         # GIVEN
@@ -507,9 +456,7 @@ class TestCaseImportExportViews(APITestCase):
         )
 
         # WHEN
-        export_response = self.client.get(reverse('importexport_export'))
-        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
-        export_data = json.loads(export_response.content.decode('utf-8'))
+        export_data = importexporthelper.get_export_data(self)
 
         # THEN
         self.assertEqual(len(export_data['events']), 1)
@@ -520,15 +467,7 @@ class TestCaseImportExportViews(APITestCase):
         )
 
         # WHEN
-        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_rrule_roundtrip.json')
-        try:
-            with open(upload_path, 'w') as fp:
-                json.dump(export_data, fp)
-            with open(upload_path) as fp:
-                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
-        finally:
-            if os.path.exists(upload_path):
-                os.remove(upload_path)
+        import_response = importexporthelper.post_import(self.client, export_data, filename='_rrule_roundtrip.json')
 
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
@@ -556,24 +495,76 @@ class TestCaseImportExportViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         eventhelper.given_event_exists(user, title='Monthly series', recurrence_rule='FREQ=MONTHLY;BYDAY=MO,WE')
-        export_data = json.loads(self.client.get(reverse('importexport_export')).content.decode('utf-8'))
+        eventhelper.given_event_exists(user, title='Hourly series', recurrence_rule='FREQ=DAILY;BYHOUR=9,15',
+                                       exception_dates=['2017-05-09T12:00:00Z'])
+        export_data = importexporthelper.get_export_data(self, verify_status=False)
 
         # WHEN
-        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_unsupported_rrule.json')
-        try:
-            with open(upload_path, 'w') as fp:
-                json.dump(export_data, fp)
-            with open(upload_path) as fp:
-                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
-        finally:
-            if os.path.exists(upload_path):
-                os.remove(upload_path)
+        import_response = importexporthelper.post_import(self.client, export_data, filename='_unsupported_rrule.json')
 
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
-        imported = Event.objects.filter(user=user).order_by('pk').last()
-        self.assertEqual(imported.title, 'Monthly series')
-        self.assertIsNone(imported.recurrence_rule, 'the event is kept as a single occurrence')
+        for title in ('Monthly series', 'Hourly series'):
+            imported = Event.objects.filter(user=user, title=title).order_by('pk').last()
+            self.assertIsNone(imported.recurrence_rule, 'the event is kept as a single occurrence')
+            self.assertIsNone(imported.exception_dates)
+
+    def test_export_import_preserves_homework_recurrence(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+        homeworkhelper.given_homework_exists(
+            course,
+            start=datetime.datetime(2017, 4, 17, 16, 0, 0, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2017, 4, 17, 18, 0, 0, tzinfo=datetime.timezone.utc),
+            recurrence_rule='FREQ=WEEKLY;BYDAY=MO;UNTIL=20170508T235959Z',
+            exception_dates=['2017-04-24T16:00:00Z'])
+
+        # WHEN
+        export_data = importexporthelper.get_export_data(self, verify_status=False)
+        import_response = importexporthelper.post_import(self.client, export_data, filename='_homework_rrule_roundtrip.json')
+
+        # THEN
+        self.assertEqual(export_data['homework'][0]['recurrence_rule'], 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20170508T235959Z')
+        self.assertEqual(export_data['homework'][0]['exception_dates'], ['2017-04-24T16:00:00Z'])
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK, import_response.data)
+        imported = Homework.objects.for_user(user.pk).order_by('pk').last()
+        self.assertNotEqual(imported.course_id, course.pk)
+        self.assertEqual(imported.recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO;UNTIL=20170508T235959Z')
+        self.assertEqual(imported.exception_dates, ['2017-04-24T16:00:00Z'])
+
+    def test_import_with_an_unsupported_homework_recurrence_rule_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+        homeworkhelper.given_homework_exists(course, recurrence_rule='FREQ=MONTHLY;BYDAY=MO,WE')
+        export_data = importexporthelper.get_export_data(self, verify_status=False)
+
+        # WHEN
+        import_response = importexporthelper.post_import(self.client, export_data, filename='_unsupported_homework_rrule.json')
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(f"homework id {export_data['homework'][0]['id']}, recurrence_rule",
+                      str(import_response.data['homework']))
+        self.assertEqual(Homework.objects.for_user(user.pk).count(), 1)
+
+    def test_import_with_a_homework_repeating_too_often_names_the_homework(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user),
+                                                  end_date=datetime.date(2019, 5, 8))
+        homeworkhelper.given_homework_exists(course, recurrence_rule='FREQ=DAILY')
+        export_data = importexporthelper.get_export_data(self, verify_status=False)
+
+        # WHEN
+        import_response = importexporthelper.post_import(self.client, export_data, filename='_too_many_occurrences.json')
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual([f"homework id {export_data['homework'][0]['id']}, recurrence_rule: It repeats more than "
+                          f"366 times."], [str(message) for message in import_response.data['homework']])
+        self.assertEqual(Homework.objects.for_user(user.pk).count(), 1)
 
     def test_export_import_preserves_multiple_schedules_per_course(self):
         # GIVEN
@@ -584,23 +575,13 @@ class TestCaseImportExportViews(APITestCase):
         courseschedulehelper.given_course_schedule_exists(course, days_of_week='0010100')
 
         # WHEN
-        export_response = self.client.get(reverse('importexport_export'))
-        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
-        export_data = json.loads(export_response.content.decode('utf-8'))
+        export_data = importexporthelper.get_export_data(self)
 
         # THEN
         self.assertEqual(len(export_data['course_schedules']), 2)
 
         # WHEN
-        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_multi_schedule_roundtrip.json')
-        try:
-            with open(upload_path, 'w') as fp:
-                json.dump(export_data, fp)
-            with open(upload_path) as fp:
-                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
-        finally:
-            if os.path.exists(upload_path):
-                os.remove(upload_path)
+        import_response = importexporthelper.post_import(self.client, export_data, filename='_multi_schedule_roundtrip.json')
 
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
@@ -618,23 +599,13 @@ class TestCaseImportExportViews(APITestCase):
         notehelper.given_note_linked_to_course(user, course, title='Class Note')
 
         # WHEN
-        export_response = self.client.get(reverse('importexport_export'))
-        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
-        export_data = json.loads(export_response.content.decode('utf-8'))
+        export_data = importexporthelper.get_export_data(self)
 
         # THEN
         self.assertEqual(export_data['notes'][0]['courses'], [course.pk])
 
         # WHEN
-        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_class_note_roundtrip.json')
-        try:
-            with open(upload_path, 'w') as fp:
-                json.dump(export_data, fp)
-            with open(upload_path) as fp:
-                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
-        finally:
-            if os.path.exists(upload_path):
-                os.remove(upload_path)
+        import_response = importexporthelper.post_import(self.client, export_data, filename='_class_note_roundtrip.json')
 
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
@@ -652,17 +623,14 @@ class TestCaseImportExportViews(APITestCase):
             cycle_slots=[{'indices': [1, 3], 'start_time': '09:00:00', 'end_time': '09:50:00'}])
 
         # WHEN
-        export_response = self.client.get(reverse('importexport_export'))
-        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
-        export_data = json.loads(export_response.content.decode('utf-8'))
+        export_data = importexporthelper.get_export_data(self)
 
         # THEN
         self.assertEqual(len(export_data['course_schedules']), 1)
         self.assertEqual(export_data['course_schedules'][0]['cycle_length'], 6)
 
         # WHEN
-        upload = SimpleUploadedFile('roundtrip.json', json.dumps(export_data).encode(), content_type='application/json')
-        import_response = self.client.post(reverse('importexport_import'), {'file[]': [upload]})
+        import_response = importexporthelper.post_import(self.client, export_data, filename='roundtrip.json')
 
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
@@ -682,9 +650,7 @@ class TestCaseImportExportViews(APITestCase):
             course, days_of_week='0100000', week_offset=1, anchor_date=datetime.date(2026, 3, 2))
 
         # WHEN
-        export_response = self.client.get(reverse('importexport_export'))
-        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
-        export_data = json.loads(export_response.content.decode('utf-8'))
+        export_data = importexporthelper.get_export_data(self)
 
         # THEN
         self.assertEqual(len(export_data['course_schedules']), 1)
@@ -692,8 +658,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(export_data['course_schedules'][0]['week_offset'], 1)
 
         # WHEN
-        upload = SimpleUploadedFile('roundtrip.json', json.dumps(export_data).encode(), content_type='application/json')
-        import_response = self.client.post(reverse('importexport_import'), {'file[]': [upload]})
+        import_response = importexporthelper.post_import(self.client, export_data, filename='roundtrip.json')
 
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
@@ -714,17 +679,14 @@ class TestCaseImportExportViews(APITestCase):
         schedule.save()
 
         # WHEN
-        export_response = self.client.get(reverse('importexport_export'))
-        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
-        export_data = json.loads(export_response.content.decode('utf-8'))
+        export_data = importexporthelper.get_export_data(self)
 
         # THEN
         self.assertEqual(export_data['course_schedules'][0]['start_date'], '2026-03-09')
         self.assertEqual(export_data['course_schedules'][0]['end_date'], '2026-04-24')
 
         # WHEN
-        upload = SimpleUploadedFile('roundtrip.json', json.dumps(export_data).encode(), content_type='application/json')
-        import_response = self.client.post(reverse('importexport_import'), {'file[]': [upload]})
+        import_response = importexporthelper.post_import(self.client, export_data, filename='roundtrip.json')
 
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
@@ -743,16 +705,13 @@ class TestCaseImportExportViews(APITestCase):
         schedule.save()
 
         # WHEN
-        export_response = self.client.get(reverse('importexport_export'))
-        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
-        export_data = json.loads(export_response.content.decode('utf-8'))
+        export_data = importexporthelper.get_export_data(self)
 
         # THEN
         self.assertEqual(export_data['course_schedules'][0]['template'], enums.AB_DAY)
 
         # WHEN
-        upload = SimpleUploadedFile('roundtrip.json', json.dumps(export_data).encode(), content_type='application/json')
-        import_response = self.client.post(reverse('importexport_import'), {'file[]': [upload]})
+        import_response = importexporthelper.post_import(self.client, export_data, filename='roundtrip.json')
 
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
@@ -764,33 +723,21 @@ class TestCaseImportExportViews(APITestCase):
     def test_export_import_preserves_homework_completed_at(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
         homework = homeworkhelper.given_homework_exists(course, category=category, completed=True,
                                                         current_grade='90/100')
         original_completed_at = datetime.datetime(2017, 3, 1, 9, 30, tzinfo=datetime.timezone.utc)
         Homework.objects.filter(pk=homework.pk).update(completed_at=original_completed_at)
 
         # WHEN
-        export_response = self.client.get(reverse('importexport_export'))
-        self.assertEqual(export_response.status_code, status.HTTP_200_OK)
-        export_data = json.loads(export_response.content.decode('utf-8'))
+        export_data = importexporthelper.get_export_data(self)
 
         # THEN
         self.assertEqual(len(export_data['homework']), 1)
         self.assertEqual(parse_datetime(export_data['homework'][0]['completed_at']), original_completed_at)
 
         # WHEN
-        upload_path = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', '_completed_at_roundtrip.json')
-        try:
-            with open(upload_path, 'w') as fp:
-                json.dump(export_data, fp)
-            with open(upload_path) as fp:
-                import_response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
-        finally:
-            if os.path.exists(upload_path):
-                os.remove(upload_path)
+        import_response = importexporthelper.post_import(self.client, export_data, filename='_completed_at_roundtrip.json')
 
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_200_OK)
@@ -907,9 +854,7 @@ class TestCaseImportExportViews(APITestCase):
         }
 
         # WHEN
-        upload = SimpleUploadedFile('payload.json', json.dumps(payload).encode('utf-8'),
-                                    content_type='application/json')
-        response = self.client.post(reverse('importexport_import'), {'file[]': [upload]})
+        response = importexporthelper.post_import(self.client, payload, filename='payload.json')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg=response.data)
@@ -921,7 +866,7 @@ class TestCaseImportExportViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone=time_zone)
         exampleschedulehelper.given_example_import_allowed(user)
 
-        self.client.post(reverse('importexport_import_exampleschedule'))
+        exampleschedulehelper.post_import_example_schedule(self.client)
 
         user_tz = ZoneInfo(time_zone)
         course = Course.objects.get(title='Fundamentals of Programming 💻')
@@ -957,7 +902,7 @@ class TestCaseImportExportViews(APITestCase):
         exampleschedulehelper.given_example_import_allowed(user)
 
         # WHEN
-        response = self.client.post(reverse('importexport_import_exampleschedule'))
+        response = exampleschedulehelper.post_import_example_schedule(self.client)
 
         # GIVEN
         user_tz = ZoneInfo('America/Los_Angeles')
@@ -1354,7 +1299,7 @@ class TestCaseImportExportViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         exampleschedulehelper.given_example_import_allowed(user)
-        first_response = self.client.post(reverse('importexport_import_exampleschedule'))
+        first_response = exampleschedulehelper.post_import_example_schedule(self.client)
         self.assertEqual(first_response.status_code, status.HTTP_204_NO_CONTENT)
 
         first_course_group = CourseGroup.objects.get()
@@ -1389,7 +1334,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # WHEN
         exampleschedulehelper.given_example_schedule_became_user_data(user)
-        second_response = self.client.post(reverse('importexport_import_exampleschedule'))
+        second_response = exampleschedulehelper.post_import_example_schedule(self.client)
 
         # THEN
         # No server error occurs
@@ -1432,7 +1377,7 @@ class TestCaseImportExportViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         exampleschedulehelper.given_example_import_allowed(user)
-        first_response = self.client.post(reverse('importexport_import_exampleschedule'))
+        first_response = exampleschedulehelper.post_import_example_schedule(self.client)
         self.assertEqual(first_response.status_code, status.HTTP_204_NO_CONTENT)
         first_course_group = CourseGroup.objects.get()
 
@@ -1443,7 +1388,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # WHEN
         exampleschedulehelper.given_example_schedule_became_user_data(user)
-        second_response = self.client.post(reverse('importexport_import_exampleschedule'))
+        second_response = exampleschedulehelper.post_import_example_schedule(self.client)
 
         # THEN
         # No server error occurs
@@ -1587,12 +1532,7 @@ class TestCaseImportExportViews(APITestCase):
         }
 
         # WHEN
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(import_data, f)
-            f.flush()
-            with open(f.name, 'rb') as fp:
-                response = self.client.post(reverse('importexport_import'), {'file[]': [fp]})
+        response = importexporthelper.post_import(self.client, import_data)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1645,18 +1585,6 @@ class TestCaseImportExportViews(APITestCase):
             'course_schedules': [],
         }
 
-    def _post_import(self, payload):
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(payload, f)
-            f.flush()
-            with open(f.name, 'rb') as fp:
-                return self.client.post(reverse('importexport_import'), {'file[]': [fp]})
-
-    def _post_dry_run(self, payload):
-        upload = SimpleUploadedFile('dry_run.json', json.dumps(payload).encode(), content_type='application/json')
-        return self.client.post(f"{reverse('importexport_import')}?dry_run=true", {'file[]': [upload]})
-
     @mock.patch('helium.importexport.views.apis.importviews.reminderservice.process_push_reminders')
     def test_dry_run_validates_without_keeping_anything(self, mock_process_push_reminders):
         # GIVEN
@@ -1665,7 +1593,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # WHEN
         with self.captureOnCommitCallbacks() as callbacks:
-            response = self._post_dry_run(payload)
+            response = importexporthelper.post_import(self.client, payload, filename='dry_run.json', dry_run='true')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1686,8 +1614,8 @@ class TestCaseImportExportViews(APITestCase):
         payload['courses'][0]['credits'] = 'three'
 
         # WHEN
-        dry_run = self._post_dry_run(payload)
-        imported = self._post_import(payload)
+        dry_run = importexporthelper.post_import(self.client, payload, filename='dry_run.json', dry_run='true')
+        imported = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(dry_run.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1700,7 +1628,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # WHEN
         with self.captureOnCommitCallbacks() as callbacks:
-            response = self._post_import(payload)
+            response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1719,12 +1647,10 @@ class TestCaseImportExportViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
-        upload = SimpleUploadedFile('import.json', json.dumps(self._minimal_import_payload()).encode(),
-                                    content_type='application/json')
+        payload = self._minimal_import_payload()
 
         # WHEN
-        response = self.client.post(f"{reverse('importexport_import')}?course_group={course_group.pk}",
-                                    {'file[]': [upload]})
+        response = importexporthelper.post_import(self.client, payload, course_group=course_group.pk)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
@@ -1739,13 +1665,11 @@ class TestCaseImportExportViews(APITestCase):
         other_user = userhelper.given_a_user_exists(username='other', email='other@heliumedu.com')
         course_group = coursegrouphelper.given_course_group_exists(other_user)
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        uploads = [SimpleUploadedFile('import.json', json.dumps(self._minimal_import_payload()).encode(),
-                                      content_type='application/json') for _ in range(2)]
+        payload = self._minimal_import_payload()
 
         # WHEN
-        responses = [self.client.post(f"{reverse('importexport_import')}?course_group={course_group_id}",
-                                      {'file[]': [upload]})
-                     for course_group_id, upload in zip((course_group.pk, 'term'), uploads)]
+        responses = [importexporthelper.post_import(self.client, payload, course_group=course_group_id)
+                     for course_group_id in (course_group.pk, 'term')]
 
         # THEN
         for response in responses:
@@ -1763,7 +1687,7 @@ class TestCaseImportExportViews(APITestCase):
         payload['courses'].append(second_course)
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1792,7 +1716,7 @@ class TestCaseImportExportViews(APITestCase):
         }]
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1812,7 +1736,7 @@ class TestCaseImportExportViews(APITestCase):
         payload['courses'][0]['course_group'] = 999
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1827,7 +1751,7 @@ class TestCaseImportExportViews(APITestCase):
         payload['categories'][0]['course'] = 999
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1851,7 +1775,7 @@ class TestCaseImportExportViews(APITestCase):
         }]
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1866,7 +1790,7 @@ class TestCaseImportExportViews(APITestCase):
         del payload['courses'][0]['end_date']
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1885,7 +1809,7 @@ class TestCaseImportExportViews(APITestCase):
         payload['courses'].append({**payload['courses'][0], 'title': 'C2'})
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1899,7 +1823,7 @@ class TestCaseImportExportViews(APITestCase):
         payload['courses'][0]['id'] = {'oops': 'not-an-id'}
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1915,7 +1839,7 @@ class TestCaseImportExportViews(APITestCase):
         payload['courses'][0]['course_group'] = '1'
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1928,7 +1852,7 @@ class TestCaseImportExportViews(APITestCase):
         del payload['courses'][0]['id']
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1941,7 +1865,7 @@ class TestCaseImportExportViews(APITestCase):
         payload = self._minimal_import_payload()
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1960,7 +1884,7 @@ class TestCaseImportExportViews(APITestCase):
         }]
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1986,7 +1910,7 @@ class TestCaseImportExportViews(APITestCase):
         payload = self._import_payload_with_reminder(sent=False, dismissed=True)
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1999,7 +1923,7 @@ class TestCaseImportExportViews(APITestCase):
         payload = self._import_payload_with_reminder(sent=True, dismissed=True)
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2011,13 +1935,13 @@ class TestCaseImportExportViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         exampleschedulehelper.given_example_import_allowed(user)
-        self.client.post(reverse('importexport_import_exampleschedule'))
+        exampleschedulehelper.post_import_example_schedule(self.client)
         first_course_group = CourseGroup.objects.get()
         self.client.patch(reverse('planner_reminders_dismiss_all') + '?sent=true')
 
         # WHEN
         exampleschedulehelper.given_example_schedule_became_user_data(user)
-        response = self.client.post(reverse('importexport_import_exampleschedule'))
+        response = exampleschedulehelper.post_import_example_schedule(self.client)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -2038,7 +1962,7 @@ class TestCaseImportExportViews(APITestCase):
         ]
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2057,9 +1981,108 @@ class TestCaseImportExportViews(APITestCase):
         ]
 
         # WHEN
-        response = self._post_import(payload)
+        response = importexporthelper.post_import(self.client, payload)
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Reminder.objects.filter(course__isnull=False, sent=False,
                                                   dismissed=False).count(), 2)
+
+    def test_example_schedule_gets_the_4_0_grade_scale_and_gpa(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        exampleschedulehelper.given_example_import_allowed(user)
+
+        # WHEN
+        response = exampleschedulehelper.post_import_example_schedule(self.client)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        course_group = CourseGroup.objects.get(user=user)
+        self.assertEqual(course_group.grade_scale_template, enums.GRADE_SCALE_4_0)
+        self.assertEqual(course_group.grade_scale, enums.GRADE_SCALE_TEMPLATES[enums.GRADE_SCALE_4_0]['scale'])
+        self.assertNotEqual(float(course_group.gpa), -1)
+        for course in Course.objects.filter(course_group=course_group):
+            self.assertNotEqual(float(course.grade_point), -1, course.title)
+
+    def test_import_round_trips_a_custom_grade_scale(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        custom_scale = [{'min_grade': 0.0, 'grade_point': 0.0, 'label': 'N'},
+                        {'min_grade': 50.0, 'grade_point': 1.0, 'label': 'P'}]
+        import_data = {
+            'course_groups': [{
+                'id': 1, 'title': 'Custom', 'start_date': '2024-01-01', 'end_date': '2024-05-01',
+                'shown_on_calendar': True, 'overall_grade': '-1', 'user': 1, 'grade_scale': custom_scale,
+                'grade_scale_template': None, 'gpa': '3.2000',
+            }],
+        }
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, import_data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        custom = CourseGroup.objects.get(user=user, title='Custom')
+        self.assertEqual(custom.grade_scale, custom_scale)
+        self.assertIsNone(custom.grade_scale_template)
+        self.assertEqual(float(custom.gpa), -1)
+
+    def test_import_rejects_a_template_that_conflicts_with_its_grade_scale(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['course_groups'][0].update(grade_scale_template=enums.GRADE_SCALE_4_5,
+                                           grade_scale=gradeutils.preset_grade_scale(enums.GRADE_SCALE_4_0))
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(CourseGroup.objects.exists())
+
+    def test_import_rejects_a_template_that_conflicts_with_its_schedule(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['course_schedules'] = [{
+            'id': 1, 'course': 1, 'days_of_week': '0000000', 'template': enums.AB_DAY, 'cycle_length': 6,
+            'anchor_date': '2024-01-08',
+            'cycle_slots': [{'indices': [1, 2], 'start_time': '09:00:00', 'end_time': '09:50:00'}],
+        }]
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(CourseGroup.objects.exists())
+
+    def test_imported_group_without_a_scale_has_none_when_the_account_has_no_groups(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        import_data = {'course_groups': [{'id': 1, 'title': 'Term', 'start_date': '2026-01-01',
+                                          'end_date': '2026-05-01', 'shown_on_calendar': True}]}
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, import_data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(CourseGroup.objects.get(user=user).grade_scale_template, enums.GRADE_SCALE_NONE)
+
+    def test_imported_group_without_a_scale_inherits_the_most_recent_groups_scale(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        coursegrouphelper.given_course_group_exists(user, start_date=datetime.date(2025, 1, 6),
+                                                    grade_scale_template=enums.GRADE_SCALE_4_5)
+        import_data = {'course_groups': [{'id': 1, 'title': 'Term', 'start_date': '2026-01-01',
+                                          'end_date': '2026-05-01', 'shown_on_calendar': True}]}
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, import_data)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(CourseGroup.objects.get(user=user, title='Term').grade_scale_template, enums.GRADE_SCALE_4_5)

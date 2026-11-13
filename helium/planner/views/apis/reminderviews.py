@@ -86,9 +86,9 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         Create a reminder for the authenticated user.
 
         Exactly one of `event`, `homework`, or `course` must be given — that's the parent the reminder
-        fires against. `course`-typed reminders are repeating: only one active reminder is kept per
-        (`course`, `type`, `offset`, `offset_type`) combination, and the next occurrence is rolled
-        forward by the server as each one fires.
+        fires against. Reminders on a `course`, or on a `homework` or `event` with a `recurrence_rule`, are repeating:
+        only one active reminder is kept per (parent, `type`, `offset`, `offset_type`) combination, and the
+        server rolls it forward to the next class or occurrence as each one fires.
         """
         if 'event' in request.data:
             permissions.check_event_permission(request.user.pk, request.data['event'])
@@ -170,7 +170,12 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         was_sent, was_dismissed = Reminder.objects.values_list('sent', 'dismissed').get(
             pk=serializer.instance.pk
         )
+        previous_series = (reminderservice.series_filter(serializer.instance)
+                           if serializer.instance.targets_repeating_item else None)
         reminder = serializer.save()
+
+        if previous_series and previous_series != reminderservice.series_filter(reminder):
+            reminderservice.delete_fired_reminders(previous_series)
 
         # On the false->true dismiss transition, clear the reminder's already-
         # delivered push from all of the user's devices.
@@ -201,6 +206,8 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
                 sent=True,
                 dismissed=False,
             ).delete()
+        elif instance.targets_repeating_item:
+            reminderservice.delete_reminder_series(instance)
         else:
             instance.delete()
 
@@ -215,7 +222,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         For `course`-typed reminders, this also deletes every active reminder in the same series
         (matched on `course`, `type`, `offset`, `offset_type`) plus any past sent-but-undismissed
         reminders for that `course` / `type` — so the series is fully torn down, not just the
-        single targeted row.
+        single targeted row. A reminder on a repeating `homework` or `event` likewise deletes its whole series.
         """
         response = self.destroy(request, *args, **kwargs)
 

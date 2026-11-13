@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.8.3"
+__version__ = "2.9.0"
 
 import json
 import os
@@ -150,6 +150,7 @@ SERVE_LOCAL = False
 REFRESH_TOKEN_PURGE_FREQUENCY_SEC = 60 * 60
 
 REMINDER_WATCHDOG_FREQUENCY_SEC = 60 * 60
+REMINDER_REPEATING_HEAL_LOOKBACK = timedelta(days=400)
 
 EXAMPLE_SCHEDULE_ADOPTION_AGE = timedelta(days=21)
 GETTING_STARTED_DAILY_WINDOW = timedelta(days=7)
@@ -308,9 +309,13 @@ OAUTH_CONNECTOR_RESOURCES = (f'{PROJECT_CONNECTOR_HOST}/mcp',)
 # How long a consent screen stays tied to the user it was shown to; only that user can approve it meanwhile
 OAUTH_CONSENT_TTL_SECONDS = 60 * 60
 
+# Scopes the user opts in to on the consent screen; a client that requests one gets it only if the user approves it
+OAUTH_OPTIONAL_SCOPES = ('planner:notes:read',)
+
 OAUTH2_PROVIDER = {
     'SCOPES': {
-        'planner:read': 'Read your assignments, events, notes, classes, resources, and grades',
+        'planner:read': 'Read your assignments, events, classes, resources, and grades',
+        'planner:notes:read': 'Read your notes',
         'planner:import': 'Import new terms and classes with their assignments, events, and class schedules',
     },
     'DEFAULT_SCOPES': ['planner:read'],
@@ -351,17 +356,14 @@ SPECTACULAR_SETTINGS = {
         "subscription feeds, and full account import/export.\n\n"
         "## Authentication\n\n"
         "Three flows are supported:\n\n"
-        "- **API token**: POST `/auth/api-token/` with a JWT to generate a long-lived token "
-        "(plaintext, returned once). Use `Authorization: Token <api_token>`; POST again to "
-        "rotate, `DELETE` to revoke. Changing or resetting the password also revokes it.\n"
         "- **JWT**: POST `{\"email\": \"...\", \"password\": \"...\"}` to `/auth/token/` for an "
-        "`access`/`refresh` pair. Use `Authorization: Bearer <jwt_token>`; rotate via "
-        "`/auth/token/refresh/`. Lifetimes are published by `GET /info/` as "
-        "`access_token_lifetime_minutes` and `refresh_token_lifetime_days`.\n"
-        "- **Connector** (OAuth 2.0, for an MCP server acting for a user): authorization code "
-        "with PKCE `S256`; discover the endpoints at `/.well-known/oauth-authorization-server`. Scope "
-        "`planner:read` reaches the planner reads and `planner:import` the bulk import. Connector requests "
-        "share the user's rate limit.\n\n"
+        "`access`/`refresh` pair. Use `Authorization: Bearer <jwt_token>`; refresh via "
+        "`/auth/token/refresh/`.\n"
+        "- **API token**: with a JWT, POST `/auth/api-token/` for a long-lived token, shown only "
+        "once. Use `Authorization: Token <api_token>`; POST again to rotate, `DELETE` to revoke. "
+        "Changing or resetting the password also revokes it.\n"
+        "- **OAuth 2.0**: authorization code flow, letting an app act for a user who approves its "
+        "access. Scopes: `planner:read`, `planner:notes:read`, and `planner:import`.\n\n"
         "## Rate Limits\n\n"
         "Requests are limited per client:\n\n"
         "| Authentication | Limit |\n"
@@ -458,16 +460,6 @@ SPECTACULAR_SETTINGS = {
         "- **Off-day times default to `12:00:00`.** Send `00:00:00` for both `_start_time` and "
         "`_end_time` on every day a class does NOT meet, so the off-day is unambiguous. Omitted "
         "day-times default to `12:00:00`, which collides with real classes meeting at noon.\n"
-        "- **No recurrence on Homework.** A weekly problem set across a 15-week term must be 15 separate "
-        "Homework rows. Events support `recurrence_rule`, but recurring events are read-only in the app, so "
-        "prefer one Event per occurrence. Three ways to handle this:\n"
-        "  1. Enumerate the rows up front and POST each one.\n"
-        "  2. Use the bulk-import path — one JSON file, one call (more efficient for large batches).\n"
-        "  3. Create a canonical row and use the clone endpoints "
-        "(`POST /planner/coursegroups/{cg}/courses/{c}/homework/{id}/clone/` or "
-        "`POST /planner/events/{id}/clone/`, both with no body) to duplicate it for incremental "
-        "additions mid-term — clones copy reminders too — then PATCH each clone with its new "
-        "`start` / `end`. This is what the Flutter client does.\n"
         "- **No multi-part assignment grouping.** A `\"draft + final\"` or `\"post + reply\"` pair is "
         "two independent Homework rows with descriptive titles (`\"Essay 1 — Draft\"`, "
         "`\"Essay 1 — Final\"`). Helium has no parent/child or group concept for assignments.\n"

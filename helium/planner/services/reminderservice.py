@@ -3,6 +3,7 @@ from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.db import transaction
 from django.db.models import OuterRef, Q, Subquery
 from django.utils import timezone
 
@@ -10,7 +11,7 @@ from helium.common import enums
 from helium.common.services import pushservice
 from helium.common.tasks import send_dismiss_pushes, send_pushes
 from helium.common.utils import datetimeutils, metricutils, taskutils
-from helium.planner.models import Reminder
+from helium.planner.models import Event, Homework, Reminder
 from helium.planner.serializers.pushserializer import PushReminderSerializer
 
 logger = logging.getLogger(__name__)
@@ -18,12 +19,9 @@ logger = logging.getLogger(__name__)
 
 def _push_body(reminder):
     all_day = False
-    if reminder.homework:
-        local_time = timezone.localtime(reminder.homework.start)
-        all_day = reminder.homework.all_day
-    elif reminder.event:
-        local_time = timezone.localtime(reminder.event.start)
-        all_day = reminder.event.all_day
+    if reminder.calendar_item:
+        local_time = timezone.localtime(reminder.occurrence_bounds()[0])
+        all_day = reminder.calendar_item.all_day
     elif reminder.course:
         class_start = reminder.start_of_range + datetimeutils.offset_to_timedelta(reminder.offset, reminder.offset_type)
         local_time = timezone.localtime(class_start)
@@ -41,6 +39,47 @@ def _offset_label(reminder):
     if reminder.offset == 1:
         unit = unit.rstrip('s')
     return f'{reminder.offset} {unit}'
+
+
+_ITEM_USER_SETTINGS = ('homework__course__course_group__user__settings', 'event__user__settings')
+
+
+def _item_series_key(reminder):
+    return (reminder.homework_id, reminder.event_id, reminder.user_id, reminder.type, reminder.offset,
+            reminder.offset_type)
+
+
+def _create_next_item_reminder(reminder):
+    parent_field, model, pk, user_settings = (
+        ('homework', Homework, reminder.homework_id, 'course__course_group__user__settings') if reminder.homework_id
+        else ('event', Event, reminder.event_id, 'user__settings'))
+    with transaction.atomic():
+        item = model.objects.select_for_update(of=('self',)).select_related(user_settings).filter(pk=pk).first()
+        if item is None or not item.recurrence_rule:
+            return None
+
+        series = series_filter(reminder)
+        if Reminder.objects.active().filter(**series).exclude(pk=reminder.pk).exists():
+            return None
+
+        new_reminder = Reminder(
+            message=reminder.message,
+            offset=reminder.offset,
+            offset_type=reminder.offset_type,
+            type=reminder.type,
+            sent=False,
+            dismissed=False,
+            user=reminder.user,
+            **{parent_field: item},
+        )
+
+        fired_start, _ = reminder.occurrence_bounds()
+        next_start = new_reminder.next_occurrence_start(after_datetime=fired_start)
+        if next_start is None:
+            return None
+
+        new_reminder.save()
+        return new_reminder
 
 
 def get_subject(reminder):
@@ -63,7 +102,7 @@ _SERIES_FIELDS = ('course', 'user', 'type', 'offset', 'offset_type')
 
 def heal_orphaned_repeating_reminders(user_id=None):
     """
-    Periodic maintenance for repeating course reminder series.
+    Periodic maintenance for repeating reminder series: courses, then repeating Homework and Events.
 
     Series with no active reminder whose course has ended in every timezone are skipped.
 
@@ -138,9 +177,8 @@ def heal_orphaned_repeating_reminders(user_id=None):
         Reminder.objects.filter(pk__in=to_delete_pks).delete()
 
     for reminder in successor_templates:
-        series_filter = dict(course=reminder.course, user=reminder.user, type=reminder.type,
-                             offset=reminder.offset, offset_type=reminder.offset_type)
-        if Reminder.objects.active().filter(**series_filter).exists():
+        series = series_filter(reminder)
+        if Reminder.objects.active().filter(**series).exists():
             continue
         try:
             logger.info(
@@ -149,11 +187,14 @@ def heal_orphaned_repeating_reminders(user_id=None):
         except Exception:
             logger.error("An error occurred healing orphaned repeating reminder.", exc_info=True)
 
+    heal_repeating_item_reminders(user_id=user_id)
+
 
 def clone_reminders(source, target):
-    """Copy reminders from source onto target. Both must be Homework or Event; ``start_of_range`` re-anchors via ``Reminder.save()``."""
-    from helium.planner.models import Event, Homework
-
+    """
+    Copy reminders from source onto target, once per series when source repeats. Both must be Homework or Event;
+    ``start_of_range`` re-anchors via ``Reminder.save()``.
+    """
     if not isinstance(source, (Homework, Event)):
         raise ValueError(
             f'clone_reminders source must be a Homework or Event, got {type(source).__name__}')
@@ -164,7 +205,14 @@ def clone_reminders(source, target):
     parent_field = 'homework' if isinstance(target, Homework) else 'event'
     user = target.get_user()
 
-    for reminder in source.reminders.all():
+    reminders = list(source.reminders.all())
+    if source.recurrence_rule:
+        by_series = {}
+        for reminder in sorted(reminders, key=lambda r: (not r.sent, r.start_of_range or timezone.now())):
+            by_series[(reminder.type, reminder.offset, reminder.offset_type)] = reminder
+        reminders = list(by_series.values())
+
+    for reminder in reminders:
         Reminder.objects.create(
             message=reminder.message,
             offset=reminder.offset,
@@ -175,27 +223,100 @@ def clone_reminders(source, target):
         )
 
 
+def delete_reminder_series(reminder):
+    """Delete every reminder in a repeating item reminder's series, fired records included."""
+    Reminder.objects.filter(**series_filter(reminder)).delete()
+
+
+def delete_fired_reminders(series):
+    """Delete the fired records of the reminder series matching ``series`` (a :func:`series_filter`)."""
+    Reminder.objects.filter(sent=True, **series).delete()
+
+
+def collapse_reminder_series(item):
+    """
+    Drop the fired records of an item's reminder series that still have an active reminder, for when the item stops
+    repeating and each series becomes a single reminder again.
+    """
+    reminders = list(item.reminders.all())
+    active_keys = {(r.user_id, r.type, r.offset, r.offset_type) for r in reminders if not r.sent and not r.dismissed}
+    fired_pks = [r.pk for r in reminders if r.sent and (r.user_id, r.type, r.offset, r.offset_type) in active_keys]
+    if fired_pks:
+        Reminder.objects.filter(pk__in=fired_pks).delete()
+
+
+def series_filter(reminder):
+    """The lookup that matches every reminder in ``reminder``'s repeating series."""
+    if reminder.course_id:
+        parent = dict(course=reminder.course)
+    elif reminder.homework_id:
+        parent = dict(homework=reminder.homework)
+    else:
+        parent = dict(event=reminder.event)
+    return dict(user=reminder.user, type=reminder.type, offset=reminder.offset, offset_type=reminder.offset_type,
+                **parent)
+
+
+def heal_repeating_item_reminders(user_id=None, homework_id=None, event_id=None):
+    """
+    Re-arm every repeating Homework or Event reminder series that has no active reminder, from its latest fired
+    reminder, and move an active reminder that expired past the send window unsent on to its next occurrence.
+    Without ``homework_id`` or ``event_id``, only reminders within the last
+    ``settings.REMINDER_REPEATING_HEAL_LOOKBACK`` are considered.
+    """
+    reminders = Reminder.objects.filter(Q(homework__recurrence_rule__isnull=False) |
+                                        Q(event__recurrence_rule__isnull=False))
+    if user_id is not None:
+        reminders = reminders.for_user(user_id)
+    if homework_id is not None:
+        reminders = reminders.filter(homework_id=homework_id)
+    if event_id is not None:
+        reminders = reminders.filter(event_id=event_id)
+
+    lookback_start = timezone.now() - settings.REMINDER_REPEATING_HEAL_LOOKBACK
+    expired = (reminders.active()
+               .filter(start_of_range__lt=timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES))
+               .select_related('user__settings', *_ITEM_USER_SETTINGS))
+    if homework_id is None and event_id is None:
+        expired = expired.filter(start_of_range__gte=lookback_start)
+    for reminder in expired:
+        reminder.save()
+
+    active_keys = {_item_series_key(reminder) for reminder in reminders.active()}
+
+    fired = reminders.filter(sent=True).select_related('user__settings', *_ITEM_USER_SETTINGS)
+    if homework_id is None and event_id is None:
+        fired = fired.filter(start_of_range__gte=lookback_start)
+
+    latest_fired = {_item_series_key(reminder): reminder for reminder in fired.order_by('start_of_range')}
+
+    for key, template in latest_fired.items():
+        if key in active_keys:
+            continue
+        try:
+            create_next_repeating_reminder(template)
+        except Exception:
+            logger.error("An error occurred healing a repeating item reminder.", exc_info=True)
+
+
 def create_next_repeating_reminder(reminder):
     """
-    For a repeating reminder (course), create the next occurrence.
+    For a repeating reminder (course, or a Homework or Event with a recurrence rule), create the next occurrence.
 
-    Passes the fired class's start time as after_datetime so the search begins strictly after
-    the class that just fired, preventing the same occurrence from being queued again. Guards
+    Passes the fired occurrence's start time as after_datetime so the search begins strictly after
+    the occurrence that just fired, preventing the same occurrence from being queued again. Guards
     against duplicate creation (e.g. concurrent workers) by checking for an existing active
     (unsent + undismissed) reminder for the same series before saving.
     """
+    if reminder.homework_id or reminder.event_id:
+        return _create_next_item_reminder(reminder)
+
     if not reminder.course_id:
         return None
 
-    series_filter = dict(
-        course=reminder.course,
-        user=reminder.user,
-        type=reminder.type,
-        offset=reminder.offset,
-        offset_type=reminder.offset_type,
-    )
+    series = series_filter(reminder)
 
-    if Reminder.objects.active().filter(**series_filter).exclude(pk=reminder.pk).exists():
+    if Reminder.objects.active().filter(**series).exclude(pk=reminder.pk).exists():
         return None
 
     # Compute the start time of the class that just fired so we skip it when searching.
@@ -241,17 +362,18 @@ def clear_delivered_push(reminder):
 
 def _delete_excess_past_reminders(just_fired):
     """
-    After a repeating course reminder fires, delete every other sent reminder for the same
-    course/user/type, dismissed ones included. Only the reminder that just fired is kept as the
-    single past record visible in notifications. Intentionally does not filter by offset/offset_type
-    so that stale reminders from a previous offset (e.g. after a reminder edit) are also cleaned up.
+    After a repeating reminder fires, delete every other sent reminder of its series, dismissed ones included.
+    Only the reminder that just fired is kept as the single past record visible in notifications. A course
+    series intentionally ignores offset/offset_type so stale reminders from a previous offset (e.g. after a
+    reminder edit) are also cleaned up; a Homework or Event series is keyed by offset too, as each offset is a separate
+    reminder the user set.
     """
-    Reminder.objects.filter(
-        course=just_fired.course,
-        user=just_fired.user,
-        type=just_fired.type,
-        sent=True,
-    ).exclude(pk=just_fired.pk).delete()
+    series = series_filter(just_fired)
+    if just_fired.course_id:
+        series.pop('offset')
+        series.pop('offset_type')
+
+    Reminder.objects.filter(sent=True, **series).exclude(pk=just_fired.pk).delete()
 
 
 def _reminder_for_processing(reminder_id, *prefetch):
@@ -279,14 +401,15 @@ def _claim(reminder):
 
 
 def _continue_series(reminder, channel):
-    if reminder.course_id:
+    if reminder.repeating:
         _delete_excess_past_reminders(reminder)
         try:
             new_reminder = create_next_repeating_reminder(reminder)
             if new_reminder is None:
                 logger.info(
-                    f'No next occurrence for repeating {channel} reminder series (course ended): '
-                    f'course={reminder.course_id}, user={reminder.user_id}')
+                    f'No next occurrence for repeating {channel} reminder series (series ended): '
+                    f'course={reminder.course_id}, homework={reminder.homework_id}, event={reminder.event_id}, '
+                    f'user={reminder.user_id}')
         except Exception:
             logger.error(f"An error occurred creating next repeating {channel} reminder.", exc_info=True)
 

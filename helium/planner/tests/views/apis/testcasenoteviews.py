@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.helpers import commonhelper
 from helium.planner.models import Note
 from helium.planner.tests.helpers import (
     notehelper, eventhelper, homeworkhelper, coursegrouphelper, coursehelper,
@@ -23,8 +24,7 @@ class TestCaseNoteViews(APITestCase):
             self.client.put(reverse('planner_notes_detail', kwargs={'pk': '9999'})),
             self.client.delete(reverse('planner_notes_detail', kwargs={'pk': '9999'}))
         ]
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_notes(self):
         user1 = userhelper.given_a_user_exists()

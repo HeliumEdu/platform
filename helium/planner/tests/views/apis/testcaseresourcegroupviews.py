@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.helpers import commonhelper
 from helium.planner.models import ResourceGroup
 from helium.planner.tests.helpers import resourcegrouphelper
 
@@ -25,8 +26,7 @@ class TestCaseResourceGroupViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_resourcegroups(self):
         # GIVEN
@@ -127,8 +127,7 @@ class TestCaseResourceGroupViews(APITestCase):
 
         # THEN
         self.assertTrue(ResourceGroup.objects.filter(pk=resource_group.pk, user_id=user1.pk).exists())
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_404_NOT_FOUND)
 
     def test_update_read_only_field_does_nothing(self):
         # GIVEN
@@ -160,13 +159,7 @@ class TestCaseResourceGroupViews(APITestCase):
             self.client.delete(reverse('planner_resourcegroups_detail', kwargs={'pk': '9999'}))
         ]
 
-        for response in responses:
-            if isinstance(response.data, list):
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-                self.assertEqual(len(response.data), 0)
-            else:
-                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('matches the given query', response.data['detail'].lower())
+        commonhelper.verify_responses_hide_other_users_data(self, responses)
 
     def test_updated_at_filter(self):
         # GIVEN

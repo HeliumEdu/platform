@@ -1,5 +1,6 @@
 import logging
 
+from helium.common import enums
 from helium.common.managers.basemanager import BaseManager, BaseQuerySet
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ class HomeworkQuerySet(BaseQuerySet):
         return self.filter(category_id=category_id)
 
     def graded(self):
-        return self.completed().exclude(current_grade='-1/100')
+        return self.completed().exclude(current_grade=enums.UNGRADED)
 
     def completed(self, completed=True):
         return self.filter(completed=completed)

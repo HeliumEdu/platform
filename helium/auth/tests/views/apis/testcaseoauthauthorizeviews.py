@@ -57,6 +57,19 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
         self.assertEqual(response.data['redirect_uri'], oauthhelper.REDIRECT_URI)
         self.assertEqual({scope['scope'] for scope in response.data['scopes']}, {'planner:read', 'planner:import'})
         self.assertTrue(all(scope['description'] for scope in response.data['scopes']))
+        self.assertTrue(all(scope['required'] for scope in response.data['scopes']))
+
+    def test_describe_authorization_marks_notes_not_required(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.get(self.authorize_url(scope='planner:read planner:notes:read planner:import'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual({scope['scope']: scope['required'] for scope in response.data['scopes']},
+                         {'planner:read': True, 'planner:notes:read': False, 'planner:import': True})
 
     def test_describe_authorization_shows_the_users_linked_providers(self):
         # GIVEN
@@ -105,6 +118,99 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
         self.assertEqual(tokens['expires_in'], 3600)
         self.assertIn('refresh_token', tokens)
         self.assertEqual(get_access_token_model().objects.get(user=user).application, self.application)
+
+    def test_approval_without_scopes_leaves_out_optional_ones(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        code = self.given_an_authorization_code(scope='planner:read planner:notes:read planner:import')
+
+        # WHEN
+        tokens = self.exchange_code(code).json()
+
+        # THEN
+        self.assertEqual(tokens['scope'], 'planner:read planner:import')
+
+    def test_approval_of_an_optional_scope_grants_it(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        url = self.authorize_url(scope='planner:read planner:notes:read planner:import')
+
+        # WHEN
+        response = self.client.post(url, {'allow': True,
+                                           'scopes': ['planner:read', 'planner:notes:read', 'planner:import']},
+                                    format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        tokens = self.exchange_code(oauthhelper.redirect_params(response.data['redirect_uri'])['code']).json()
+        self.assertEqual(tokens['scope'], 'planner:read planner:notes:read planner:import')
+
+    def test_approval_declining_an_optional_scope_leaves_it_out(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        url = self.authorize_url(scope='planner:read planner:notes:read planner:import')
+
+        # WHEN
+        response = self.client.post(url, {'allow': True, 'scopes': ['planner:read', 'planner:import']},
+                                    format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        tokens = self.exchange_code(oauthhelper.redirect_params(response.data['redirect_uri'])['code']).json()
+        self.assertEqual(tokens['scope'], 'planner:read planner:import')
+
+    def test_approval_of_an_unrequested_scope_is_refused(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.post(self.authorize_url(),
+                                    {'allow': True, 'scopes': ['planner:read', 'planner:notes:read', 'planner:import']},
+                                    format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('scopes', response.data)
+        self.assertFalse(get_grant_model().objects.exists(), 'no authorization code is issued')
+
+    def test_approval_declining_a_required_scope_is_refused(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.post(self.authorize_url(), {'allow': True, 'scopes': ['planner:read']}, format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('scopes', response.data)
+        self.assertFalse(get_grant_model().objects.exists(), 'no authorization code is issued')
+
+    def test_approval_of_no_scopes_is_refused(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        url = self.authorize_url(scope='planner:notes:read')
+
+        # WHEN
+        responses = [self.client.post(url, {'allow': True, 'scopes': []}, format='json'),
+                     self.client.post(url, {'allow': True}, format='json')]
+
+        # THEN
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn('scopes', response.data)
+        self.assertFalse(get_grant_model().objects.exists(), 'no authorization code is issued')
+
+    def test_denial_ignores_scopes(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.post(self.authorize_url(), {'allow': False, 'scopes': ['account:delete']},
+                                    format='json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(oauthhelper.redirect_params(response.data['redirect_uri'])['error'], 'access_denied')
 
     def test_issued_token_reads_the_planner(self):
         # GIVEN
@@ -165,6 +271,26 @@ class TestCaseOAuthAuthorizeViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         self.assertNotEqual(response.json()['refresh_token'], tokens['refresh_token'])
+
+    def test_refresh_cannot_add_a_declined_scope(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        code = self.given_an_authorization_code(scope='planner:read planner:notes:read planner:import')
+        tokens = self.exchange_code(code).json()
+
+        # WHEN
+        widened = self.client.post(reverse('oauth2_provider:token'), {
+            'grant_type': 'refresh_token', 'refresh_token': tokens['refresh_token'],
+            'client_id': self.application.client_id, 'scope': 'planner:read planner:notes:read planner:import'})
+        refreshed = self.client.post(reverse('oauth2_provider:token'), {
+            'grant_type': 'refresh_token', 'refresh_token': tokens['refresh_token'],
+            'client_id': self.application.client_id})
+
+        # THEN
+        self.assertEqual(widened.status_code, status.HTTP_400_BAD_REQUEST, widened.content)
+        self.assertEqual(widened.json()['error'], 'invalid_scope')
+        self.assertEqual(refreshed.status_code, status.HTTP_200_OK, refreshed.content)
+        self.assertEqual(refreshed.json()['scope'], 'planner:read planner:import')
 
     def test_denial_redirects_with_access_denied(self):
         # GIVEN
@@ -449,7 +575,7 @@ class TestCaseOAuthServerMetadata(APITestCase):
         self.assertEqual(metadata['token_endpoint_auth_methods_supported'], ['none'])
         self.assertTrue(metadata['client_id_metadata_document_supported'])
         self.assertTrue(metadata['authorization_response_iss_parameter_supported'])
-        self.assertEqual(sorted(metadata['scopes_supported']), ['planner:import', 'planner:read'])
+        self.assertEqual(sorted(metadata['scopes_supported']), ['planner:import', 'planner:notes:read', 'planner:read'])
         self.assertNotIn('registration_endpoint', metadata)
         self.assertNotIn('introspection_endpoint', metadata)
 
@@ -470,8 +596,9 @@ class TestCaseOAuthTokenAccess(APITestCase):
         # WHEN / THEN
         for url_name in ('auth_user_detail', 'planner_coursegroups_list', 'planner_courses_list',
                          'planner_courseschedules_list', 'planner_categories_list', 'planner_resource_grades',
-                         'planner_notes_list', 'planner_resourcegroups_list', 'planner_resources_list'):
+                         'planner_resourcegroups_list', 'planner_resources_list'):
             self.assertEqual(self.client.get(reverse(url_name)).status_code, status.HTTP_200_OK, url_name)
+        self.assertEqual(self.client.get(reverse('planner_notes_list')).status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(self.client.get(reverse('planner_homework_list')).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.get(reverse('planner_events_list')).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.get(reverse('planner_resource_grades_needed')).status_code,
@@ -496,6 +623,25 @@ class TestCaseOAuthTokenAccess(APITestCase):
         self.assertEqual(self.client.get(reverse('planner_notes_list')).status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(self.client.get(reverse('planner_resources_list')).status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(self.client.get(reverse('planner_resource_grades_needed')).status_code,
+                         status.HTTP_403_FORBIDDEN)
+
+    def test_notes_scope_reaches_only_notes(self):
+        # GIVEN
+        self.given_token(scope='planner:notes:read')
+
+        # WHEN / THEN
+        self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get(reverse('planner_notes_list')).status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get(reverse('planner_notes_list'), {'include_content': 'true'}).status_code,
+                         status.HTTP_200_OK)
+        self.assertEqual(self.client.post(reverse('planner_notes_list'), {}, format='json').status_code,
+                         status.HTTP_403_FORBIDDEN)
+        self.assertEqual(self.client.get(reverse('planner_notes_detail', kwargs={'pk': 1})).status_code,
+                         status.HTTP_403_FORBIDDEN)
+        for url_name in ('planner_coursegroups_list', 'planner_courses_list', 'planner_homework_list',
+                         'planner_events_list', 'planner_resources_list'):
+            self.assertEqual(self.client.get(reverse(url_name)).status_code, status.HTTP_403_FORBIDDEN, url_name)
+        self.assertEqual(self.client.post(reverse('importexport_import'), {}, format='multipart').status_code,
                          status.HTTP_403_FORBIDDEN)
 
     def test_account_and_destructive_endpoints_are_refused(self):

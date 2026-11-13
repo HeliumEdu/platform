@@ -16,10 +16,6 @@ from helium.planner.tests.helpers import categoryhelper, coursegrouphelper, cour
 
 
 class TestCaseImportService(TestCase):
-    def _create_user_with_timezone(self, tz_name):
-        user = userhelper.given_a_user_exists(time_zone=tz_name)
-        return user
-
     def test_import_homework_with_category_from_another_course_lands_in_uncategorized(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -68,7 +64,7 @@ class TestCaseImportService(TestCase):
     def test_adjust_schedule_uses_user_timezone_when_behind_utc_at_month_boundary(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 4, 1, 0, 30, 0, tzinfo=datetime.timezone.utc)
-        user = self._create_user_with_timezone('America/New_York')
+        user = userhelper.given_a_user_exists(time_zone='America/New_York')
 
         # WHEN
         import_example_schedule(user)
@@ -83,7 +79,7 @@ class TestCaseImportService(TestCase):
     def test_adjust_schedule_uses_utc_month_when_user_timezone_is_utc(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 4, 1, 0, 30, 0, tzinfo=datetime.timezone.utc)
-        user = self._create_user_with_timezone('UTC')
+        user = userhelper.given_a_user_exists(time_zone='UTC')
 
         # WHEN
         import_example_schedule(user)
@@ -98,7 +94,7 @@ class TestCaseImportService(TestCase):
     def test_adjust_schedule_day_before_utc_month_boundary(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 3, 31, 23, 30, 0, tzinfo=datetime.timezone.utc)
-        user = self._create_user_with_timezone('America/New_York')
+        user = userhelper.given_a_user_exists(time_zone='America/New_York')
 
         # WHEN
         import_example_schedule(user)

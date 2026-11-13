@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 import icalendar
 from django.test import SimpleTestCase
 
+from helium.common.utils import datetimeutils
 from helium.feed.services import icalparseservice
 
 
@@ -44,7 +45,7 @@ class TestCaseIcalParseService(SimpleTestCase):
                 for exception_date in series['exception_dates']:
                     local_exception = datetime.datetime.fromisoformat(exception_date).astimezone(user_tz)
                     self.assertEqual(local_exception.time(), datetime.time(0, 0))
-                    self.assertEqual(exception_date, local_exception.astimezone(datetime.timezone.utc).isoformat())
+                    self.assertEqual(exception_date, datetimeutils.as_utc_iso(local_exception))
                 self.assertEqual(_local_dates(series['extra_starts'], user_tz), ['2025-11-08'])
                 self.assertEqual(series['start'].astimezone(user_tz).time(), datetime.time(0, 0))
                 timed = parsed['Lecture']
@@ -62,7 +63,8 @@ class TestCaseIcalParseService(SimpleTestCase):
         self.assertEqual(parsed['recurrence_rule'], 'FREQ=MONTHLY;BYDAY=TU;BYSETPOS=2')
 
     def test_rrule_sfcalendar_cannot_expand_dropped(self):
-        for rule in ('FREQ=MONTHLY;BYDAY=MO,WE', 'FREQ=MONTHLY;BYDAY=TU', 'FREQ=YEARLY;BYMONTHDAY=15'):
+        for rule in ('FREQ=MONTHLY;BYDAY=MO,WE', 'FREQ=MONTHLY;BYDAY=TU', 'FREQ=YEARLY;BYMONTHDAY=15',
+                     'FREQ=DAILY;BYHOUR=9,14'):
             with self.subTest(rule=rule):
                 # GIVEN
                 calendar = _calendar_with_rrule(rule, 'DTSTART;TZID=America/New_York:20261013T090000')

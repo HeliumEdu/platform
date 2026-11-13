@@ -8,6 +8,7 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.common.tests.helpers import commonhelper
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.feed.tests.helpers import icalfeedhelper
@@ -24,8 +25,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
@@ -41,8 +41,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
 
         # THEN
         self.assertTrue(ExternalCalendar.objects.filter(pk=external_calendar.pk, user_id=user1.pk).exists())
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_404_NOT_FOUND)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_as_events(self, mock_urlopen):

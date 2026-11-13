@@ -14,8 +14,9 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from helium.auth.models import UserSettings
+from helium.common import enums
 from helium.common.services import uploadfileservice
-from helium.common.views.base import HeliumAPIView
+from helium.common.views.base import HeliumAPIView, is_dry_run
 from helium.importexport.serializers.importerializer import ImportCreateSerializer, \
     ICSImportCreateSerializer, ImportSerializer
 from helium.importexport.services import importservice
@@ -156,7 +157,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                             'start': '2026-09-14T23:59:00-07:00',
                             'end': '2026-09-14T23:59:00-07:00',
                             'priority': 50,
-                            'current_grade': '-1/100',
+                            'current_grade': enums.UNGRADED,
                             'completed': False,
                             'category': 200,
                             'resources': [],
@@ -170,7 +171,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                             'start': '2026-10-14T10:00:00-07:00',
                             'end': '2026-10-14T11:30:00-07:00',
                             'priority': 80,
-                            'current_grade': '-1/100',
+                            'current_grade': enums.UNGRADED,
                             'completed': False,
                             'category': 201,
                             'resources': [],
@@ -184,7 +185,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                             'start': '2026-09-17T23:59:00-07:00',
                             'end': '2026-09-17T23:59:00-07:00',
                             'priority': 50,
-                            'current_grade': '-1/100',
+                            'current_grade': enums.UNGRADED,
                             'completed': False,
                             'category': 203,
                             'resources': [],
@@ -211,7 +212,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         With `course_group`, the file's classes are added to that existing Course Group (a term already in the
         account) rather than to a new one.
         """
-        dry_run = request.query_params.get('dry_run') == 'true'
+        dry_run = is_dry_run(request)
         course_group_id = self._course_group_param(request)
         uploads = request.data.getlist('file[]')
         if len(uploads) != 1:
@@ -322,7 +323,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
         The file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
         """
-        dry_run = request.query_params.get('dry_run') == 'true'
+        dry_run = is_dry_run(request)
         uploads = request.data.getlist('file[]')
         if len(uploads) != 1:
             logger.warning(f'Rejected .ics import from user {request.user.pk} with {len(uploads)} files.')

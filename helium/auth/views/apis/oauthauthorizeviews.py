@@ -62,6 +62,7 @@ class OAuthAuthorizeView(HeliumAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        redirect_uri = oauthservice.decide_authorization(request._request, serializer.validated_data['allow'])
+        redirect_uri = oauthservice.decide_authorization(request._request, serializer.validated_data['allow'],
+                                                         serializer.validated_data.get('scopes'))
 
         return Response(OAuthRedirectSerializer({'redirect_uri': redirect_uri}).data)

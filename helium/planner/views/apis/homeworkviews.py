@@ -8,6 +8,7 @@ from rest_framework.mixins import RetrieveModelMixin, DestroyModelMixin, CreateM
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from helium.common import enums
 from helium.common.permissions import IsOwner
 from helium.common.search import HeliumSearchFilter
 from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
@@ -17,7 +18,8 @@ from helium.planner.models import Homework
 from helium.planner.permissions import IsCourseGroupOwner, IsCourseOwner
 from helium.planner.serializers.homeworkserializer import HomeworkSerializer, HomeworkExtendedSerializer
 from helium.planner.services.homeworkservice import clone_homework
-from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS
+from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS, SCOPE_ALL, \
+    OCCURRENCE_START_PARAMETER, RepeatingItemDetailMixin, occurrence_start_param, scope_parameter
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +121,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
                     'start': '2026-09-21T23:59:00-07:00',
                     'end': '2026-09-21T23:59:00-07:00',
                     'priority': 50,
-                    'current_grade': '-1/100',
+                    'current_grade': enums.UNGRADED,
                     'completed': False,
                     'category': 4242,
                     'resources': [],
@@ -180,8 +182,8 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
 @extend_schema(
     tags=['planner.homework']
 )
-class CourseGroupCourseHomeworkApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveModelMixin, UpdateModelMixin,
-                                             DestroyModelMixin):
+class CourseGroupCourseHomeworkApiDetailView(RepeatingItemDetailMixin, PreconditionMixin, HeliumAPIView,
+                                             RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
     serializer_class = HomeworkSerializer
     precondition_serializer_class = HomeworkExtendedSerializer
     permission_classes = (IsAuthenticated, IsOwner, IsCourseGroupOwner, IsCourseOwner)
@@ -230,11 +232,24 @@ class CourseGroupCourseHomeworkApiDetailView(PreconditionMixin, HeliumAPIView, R
 
         return Response(HomeworkExtendedSerializer(serializer.instance).data)
 
-    @extend_schema(summary='Partially update a Homework', parameters=[IF_MATCH_PARAMETER],
-                   responses={200: HomeworkExtendedSerializer})
+    @extend_schema(
+        summary='Partially update a Homework',
+        parameters=[
+            IF_MATCH_PARAMETER,
+            scope_parameter(SCOPE_ALL, '`all` updates the Homework, and a repeating Homework\'s whole series. `this` '
+                                       'makes the occurrence at `occurrence_start` its own Homework, with the '
+                                       'series\' reminders, and leaves it out of the series, which keeps its note '
+                                       'and attachments. If it was the last occurrence, they move to the new '
+                                       'Homework and the series is deleted. Completing an occurrence needs `this`.'),
+            OCCURRENCE_START_PARAMETER,
+        ],
+        responses={200: HomeworkExtendedSerializer},
+    )
     def patch(self, request, *args, **kwargs):
         """
-        Update only the given attributes of the given homework instance.
+        Update only the given attributes of the given homework instance. With `occurrence_start`, `start` / `end`
+        are that occurrence's new times, and the whole series moves with it. With `scope=this`, the response is the
+        new Homework.
         """
         if 'course' in request.data:
             permissions.check_course_permission(request.user.pk, request.data['course'])
@@ -244,29 +259,24 @@ class CourseGroupCourseHomeworkApiDetailView(PreconditionMixin, HeliumAPIView, R
         for resource_id in _requested_resource_ids(request):
             permissions.check_resource_permission(request.user.pk, resource_id)
 
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        logger.info(f"Homework {kwargs['pk']} patched for user {request.user.pk}")
-
-        return Response(HomeworkExtendedSerializer(serializer.instance).data)
+        return self.update_in_scope(request, HomeworkExtendedSerializer)
 
     @extend_schema(
         summary='Delete a Homework',
-        parameters=[IF_MATCH_PARAMETER],
+        parameters=[
+            IF_MATCH_PARAMETER,
+            scope_parameter(SCOPE_ALL, '`all` deletes the Homework, and a repeating Homework\'s whole series. `this` '
+                                       'deletes only the occurrence at `occurrence_start`; deleting the last one '
+                                       'deletes the series.'),
+            OCCURRENCE_START_PARAMETER,
+        ],
         tags=['planner.homework']
     )
     def delete(self, request, *args, **kwargs):
         """
         Delete the given homework instance.
         """
-        response = self.destroy(request, *args, **kwargs)
-
-        logger.info(f"Homework {kwargs['pk']} deleted for user {request.user.pk}")
-
-        return response
+        return self.destroy_in_scope(request, *args, **kwargs)
 
 
 @extend_schema(
@@ -286,16 +296,18 @@ class CourseGroupCourseHomeworkApiCloneView(HeliumAPIView, RetrieveModelMixin):
     @extend_schema(
         summary='Clone a Homework',
         request=None,
+        parameters=[OCCURRENCE_START_PARAMETER],
         responses={
             201: HomeworkExtendedSerializer
         }
     )
     def post(self, request, *args, **kwargs):
         """
-        Clone the given homework instance, including its reminders.
+        Clone the given homework instance, including its reminders. A repeating homework is cloned at the occurrence
+        at `occurrence_start`, or at its `start` when omitted, and the clone doesn't repeat.
         """
         source = self.get_object()
 
-        clone = clone_homework(source)
+        clone = clone_homework(source, occurrence_start_param(request, required=False))
 
         return Response(HomeworkExtendedSerializer(clone).data, status=status.HTTP_201_CREATED)

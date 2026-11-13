@@ -34,8 +34,9 @@ class CourseScheduleRecurrenceGroupSerializer(serializers.Serializer):
     """
     start = TzAwareDateTimeField()
     end = TzAwareDateTimeField()
-    recurrence_rule = serializers.CharField()
-    exception_dates = ExceptionDatesField()
+    recurrence_rule = serializers.CharField(
+        help_text='iCal RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats the class from `start`.')
+    exception_dates = ExceptionDatesField(help_text='List of ISO-8601 datetimes of occurrences to skip (iCal EXDATE).')
 
 
 class CourseScheduleSerializer(serializers.ModelSerializer):
@@ -71,6 +72,9 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         read_only_fields = ('course', 'created_at', 'updated_at',)
         extra_kwargs = {
             'days_of_week': {'required': True},
+            'template': {'help_text': 'A preset rotation, sent instead of the rotation fields. Any rotation fields '
+                                      'also sent must match the preset. In responses, the preset the schedule '
+                                      'matches, or null for a weekly schedule or a custom cycle length.'},
         }
 
     @extend_schema_field(CourseScheduleRecurrenceGroupSerializer(many=True))
@@ -89,9 +93,10 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         # A `template` sent in this request fills the rotation fields it implies, but
-        # only as defaults — the client's own fields win (see `_apply_template_defaults`).
-        if attrs.get('template') is not None:
-            self._apply_template_defaults(attrs, attrs['template'])
+        # only as defaults; fields the client also sent must match it.
+        requested_template = attrs.get('template')
+        if requested_template is not None:
+            self._apply_template_defaults(attrs, requested_template)
 
         cycle_length = self._resolve(attrs, 'cycle_length')
         is_week_based = self._resolve(attrs, 'is_week_based')
@@ -120,6 +125,10 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         # matching a preset get it filled in and edits that no longer match clear it — the
         # API self-heals rather than letting `template` drift out of sync with the fields.
         attrs['template'] = self._canonical_template(cycle_length, is_week_based)
+        stored_requested_template = None if requested_template == enums.WEEKLY else requested_template
+        if requested_template is not None and attrs['template'] != stored_requested_template:
+            raise ValidationError("'template' doesn't match the rotation fields. Send one or the other, or fields "
+                                  "that match the template.")
 
         start_date = self._resolve(attrs, 'start_date')
         end_date = self._resolve(attrs, 'end_date')
@@ -130,7 +139,7 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
     def _apply_template_defaults(self, attrs, template):
         # Fill the fields a template implies, but only where the client didn't set them
-        # (client fields win, and `template` is re-derived from the result). Stale state the
+        # (`template` is re-derived from the result and must match). Stale state the
         # template doesn't own — e.g. the other rotation type when switching — is cleared.
         fields = enums.SCHEDULE_TEMPLATES[template]['fields']
         is_cycle = 'cycle_length' in fields

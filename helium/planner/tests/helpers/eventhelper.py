@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 
 from dateutil import parser
 
@@ -23,6 +24,12 @@ def given_event_exists(user, title='🏀 Test Event', all_day=False, show_end_ti
                                  user=user)
 
     return event
+
+
+def given_weekly_event_exists(user, start=None, recurrence_rule='FREQ=WEEKLY;BYDAY=MO', **kwargs):
+    start = start or datetime.datetime(2030, 4, 1, 9, 0, tzinfo=ZoneInfo(user.settings.time_zone))
+    return given_event_exists(user, start=start, end=start + datetime.timedelta(hours=1),
+                              recurrence_rule=recurrence_rule, **kwargs)
 
 
 def verify_event_matches_data(test_case, event, data):

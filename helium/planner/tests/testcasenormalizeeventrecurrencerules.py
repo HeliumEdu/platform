@@ -32,9 +32,8 @@ class TestCaseNormalizeEventRecurrenceRules(TestCase):
                                     ('America/Los_Angeles', 'FREQ=MONTHLY;BYMONTHDAY=13')):
             with self.subTest(zone=zone_name):
                 # GIVEN
-                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com')
-                user.settings.time_zone = zone_name
-                user.settings.save()
+                user = userhelper.given_a_user_exists(username=f'user_{zone_name}', email=f'{zone_name}@test.com',
+                                                      time_zone=zone_name)
                 start = datetime.datetime(2026, 10, 13, 23, 30, tzinfo=datetime.timezone.utc)
                 event = eventhelper.given_event_exists(user, start=start, end=start + datetime.timedelta(hours=1),
                                                        recurrence_rule='FREQ=MONTHLY')

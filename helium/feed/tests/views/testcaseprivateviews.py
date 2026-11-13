@@ -189,9 +189,8 @@ class TestCasePrivateViews(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.settings.enable_private_slug()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group, room='')
-        category = categoryhelper.given_category_exists(course, title='Uncategorized')
+        course_group, course, category = coursehelper.given_course_with_category_exists(
+            user, course_kwargs={'room': ''}, category_kwargs={'title': 'Uncategorized'})
         homeworkhelper.given_homework_exists(course, category=category, title='Complete ungraded', completed=True,
                                              current_grade="-1/100")
         homeworkhelper.given_homework_exists(course, category=category, title='Incomplete graded', completed=False,
@@ -210,9 +209,8 @@ class TestCasePrivateViews(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.settings.enable_private_slug()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group, room='')
-        category = categoryhelper.given_category_exists(course, title='Uncategorized')
+        course_group, course, category = coursehelper.given_course_with_category_exists(
+            user, course_kwargs={'room': ''}, category_kwargs={'title': 'Uncategorized'})
         homework = homeworkhelper.given_homework_exists(course, category=category)
         note = notehelper.given_note_linked_to_homework(
             user, homework, content={'ops': [{'insert': 'Homework note content\n'}]}
@@ -232,9 +230,7 @@ class TestCasePrivateViews(TestCase):
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.settings.enable_private_slug()
-        course_group = coursegrouphelper.given_course_group_exists(user)
-        course = coursehelper.given_course_exists(course_group)
-        category = categoryhelper.given_category_exists(course)
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
         resource_group = resourcegrouphelper.given_resource_group_exists(user)
         resource = resourcehelper.given_resource_exists(resource_group, courses=[course])
         homework = homeworkhelper.given_homework_exists(

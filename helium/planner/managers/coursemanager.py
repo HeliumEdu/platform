@@ -3,6 +3,7 @@ import logging
 from django.apps import apps
 from django.db.models import Count, Q, Case, When
 
+from helium.common import enums
 from helium.common.managers.basemanager import BaseQuerySet, BaseManager
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ class CourseQuerySet(BaseQuerySet):
     def num_homework_graded(self):
         return self.aggregate(
             homework_count=Count(Case(
-                When(Q(homework__completed=True) & ~Q(homework__current_grade='-1/100'), then=1))))['homework_count']
+                When(Q(homework__completed=True) & ~Q(homework__current_grade=enums.UNGRADED), then=1))))['homework_count']
 
     def num_attachments(self):
         return self.aggregate(attachments_count=Count('attachments'))['attachments_count']

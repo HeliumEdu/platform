@@ -3,6 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Sum
 
+from helium.common import enums
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import random_color
 from helium.common.utils.validators import validate_hex_color
@@ -27,7 +28,7 @@ class Category(BaseModel):
         help_text='A valid hex color code choice to determine the color items will be shown on the calendar.',
         max_length=7, validators=[validate_hex_color], default=random_color)
 
-    average_grade = models.DecimalField(max_digits=7, default=-1, decimal_places=4)
+    average_grade = models.DecimalField(max_digits=7, default=enums.NO_GRADE, decimal_places=4)
 
     grade_by_weight = models.DecimalField(max_digits=7, default=0, decimal_places=4)
 

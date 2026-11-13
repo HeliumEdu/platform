@@ -1,6 +1,8 @@
 from helium.common.timezones import TIME_ZONE_CHOICES  # noqa: F401
 
 PYTHON_TO_HELIUM_DAY_OF_WEEK = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 0}
+WEEKDAY_TO_ICAL = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
+RECURRENCE_HORIZON_YEARS = 5
 
 MONTH = 0
 WEEK = 1
@@ -82,7 +84,7 @@ RESOURCE_STATUS_CHOICES = (
     (RENTED, 'Rented'),
     (ORDERED, 'Ordered'),
     (SHIPPED, 'Shipped'),
-    (NEED, 'Need'),
+    (NEED, 'Needed'),
     (RECEIVED, 'Received'),
     (TO_SELL, 'To Sell'),
     (DIGITAL, 'Digital')
@@ -193,3 +195,53 @@ SCHEDULE_TEMPLATES = {
     WEEK_AB: {'label': 'Week A/B', 'fields': {'is_week_based': True}},
 }
 SCHEDULE_TEMPLATE_CHOICES = tuple((key, template['label']) for key, template in SCHEDULE_TEMPLATES.items())
+
+
+UNGRADED = '-1/100'
+NO_GRADE = -1
+
+
+def _grade_scale(*bands):
+    return [{'min_grade': float(min_grade), 'grade_point': float(grade_point), 'label': label}
+            for min_grade, grade_point, label in bands]
+
+
+GRADE_SCALE_NONE = 0
+GRADE_SCALE_4_0 = 1
+GRADE_SCALE_4_0_PLUS_MINUS = 2
+GRADE_SCALE_4_33_PLUS_MINUS = 3
+GRADE_SCALE_4_5 = 4
+GRADE_SCALE_7_0 = 5
+GRADE_SCALE_9_0 = 6
+GRADE_SCALE_10_0 = 7
+GRADE_SCALE_1_5_PASS_50 = 8
+GRADE_SCALE_1_5_PASS_75 = 9
+GRADE_SCALE_TEMPLATES = {
+    GRADE_SCALE_NONE: {'label': 'None', 'scale': []},
+    GRADE_SCALE_4_0: {'label': '4.0', 'scale': _grade_scale(
+        (0, 0, 'F'), (60, 1, 'D'), (70, 2, 'C'), (80, 3, 'B'), (90, 4, 'A'))},
+    GRADE_SCALE_4_0_PLUS_MINUS: {'label': '4.0 with +/-', 'scale': _grade_scale(
+        (0, 0, 'F'), (60, 0.7, 'D-'), (63, 1, 'D'), (67, 1.3, 'D+'), (70, 1.7, 'C-'), (73, 2, 'C'), (77, 2.3, 'C+'),
+        (80, 2.7, 'B-'), (83, 3, 'B'), (87, 3.3, 'B+'), (90, 3.7, 'A-'), (93, 4, 'A'), (97, 4, 'A+'))},
+    GRADE_SCALE_4_33_PLUS_MINUS: {'label': '4.33 with +/-', 'scale': _grade_scale(
+        (0, 0, 'F'), (60, 0.67, 'D-'), (63, 1, 'D'), (67, 1.33, 'D+'), (70, 1.67, 'C-'), (73, 2, 'C'), (77, 2.33, 'C+'),
+        (80, 2.67, 'B-'), (83, 3, 'B'), (87, 3.33, 'B+'), (90, 3.67, 'A-'), (93, 4, 'A'), (97, 4.33, 'A+'))},
+    GRADE_SCALE_4_5: {'label': '4.5', 'scale': _grade_scale(
+        (0, 0, 'F'), (60, 1, 'D'), (65, 1.5, 'D+'), (70, 2, 'C'), (75, 2.5, 'C+'), (80, 3, 'B'), (85, 3.5, 'B+'),
+        (90, 4, 'A'), (95, 4.5, 'A+'))},
+    GRADE_SCALE_7_0: {'label': '7.0', 'scale': _grade_scale(
+        (0, 1, 'F'), (25, 2, 'F'), (40, 3, 'F'), (50, 4, 'P'), (65, 5, 'C'), (75, 6, 'D'), (85, 7, 'HD'))},
+    GRADE_SCALE_9_0: {'label': '9.0', 'scale': _grade_scale(
+        (0, 0, 'F'), (50, 1, 'D'), (60, 2, 'C'), (65, 3, 'C+'), (70, 4, 'B-'), (73, 5, 'B'), (77, 6, 'B+'),
+        (80, 7, 'A-'), (85, 8, 'A'), (90, 9, 'A+'))},
+    GRADE_SCALE_10_0: {'label': '10.0', 'scale': _grade_scale(
+        (0, 0, 'F'), (40, 4, 'P'), (45, 5, 'C'), (50, 6, 'B'), (60, 7, 'B+'), (70, 8, 'A'), (80, 9, 'A+'),
+        (90, 10, 'O'))},
+    GRADE_SCALE_1_5_PASS_50: {'label': '1.0-5.0 (pass at 50%)', 'scale': _grade_scale(
+        (0, 5, ''), (50, 4, ''), (55, 3.7, ''), (60, 3.3, ''), (65, 3, ''), (70, 2.7, ''), (75, 2.3, ''), (80, 2, ''),
+        (85, 1.7, ''), (90, 1.3, ''), (95, 1, ''))},
+    GRADE_SCALE_1_5_PASS_75: {'label': '1.0-5.0 (pass at 75%)', 'scale': _grade_scale(
+        (0, 5, ''), (75, 3, ''), (76, 2.75, ''), (79, 2.5, ''), (82, 2.25, ''), (85, 2, ''), (88, 1.75, ''),
+        (91, 1.5, ''), (94, 1.25, ''), (97, 1, ''))},
+}
+GRADE_SCALE_TEMPLATE_CHOICES = tuple((key, template['label']) for key, template in GRADE_SCALE_TEMPLATES.items())

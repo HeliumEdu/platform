@@ -46,14 +46,14 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = (
-            'id', 'title', 'room', 'credits', 'color', 'website', 'is_online', 'current_grade', 'trend', 'teacher_name',
-            'teacher_email', 'start_date', 'end_date', 'exceptions', 'schedules', 'template', 'course_group', 'notes',
-            'created_at', 'updated_at',
+            'id', 'title', 'room', 'credits', 'color', 'website', 'is_online', 'current_grade', 'grade_point', 'trend',
+            'teacher_name', 'teacher_email', 'start_date', 'end_date', 'exceptions', 'schedules', 'template',
+            'course_group', 'notes', 'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
             'has_weighted_grading', 'num_homework', 'num_homework_completed', 'num_homework_graded',)
         read_only_fields = (
-            'course_group', 'notes', 'current_grade', 'trend', 'created_at', 'updated_at', 'has_weighted_grading',
-            'num_homework', 'num_homework_completed', 'num_homework_graded',)
+            'course_group', 'notes', 'current_grade', 'grade_point', 'trend', 'created_at', 'updated_at',
+            'has_weighted_grading', 'num_homework', 'num_homework_completed', 'num_homework_graded',)
 
     def create(self, validated_data):
         # `None` means the field was omitted; a provided template can be `0` (a falsy enum value), so

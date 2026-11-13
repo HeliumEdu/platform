@@ -10,8 +10,11 @@ from rest_framework.test import APITestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.common.tests.helpers import commonhelper
+from helium.common.utils import datetimeutils
 from helium.planner.models import Event, Reminder
-from helium.planner.tests.helpers import eventhelper, reminderhelper
+from helium.planner.tests.helpers import attachmenthelper, eventhelper, notehelper, occurrencehelper, \
+    reminderhelper
 
 
 class TestCaseEventViews(APITestCase):
@@ -30,8 +33,7 @@ class TestCaseEventViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        commonhelper.verify_all_responses_have_status(self, responses, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_events(self):
         user1 = userhelper.given_a_user_exists()
@@ -105,17 +107,51 @@ class TestCaseEventViews(APITestCase):
         self.assertEqual(cloned_reminder.user_id, user.pk)
         self.assertEqual(cloned_reminder.start_of_range, clone.start - datetime.timedelta(minutes=30))
 
-    def test_clone_recurring_event_returns_400(self):
+    def test_clone_recurring_event_returns_non_recurring_event_at_requested_occurrence(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        source = eventhelper.given_event_exists(user, recurrence_rule='FREQ=WEEKLY;BYDAY=MO',
+                                                start=datetime.datetime(2017, 5, 8, 12, 0, 0,
+                                                                        tzinfo=datetime.timezone.utc),
+                                                end=datetime.datetime(2017, 5, 8, 14, 0, 0,
+                                                                      tzinfo=datetime.timezone.utc))
+        occurrence_start = datetime.datetime(2017, 5, 22, 12, 0, 0, tzinfo=datetime.timezone.utc)
+
+        # WHEN
+        response = _clone(self.client, source, occurrence_start)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        clone = Event.objects.get(pk=response.data['id'])
+        self.assertIsNone(clone.recurrence_rule)
+        self.assertEqual(clone.start, occurrence_start)
+        self.assertEqual(clone.end, occurrence_start + datetime.timedelta(hours=2))
+
+    def test_clone_recurring_event_at_non_occurrence_returns_400(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         source = eventhelper.given_event_exists(user, recurrence_rule='FREQ=WEEKLY;BYDAY=MO')
 
         # WHEN
-        response = self.client.post(reverse('planner_events_clone', kwargs={'pk': source.pk}),
-                                    content_type='application/json')
+        response = self.client.post(reverse('planner_events_clone', kwargs={'pk': source.pk}) +
+                                    '?occurrence_start=2017-05-23T12:00:00Z')
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('occurrence_start', response.data)
+        self.assertEqual(Event.objects.count(), 1)
+
+    def test_clone_endless_event_past_the_horizon_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        source = eventhelper.given_event_exists(user, recurrence_rule='FREQ=DAILY')
+
+        # WHEN
+        response = _clone(self.client, source, source.start.replace(year=9999))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('occurrence_start', response.data)
         self.assertEqual(Event.objects.count(), 1)
 
     def test_clone_event_other_user_returns_404(self):
@@ -418,6 +454,32 @@ class TestCaseEventViews(APITestCase):
         self.assertIsNone(response.data['recurrence_rule'])
         self.assertIsNone(response.data['exception_dates'])
 
+    def test_blank_recurrence_rule_is_stored_as_null(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        event = eventhelper.given_event_exists(user)
+        data = {
+            'title': 'One-off meeting',
+            'all_day': False,
+            'show_end_time': True,
+            'start': '2025-09-01T18:00:00Z',
+            'end': '2025-09-01T19:00:00Z',
+            'priority': 50,
+            'recurrence_rule': '',
+        }
+
+        # WHEN
+        created = self.client.post(reverse('planner_events_list'), json.dumps(data), content_type='application/json')
+        patched = self.client.patch(reverse('planner_events_detail', kwargs={'pk': event.pk}),
+                                    json.dumps({'recurrence_rule': ''}), content_type='application/json')
+
+        # THEN
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(patched.status_code, status.HTTP_200_OK)
+        self.assertIsNone(created.data['recurrence_rule'])
+        self.assertIsNone(patched.data['recurrence_rule'])
+        self.assertEqual(Event.objects.filter(recurrence_rule__isnull=True).count(), 2)
+
     def test_create_event_rejects_malformed_recurrence_rule(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -687,13 +749,7 @@ class TestCaseEventViews(APITestCase):
         ]
 
         # THEN
-        for response in responses:
-            if isinstance(response.data, list):
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-                self.assertEqual(len(response.data), 0)
-            else:
-                self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('matches the given query', response.data['detail'].lower())
+        commonhelper.verify_responses_hide_other_users_data(self, responses)
 
     def test_range_query(self):
         # GIVEN
@@ -808,3 +864,293 @@ class TestCaseEventViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
+
+
+class TestCaseEventOccurrenceViews(APITestCase):
+    def test_patch_this_occurrence_detaches_it_with_its_own_times_and_reminders(self):
+        for index, zone in enumerate(('Europe/Amsterdam', 'America/Los_Angeles')):
+            with self.subTest(zone=zone):
+                # GIVEN
+                tz = ZoneInfo(zone)
+                user = userhelper.given_a_user_exists_and_is_authenticated(
+                    self.client, username=f'user{index}', email=f'user{index}@test.com', time_zone=zone)
+                series = _given_weekly_series(user, tz)
+                reminderhelper.given_reminder_exists(user, event=series, offset=30)
+                attachment = attachmenthelper.given_attachment_exists(user, event=series)
+                note = notehelper.given_note_linked_to_event(user, series)
+                occurrence = datetime.datetime(2030, 5, 20, 9, 0, tzinfo=tz)
+                moved = datetime.datetime(2030, 5, 21, 14, 0, tzinfo=tz)
+
+                # WHEN
+                response = _patch(
+                    self.client, series, {'title': 'Lecture (Room 2)', 'start': moved.isoformat(),
+                                          'end': (moved + datetime.timedelta(hours=2)).isoformat()},
+                    occurrencehelper.occurrence_query(occurrence))
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                detached = Event.objects.get(pk=response.data['id'])
+                self.assertNotEqual(detached.pk, series.pk)
+                self.assertEqual(detached.title, 'Lecture (Room 2)')
+                self.assertEqual(detached.start, moved)
+                self.assertEqual(detached.end, moved + datetime.timedelta(hours=2))
+                self.assertIsNone(detached.recurrence_rule)
+                reminder = detached.reminders.get()
+                self.assertFalse(reminder.sent)
+                self.assertEqual(reminder.offset, 30)
+                self.assertEqual(reminder.start_of_range, moved - datetime.timedelta(minutes=30))
+                self.assertEqual(detached.attachments.count(), 0)
+                self.assertEqual(detached.notes_set.count(), 0)
+                series.refresh_from_db()
+                self.assertEqual(series.exception_dates, [datetimeutils.as_utc_iso(occurrence)])
+                self.assertEqual(series.title, 'Lecture')
+                self.assertEqual(list(series.attachments.all()), [attachment])
+                self.assertEqual(list(note.events.all()), [series])
+
+    def test_patch_this_occurrence_rejects_what_is_not_a_remaining_occurrence(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        series = _given_weekly_series(user, tz)
+        excluded = datetime.datetime(2030, 5, 13, 9, 0, tzinfo=tz)
+        series.exception_dates = [datetimeutils.as_utc_iso(excluded)]
+        series.save()
+        single = eventhelper.given_event_exists(user, start=datetime.datetime(2030, 5, 6, 7, 0, tzinfo=datetime.timezone.utc))
+        cases = (
+            (series, occurrencehelper.occurrence_query(datetime.datetime(2030, 5, 7, 9, 0, tzinfo=tz)),
+             'occurrence_start'),
+            (series, occurrencehelper.occurrence_query(excluded), 'occurrence_start'),
+            (series, 'scope=this', 'occurrence_start'),
+            (series, 'scope=some&occurrence_start=2030-05-20T07:00:00Z', 'scope'),
+            (series, 'scope=this&occurrence_start=2030-05-20T09:00:00', 'occurrence_start'),
+            (single, 'scope=this&occurrence_start=2030-05-06T07:00:00Z', 'non_field_errors'),
+        )
+
+        for event, query, error_key in cases:
+            with self.subTest(query=query):
+                # WHEN
+                response = _patch(self.client, event, {'title': 'Moved'}, query)
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                if error_key != 'non_field_errors':
+                    self.assertIn(error_key, response.data)
+                self.assertEqual(Event.objects.count(), 2)
+                series.refresh_from_db()
+                self.assertEqual(series.exception_dates, [datetimeutils.as_utc_iso(excluded)])
+                self.assertEqual(series.title, 'Lecture')
+
+    def test_patch_this_last_remaining_occurrence_hands_note_and_attachments_over(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        series = _given_weekly_series(user, tz, rule='FREQ=WEEKLY;BYDAY=MO;COUNT=2')
+        series.exception_dates = [datetimeutils.as_utc_iso(series.start)]
+        series.save()
+        reminderhelper.given_reminder_exists(user, event=series)
+        attachment = attachmenthelper.given_attachment_exists(user, event=series)
+        note = notehelper.given_note_linked_to_event(user, series)
+        last = datetime.datetime(2030, 5, 13, 9, 0, tzinfo=tz)
+
+        # WHEN
+        response = _patch(self.client, series, {'title': 'Final lecture'}, occurrencehelper.occurrence_query(last))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Event.objects.filter(pk=series.pk).exists())
+        detached = Event.objects.get(pk=response.data['id'])
+        self.assertEqual(detached.title, 'Final lecture')
+        self.assertEqual(detached.start, last)
+        self.assertEqual(list(note.events.all()), [detached])
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.event_id, detached.pk)
+        self.assertEqual(detached.reminders.count(), 1)
+
+    def test_patch_from_an_occurrence_moves_the_whole_series(self):
+        for index, zone in enumerate(('Europe/Amsterdam', 'America/Los_Angeles')):
+            with self.subTest(zone=zone):
+                # GIVEN
+                tz = ZoneInfo(zone)
+                user = userhelper.given_a_user_exists_and_is_authenticated(
+                    self.client, username=f'user{index}', email=f'user{index}@test.com', time_zone=zone)
+                series = _given_weekly_series(user, tz)
+                series.exception_dates = [datetimeutils.as_utc_iso(datetime.datetime(2030, 5, 27, 9, 0, tzinfo=tz))]
+                series.save()
+                occurrence = datetime.datetime(2030, 5, 13, 9, 0, tzinfo=tz)
+                moved = datetime.datetime(2030, 5, 14, 10, 30, tzinfo=tz)
+
+                # WHEN
+                response = _patch(self.client, series, {'start': moved.isoformat(),
+                                                        'end': (moved + datetime.timedelta(hours=2)).isoformat()},
+                                  occurrencehelper.occurrence_query(occurrence, scope=None))
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertEqual(response.data['id'], series.pk)
+                series.refresh_from_db()
+                self.assertEqual(series.start, datetime.datetime(2030, 5, 7, 10, 30, tzinfo=tz))
+                self.assertEqual(series.end - series.start, datetime.timedelta(hours=2))
+                self.assertEqual(series.recurrence_rule, 'FREQ=WEEKLY;BYDAY=TU')
+                self.assertEqual(series.exception_dates,
+                                 [datetimeutils.as_utc_iso(datetime.datetime(2030, 5, 28, 10, 30, tzinfo=tz))])
+                self.assertEqual(Event.objects.filter(user=user).count(), 1)
+
+    def test_patch_series_start_without_a_rule_moves_rule_and_exceptions(self):
+        # GIVEN
+        tz = ZoneInfo('America/Los_Angeles')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Los_Angeles')
+        series = _given_weekly_series(user, tz, rule='FREQ=WEEKLY;BYDAY=MO;UNTIL=20300701T065959Z')
+        series.exception_dates = [datetimeutils.as_utc_iso(datetime.datetime(2030, 5, 20, 9, 0, tzinfo=tz))]
+        series.save()
+        new_start = datetime.datetime(2030, 5, 8, 9, 0, tzinfo=tz)
+
+        # WHEN
+        response = self.client.patch(reverse('planner_events_detail', kwargs={'pk': series.pk}),
+                                     json.dumps({'start': new_start.isoformat(),
+                                                 'end': (new_start + datetime.timedelta(hours=1)).isoformat()}),
+                                     content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        series.refresh_from_db()
+        self.assertEqual(series.recurrence_rule, 'FREQ=WEEKLY;BYDAY=WE;UNTIL=20300703T065959Z')
+        self.assertEqual(series.exception_dates,
+                         [datetimeutils.as_utc_iso(datetime.datetime(2030, 5, 22, 9, 0, tzinfo=tz))])
+
+    def test_patch_series_start_with_an_explicit_rule_keeps_that_rule(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        series = _given_weekly_series(user, tz)
+        new_start = datetime.datetime(2030, 5, 10, 9, 0, tzinfo=tz)
+
+        # WHEN
+        response = self.client.patch(reverse('planner_events_detail', kwargs={'pk': series.pk}),
+                                     json.dumps({'start': new_start.isoformat(),
+                                                 'end': (new_start + datetime.timedelta(hours=1)).isoformat(),
+                                                 'recurrence_rule': 'FREQ=WEEKLY;BYDAY=FR,MO'}),
+                                     content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        series.refresh_from_db()
+        self.assertEqual(series.recurrence_rule, 'FREQ=WEEKLY;BYDAY=FR,MO')
+
+    def test_patch_from_an_occurrence_with_only_end_keeps_the_series_start(self):
+        for index, zone in enumerate(('Europe/Amsterdam', 'America/Los_Angeles')):
+            with self.subTest(zone=zone):
+                # GIVEN
+                tz = ZoneInfo(zone)
+                user = userhelper.given_a_user_exists_and_is_authenticated(
+                    self.client, username=f'user{index}', email=f'user{index}@test.com', time_zone=zone)
+                series = _given_weekly_series(user, tz)
+                occurrence = datetime.datetime(2030, 5, 20, 9, 0, tzinfo=tz)
+
+                # WHEN
+                response = _patch(self.client, series, {'end': (occurrence + datetime.timedelta(hours=2)).isoformat()},
+                                  occurrencehelper.occurrence_query(occurrence, scope=None))
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+                series.refresh_from_db()
+                self.assertEqual(series.start, datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz))
+                self.assertEqual(series.end - series.start, datetime.timedelta(hours=2))
+
+    def test_patch_from_an_occurrence_with_only_start_keeps_the_occurrence_duration(self):
+        for zone_index, zone in enumerate(('Europe/Amsterdam', 'America/Los_Angeles')):
+            tz = ZoneInfo(zone)
+            cases = (
+                (datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz), datetime.datetime(2030, 5, 6, 9, 30, tzinfo=tz),
+                 datetime.datetime(2030, 5, 6, 9, 30, tzinfo=tz)),
+                (datetime.datetime(2030, 5, 20, 9, 0, tzinfo=tz), datetime.datetime(2030, 5, 21, 10, 0, tzinfo=tz),
+                 datetime.datetime(2030, 5, 7, 10, 0, tzinfo=tz)),
+            )
+            for case_index, (occurrence, moved, expected_start) in enumerate(cases):
+                with self.subTest(zone=zone, occurrence=occurrence):
+                    # GIVEN
+                    username = f'user{zone_index}{case_index}'
+                    user = userhelper.given_a_user_exists_and_is_authenticated(
+                        self.client, username=username, email=f'{username}@test.com', time_zone=zone)
+                    series = _given_weekly_series(user, tz)
+
+                    # WHEN
+                    response = _patch(self.client, series, {'start': moved.isoformat()},
+                                      occurrencehelper.occurrence_query(occurrence, scope=None))
+
+                    # THEN
+                    self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+                    series.refresh_from_db()
+                    self.assertEqual(series.start, expected_start)
+                    self.assertEqual(series.end - series.start, datetime.timedelta(hours=1))
+
+    def test_delete_this_occurrence_leaves_it_out_of_the_series(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        series = _given_weekly_series(user, tz)
+        occurrence = datetime.datetime(2030, 5, 13, 9, 0, tzinfo=tz)
+
+        # WHEN
+        response = _delete(self.client, series, occurrencehelper.occurrence_query(occurrence))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        series.refresh_from_db()
+        self.assertEqual(series.exception_dates, [datetimeutils.as_utc_iso(occurrence)])
+        self.assertEqual(series.recurrence_rule, 'FREQ=WEEKLY;BYDAY=MO')
+
+    def test_delete_this_last_remaining_occurrence_deletes_the_series(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        series = _given_weekly_series(user, tz, rule='FREQ=WEEKLY;BYDAY=MO;COUNT=2')
+        series.exception_dates = [datetimeutils.as_utc_iso(series.start)]
+        series.save()
+        note = notehelper.given_note_linked_to_event(user, series)
+
+        # WHEN
+        response = _delete(self.client, series, occurrencehelper.occurrence_query('2030-05-13T07:00:00Z'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Event.objects.filter(pk=series.pk).exists())
+        self.assertFalse(type(note).objects.filter(pk=note.pk).exists())
+
+    def test_patch_clearing_the_rule_drops_fired_reminder_records(self):
+        # GIVEN
+        tz = ZoneInfo('Europe/Amsterdam')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='Europe/Amsterdam')
+        series = _given_weekly_series(user, tz)
+        active = reminderhelper.given_reminder_exists(user, event=series, offset=15)
+        fired = reminderhelper.given_reminder_exists(user, event=series, offset=15)
+        Reminder.objects.filter(pk=fired.pk).update(sent=True)
+        other_offset_fired = reminderhelper.given_reminder_exists(user, event=series, offset=60)
+        Reminder.objects.filter(pk=other_offset_fired.pk).update(sent=True)
+
+        # WHEN
+        response = self.client.patch(reverse('planner_events_detail', kwargs={'pk': series.pk}),
+                                     json.dumps({'recurrence_rule': None}), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(series.reminders.values_list('pk', flat=True)), {active.pk, other_offset_fired.pk})
+
+
+def _given_weekly_series(user, tz, rule='FREQ=WEEKLY;BYDAY=MO'):
+    return eventhelper.given_weekly_event_exists(user, title='Lecture',
+                                                 start=datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz),
+                                                 recurrence_rule=rule)
+
+
+def _patch(client, event, data, query):
+    return client.patch(f"{reverse('planner_events_detail', kwargs={'pk': event.pk})}?{query}",
+                        json.dumps(data), content_type='application/json')
+
+
+def _delete(client, event, query):
+    return client.delete(f"{reverse('planner_events_detail', kwargs={'pk': event.pk})}?{query}")
+
+
+def _clone(client, event, occurrence_start):
+    return client.post(f"{reverse('planner_events_clone', kwargs={'pk': event.pk})}?"
+                       f"{occurrencehelper.occurrence_query(occurrence_start, scope=None)}")
