@@ -33,8 +33,8 @@ class CourseGroupSerializer(serializers.ModelSerializer):
                   'group outside the example schedule, else empty.')
     grade_scale_template = serializers.ChoiceField(
         choices=enums.GRADE_SCALE_TEMPLATE_CHOICES, required=False, allow_null=True,
-        help_text='A preset to fill `grade_scale` from when `grade_scale` is omitted. Always re-derived from the '
-                  'resulting `grade_scale`: the matching preset, or null for a custom scale.')
+        help_text='A preset grade scale, sent instead of `grade_scale`. If both are sent, `grade_scale` must match '
+                  'the preset. In responses, the preset `grade_scale` matches, or null for a custom scale.')
 
     class Meta:
         model = CourseGroup
@@ -71,6 +71,10 @@ class CourseGroupSerializer(serializers.ModelSerializer):
 
         if 'grade_scale' in attrs:
             attrs['grade_scale_template'] = gradeutils.preset_for(attrs['grade_scale'])
+            if template is not None and attrs['grade_scale_template'] != template:
+                raise serializers.ValidationError(
+                    {'grade_scale_template': "Doesn't match 'grade_scale'. Send one or the other, or values that "
+                                             "match the preset."})
         elif self.instance is not None:
             attrs['grade_scale_template'] = gradeutils.preset_for(self.instance.grade_scale)
         else:

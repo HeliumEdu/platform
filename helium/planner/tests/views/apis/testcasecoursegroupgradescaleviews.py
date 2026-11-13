@@ -81,7 +81,7 @@ class TestCaseCourseGroupGradeScaleViews(APITestCase):
         self.assertIsNone(response.data['grade_scale_template'])
         self.assertEqual([band['grade_point'] for band in response.data['grade_scale']], [0.0, 2.0, 4.0])
 
-    def test_scale_sent_with_a_template_wins_and_template_is_re_derived(self):
+    def test_template_with_a_custom_scale_is_rejected(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
@@ -89,9 +89,47 @@ class TestCaseCourseGroupGradeScaleViews(APITestCase):
         response = self._create_course_group(grade_scale_template=enums.GRADE_SCALE_4_5, grade_scale=_CUSTOM_SCALE)
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('grade_scale_template', response.data)
+        self.assertFalse(CourseGroup.objects.exists())
+
+    def test_template_with_another_presets_scale_is_rejected(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self._create_course_group(grade_scale_template=enums.GRADE_SCALE_4_5,
+                                             grade_scale=gradeutils.preset_grade_scale(enums.GRADE_SCALE_4_0))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('grade_scale_template', response.data)
+
+    def test_template_with_its_own_scale_is_accepted(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self._create_course_group(grade_scale_template=enums.GRADE_SCALE_4_5,
+                                             grade_scale=gradeutils.preset_grade_scale(enums.GRADE_SCALE_4_5))
+
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIsNone(response.data['grade_scale_template'])
-        self.assertEqual(len(response.data['grade_scale']), 3)
+        self.assertEqual(response.data['grade_scale_template'], enums.GRADE_SCALE_4_5)
+
+    def test_put_with_template_and_a_conflicting_scale_is_rejected(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+
+        # WHEN
+        response = self._put_course_group(course_group, grade_scale_template=enums.GRADE_SCALE_4_5,
+                                          grade_scale=_CUSTOM_SCALE)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        course_group.refresh_from_db()
+        self.assertEqual(course_group.grade_scale_template, enums.GRADE_SCALE_4_0)
 
     def test_create_copies_the_most_recent_groups_scale_skipping_the_example(self):
         # GIVEN

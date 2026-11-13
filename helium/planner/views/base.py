@@ -1,7 +1,6 @@
+import logging
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-
-import logging
 
 from dateutil import parser
 from django.db import transaction

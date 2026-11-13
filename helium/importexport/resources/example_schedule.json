@@ -18,6 +18,7 @@
       "shown_on_calendar": true,
       "overall_grade": "87.7934",
       "trend": 0.0010061923076923659,
+      "grade_scale_template": 1,
       "user": 118,
       "num_days": 61,
       "num_days_completed": 37,

@@ -86,7 +86,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         Create a reminder for the authenticated user.
 
         Exactly one of `event`, `homework`, or `course` must be given — that's the parent the reminder
-        fires against. Reminders on a `course`, or on an `event` with a `recurrence_rule`, are repeating:
+        fires against. Reminders on a `course`, or on a `homework` or `event` with a `recurrence_rule`, are repeating:
         only one active reminder is kept per (parent, `type`, `offset`, `offset_type`) combination, and the
         server rolls it forward to the next class or occurrence as each one fires.
         """

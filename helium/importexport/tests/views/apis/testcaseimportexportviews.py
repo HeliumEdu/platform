@@ -17,6 +17,7 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 from helium.common.tests.helpers import commonhelper
+from helium.common.utils import gradeutils
 from helium.feed.models import ExternalCalendar
 from helium.feed.tests.helpers import externalcalendarhelper
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Category, ResourceGroup, Resource, Event, \
@@ -2023,6 +2024,37 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(custom.grade_scale, custom_scale)
         self.assertIsNone(custom.grade_scale_template)
         self.assertEqual(float(custom.gpa), -1)
+
+    def test_import_rejects_a_template_that_conflicts_with_its_grade_scale(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['course_groups'][0].update(grade_scale_template=enums.GRADE_SCALE_4_5,
+                                           grade_scale=gradeutils.preset_grade_scale(enums.GRADE_SCALE_4_0))
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(CourseGroup.objects.exists())
+
+    def test_import_rejects_a_template_that_conflicts_with_its_schedule(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['course_schedules'] = [{
+            'id': 1, 'course': 1, 'days_of_week': '0000000', 'template': enums.AB_DAY, 'cycle_length': 6,
+            'anchor_date': '2024-01-08',
+            'cycle_slots': [{'indices': [1, 2], 'start_time': '09:00:00', 'end_time': '09:50:00'}],
+        }]
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(CourseGroup.objects.exists())
 
     def test_imported_group_without_a_scale_has_none_when_the_account_has_no_groups(self):
         # GIVEN

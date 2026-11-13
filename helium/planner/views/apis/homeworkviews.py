@@ -167,7 +167,6 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         self.perform_create(serializer)
 
         # Return extended serializer with note field
@@ -240,7 +239,9 @@ class CourseGroupCourseHomeworkApiDetailView(RepeatingItemDetailMixin, Precondit
             scope_parameter(SCOPE_ALL, '`all` updates the Homework, and a repeating Homework\'s whole series. `this` '
                                        'makes the occurrence at `occurrence_start` its own Homework, with the '
                                        'series\' reminders, and leaves it out of the series, which keeps its note '
-                                       'and attachments. Completing or grading an occurrence needs `this`.'),
+                                       'and attachments. If it was the last occurrence, they move to the new '
+                                       'Homework and the series is deleted. Completing or grading an occurrence needs '
+                                       '`this`.'),
             OCCURRENCE_START_PARAMETER,
         ],
         responses={200: HomeworkExtendedSerializer},
@@ -303,8 +304,8 @@ class CourseGroupCourseHomeworkApiCloneView(HeliumAPIView, RetrieveModelMixin):
     )
     def post(self, request, *args, **kwargs):
         """
-        Clone the given homework instance, including its reminders. A repeating assignment is cloned at the occurrence at
-        `occurrence_start`, or at its `start` when omitted, and the clone doesn't repeat.
+        Clone the given homework instance, including its reminders. A repeating homework is cloned at the occurrence
+        at `occurrence_start`, or at its `start` when omitted, and the clone doesn't repeat.
         """
         source = self.get_object()
 

@@ -825,7 +825,7 @@ class TestCaseCourseViews(APITestCase):
         self.assertIsNone(schedule.template)
         self.assertEqual(schedule.cycle_length, 5)
 
-    def test_template_and_conflicting_field_self_heals_to_matching_template(self):
+    def test_template_and_conflicting_field_is_rejected(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -845,10 +845,74 @@ class TestCaseCourseViews(APITestCase):
             json.dumps(data), content_type='application/json')
 
         # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(CourseSchedule.objects.exists())
+
+    def test_template_with_matching_fields_is_accepted(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'days_of_week': '0000000',
+            'template': enums.SIX_DAY_CYCLE,
+            'cycle_length': 6,
+            'anchor_date': '2026-03-02',
+            'cycle_slots': [{'indices': [1, 2], 'start_time': '09:00:00', 'end_time': '09:50:00'}],
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json')
+
+        # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        schedule = CourseSchedule.objects.get(pk=response.data['id'])
-        self.assertEqual(schedule.cycle_length, 6)
-        self.assertEqual(schedule.template, enums.SIX_DAY_CYCLE)
+        self.assertEqual(response.data['template'], enums.SIX_DAY_CYCLE)
+
+    def test_weekly_template_with_weekly_fields_is_accepted(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'days_of_week': '0100000',
+            'mon_start_time': '09:00:00', 'mon_end_time': '09:50:00',
+            'template': enums.WEEKLY,
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(response.data['template'])
+
+    def test_weekly_template_with_a_cycle_length_is_rejected(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+
+        # WHEN
+        data = {
+            'days_of_week': '0000000',
+            'template': enums.WEEKLY,
+            'cycle_length': 6,
+            'anchor_date': '2026-03-02',
+            'cycle_slots': [{'indices': [1, 2], 'start_time': '09:00:00', 'end_time': '09:50:00'}],
+        }
+        response = self.client.post(
+            reverse('planner_coursegroups_courses_courseschedules_list',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk}),
+            json.dumps(data), content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_raw_cycle_length_infers_matching_template(self):
         # GIVEN

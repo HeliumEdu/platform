@@ -42,7 +42,8 @@ def _offset_label(reminder):
 
 
 def _item_series_key(reminder):
-    return reminder.homework_id, reminder.event_id, reminder.user_id, reminder.type, reminder.offset, reminder.offset_type
+    return (reminder.homework_id, reminder.event_id, reminder.user_id, reminder.type, reminder.offset,
+            reminder.offset_type)
 
 
 def _create_next_item_reminder(reminder):
@@ -393,7 +394,8 @@ def _continue_series(reminder, channel):
             if new_reminder is None:
                 logger.info(
                     f'No next occurrence for repeating {channel} reminder series (series ended): '
-                    f'course={reminder.course_id}, event={reminder.event_id}, user={reminder.user_id}')
+                    f'course={reminder.course_id}, homework={reminder.homework_id}, event={reminder.event_id}, '
+                    f'user={reminder.user_id}')
         except Exception:
             logger.error(f"An error occurred creating next repeating {channel} reminder.", exc_info=True)
 

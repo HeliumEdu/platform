@@ -441,6 +441,7 @@ class TestCaseShiftRecurrenceRule(TestCase):
         self.assertEqual(shifted, 'FREQ=MONTHLY;BYDAY=2TU')
 
     def test_until_moves_by_the_same_distance_in_each_format(self):
+        # GIVEN
         old_start = datetime.datetime(2026, 9, 7, 9, 0)
         new_start = datetime.datetime(2026, 9, 9, 10, 30)
         for until, expected in (('20261201T235959Z', '20261204T012959Z'),

@@ -18,7 +18,7 @@ from helium.planner.models import Event, Reminder, Note
 from helium.planner.serializers.eventserializer import EventSerializer, EventExtendedSerializer
 from helium.planner.services.eventservice import clone_event
 from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS, SCOPE_ALL, \
-    SCOPE_THIS, OCCURRENCE_START_PARAMETER, RepeatingItemDetailMixin, occurrence_start_param, scope_parameter
+    OCCURRENCE_START_PARAMETER, RepeatingItemDetailMixin, occurrence_start_param, scope_parameter
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +164,8 @@ class EventsApiDetailView(RepeatingItemDetailMixin, PreconditionMixin, HeliumAPI
             scope_parameter(SCOPE_ALL, '`all` updates the Event, and a repeating Event\'s whole series. `this` '
                                        'makes the occurrence at `occurrence_start` its own Event, with the '
                                        'series\' reminders, and leaves it out of the series, which keeps its note '
-                                       'and attachments.'),
+                                       'and attachments. If it was the last occurrence, they move to the new Event '
+                                       'and the series is deleted.'),
             OCCURRENCE_START_PARAMETER,
         ],
         responses={200: EventExtendedSerializer},
