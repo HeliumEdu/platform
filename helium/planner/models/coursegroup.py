@@ -4,7 +4,7 @@ from django.db import models
 
 from helium.common import enums
 from helium.common.models import BaseModel
-from helium.common.utils.gradeutils import default_grade_scale
+from helium.common.utils.gradeutils import default_grade_scale, preset_for
 from helium.common.utils.validators import validate_and_normalize_date_csv
 from helium.planner.managers.coursegroupmanager import CourseGroupManager
 
@@ -57,6 +57,10 @@ class CourseGroup(BaseModel):
         if self.exceptions:
             self.exceptions = validate_and_normalize_date_csv(
                 self.exceptions, self.start_date, self.end_date, range_label='group date range')
+
+    def save(self, *args, **kwargs):
+        self.grade_scale_template = preset_for(self.grade_scale)
+        super().save(*args, **kwargs)
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'

@@ -240,8 +240,7 @@ class CourseGroupCourseHomeworkApiDetailView(RepeatingItemDetailMixin, Precondit
                                        'makes the occurrence at `occurrence_start` its own Homework, with the '
                                        'series\' reminders, and leaves it out of the series, which keeps its note '
                                        'and attachments. If it was the last occurrence, they move to the new '
-                                       'Homework and the series is deleted. Completing or grading an occurrence needs '
-                                       '`this`.'),
+                                       'Homework and the series is deleted. Completing an occurrence needs `this`.'),
             OCCURRENCE_START_PARAMETER,
         ],
         responses={200: HomeworkExtendedSerializer},

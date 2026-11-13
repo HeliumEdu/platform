@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.utils import timezone
@@ -18,7 +19,7 @@ from rest_framework.exceptions import ValidationError
 from helium.common import enums
 from helium.common.utils import datetimeutils, gradeutils, metricutils, taskutils
 from helium.common.utils.datetimeutils import local_midnight_as_utc
-from helium.common.utils.validators import shift_recurrence_rule_for_user
+from helium.common.utils.validators import shift_recurrence_rule_for_user, validate_recurrence_rule
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.feed.models import ExternalCalendar
@@ -310,6 +311,12 @@ def _import_events(events, user, example_schedule):
     errors = _SectionErrors('events')
     for event in events:
         with errors.row(event['id']):
+            try:
+                validate_recurrence_rule(event.get('recurrence_rule'))
+            except DjangoValidationError:
+                logger.info(f"Dropping unsupported recurrence rule from imported event {event.get('id')}.")
+                event['recurrence_rule'] = None
+                event['exception_dates'] = None
             serializer = EventSerializer(data=event)
 
             if serializer.is_valid():

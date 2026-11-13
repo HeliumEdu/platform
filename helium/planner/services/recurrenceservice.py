@@ -3,6 +3,7 @@ import logging
 from zoneinfo import ZoneInfo
 
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from helium.common import enums
@@ -128,6 +129,7 @@ def detach_occurrence(source, occurrence_start):
         if isinstance(source, Homework):
             detached.resources.set(source.resources.all())
         reminderservice.clone_reminders(source, detached)
+        detached.reminders.filter(start_of_range__lte=timezone.now()).update(sent=True, dismissed=True)
 
         _exclude(source, occurrence_start)
 
@@ -174,3 +176,5 @@ def _noun(item):
 def _exclude(source, occurrence_start):
     source.exception_dates = [*(source.exception_dates or []), datetimeutils.as_utc_iso(occurrence_start)]
     source.save(update_fields=['exception_dates', 'updated_at'])
+    for reminder in source.reminders.active():
+        reminder.save()

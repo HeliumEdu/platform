@@ -41,16 +41,20 @@ def _offset_label(reminder):
     return f'{reminder.offset} {unit}'
 
 
+_ITEM_USER_SETTINGS = ('homework__course__course_group__user__settings', 'event__user__settings')
+
+
 def _item_series_key(reminder):
     return (reminder.homework_id, reminder.event_id, reminder.user_id, reminder.type, reminder.offset,
             reminder.offset_type)
 
 
 def _create_next_item_reminder(reminder):
-    parent_field, model, pk = (('homework', Homework, reminder.homework_id) if reminder.homework_id
-                               else ('event', Event, reminder.event_id))
+    parent_field, model, pk, user_settings = (
+        ('homework', Homework, reminder.homework_id, 'course__course_group__user__settings') if reminder.homework_id
+        else ('event', Event, reminder.event_id, 'user__settings'))
     with transaction.atomic():
-        item = model.objects.select_for_update().filter(pk=pk).first()
+        item = model.objects.select_for_update(of=('self',)).select_related(user_settings).filter(pk=pk).first()
         if item is None or not item.recurrence_rule:
             return None
 
@@ -256,7 +260,8 @@ def series_filter(reminder):
 def heal_repeating_item_reminders(user_id=None, homework_id=None, event_id=None):
     """
     Re-arm every repeating Homework or Event reminder series that has no active reminder, from its latest fired
-    reminder. Without ``homework_id`` or ``event_id``, only series that fired within the last
+    reminder, and move an active reminder that expired past the send window unsent on to its next occurrence.
+    Without ``homework_id`` or ``event_id``, only reminders within the last
     ``settings.REMINDER_REPEATING_HEAL_LOOKBACK`` are considered.
     """
     reminders = Reminder.objects.filter(Q(homework__recurrence_rule__isnull=False) |
@@ -268,11 +273,20 @@ def heal_repeating_item_reminders(user_id=None, homework_id=None, event_id=None)
     if event_id is not None:
         reminders = reminders.filter(event_id=event_id)
 
+    lookback_start = timezone.now() - settings.REMINDER_REPEATING_HEAL_LOOKBACK
+    expired = (reminders.active()
+               .filter(start_of_range__lt=timezone.now() - timedelta(minutes=settings.REMINDER_SEND_WINDOW_MINUTES))
+               .select_related('user__settings', *_ITEM_USER_SETTINGS))
+    if homework_id is None and event_id is None:
+        expired = expired.filter(start_of_range__gte=lookback_start)
+    for reminder in expired:
+        reminder.save()
+
     active_keys = {_item_series_key(reminder) for reminder in reminders.active()}
 
-    fired = reminders.filter(sent=True).select_related('homework', 'event', 'user', 'user__settings')
+    fired = reminders.filter(sent=True).select_related('user__settings', *_ITEM_USER_SETTINGS)
     if homework_id is None and event_id is None:
-        fired = fired.filter(start_of_range__gte=timezone.now() - settings.REMINDER_REPEATING_HEAL_LOOKBACK)
+        fired = fired.filter(start_of_range__gte=lookback_start)
 
     latest_fired = {_item_series_key(reminder): reminder for reminder in fired.order_by('start_of_range')}
 

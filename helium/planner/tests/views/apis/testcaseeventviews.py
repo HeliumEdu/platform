@@ -1036,6 +1036,53 @@ class TestCaseEventOccurrenceViews(APITestCase):
         series.refresh_from_db()
         self.assertEqual(series.recurrence_rule, 'FREQ=WEEKLY;BYDAY=FR,MO')
 
+    def test_patch_from_an_occurrence_with_only_end_keeps_the_series_start(self):
+        for index, zone in enumerate(('Europe/Amsterdam', 'America/Los_Angeles')):
+            with self.subTest(zone=zone):
+                # GIVEN
+                tz = ZoneInfo(zone)
+                user = userhelper.given_a_user_exists_and_is_authenticated(
+                    self.client, username=f'user{index}', email=f'user{index}@test.com', time_zone=zone)
+                series = _given_weekly_series(user, tz)
+                occurrence = datetime.datetime(2030, 5, 20, 9, 0, tzinfo=tz)
+
+                # WHEN
+                response = _patch(self.client, series, {'end': (occurrence + datetime.timedelta(hours=2)).isoformat()},
+                                  occurrencehelper.occurrence_query(occurrence, scope=None))
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+                series.refresh_from_db()
+                self.assertEqual(series.start, datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz))
+                self.assertEqual(series.end - series.start, datetime.timedelta(hours=2))
+
+    def test_patch_from_an_occurrence_with_only_start_keeps_the_occurrence_duration(self):
+        for zone_index, zone in enumerate(('Europe/Amsterdam', 'America/Los_Angeles')):
+            tz = ZoneInfo(zone)
+            cases = (
+                (datetime.datetime(2030, 5, 6, 9, 0, tzinfo=tz), datetime.datetime(2030, 5, 6, 9, 30, tzinfo=tz),
+                 datetime.datetime(2030, 5, 6, 9, 30, tzinfo=tz)),
+                (datetime.datetime(2030, 5, 20, 9, 0, tzinfo=tz), datetime.datetime(2030, 5, 21, 10, 0, tzinfo=tz),
+                 datetime.datetime(2030, 5, 7, 10, 0, tzinfo=tz)),
+            )
+            for case_index, (occurrence, moved, expected_start) in enumerate(cases):
+                with self.subTest(zone=zone, occurrence=occurrence):
+                    # GIVEN
+                    username = f'user{zone_index}{case_index}'
+                    user = userhelper.given_a_user_exists_and_is_authenticated(
+                        self.client, username=username, email=f'{username}@test.com', time_zone=zone)
+                    series = _given_weekly_series(user, tz)
+
+                    # WHEN
+                    response = _patch(self.client, series, {'start': moved.isoformat()},
+                                      occurrencehelper.occurrence_query(occurrence, scope=None))
+
+                    # THEN
+                    self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+                    series.refresh_from_db()
+                    self.assertEqual(series.start, expected_start)
+                    self.assertEqual(series.end - series.start, datetime.timedelta(hours=1))
+
     def test_delete_this_occurrence_leaves_it_out_of_the_series(self):
         # GIVEN
         tz = ZoneInfo('Europe/Amsterdam')

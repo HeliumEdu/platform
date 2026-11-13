@@ -10,7 +10,6 @@ from helium.common.utils.openapiutils import support_article_url
 from helium.planner.models import CourseGroup
 from helium.planner.serializers.gradescaleserializer import GradeScaleField
 from helium.planner.services import gradingservice
-from helium.planner.tasks import recalculate_course_group_gpa
 
 logger = logging.getLogger(__name__)
 
@@ -65,38 +64,26 @@ class CourseGroupSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         validate_date_range_and_exceptions(attrs, self.instance, 'group date range')
 
-        template = attrs.get('grade_scale_template')
-        if template is not None and 'grade_scale' not in attrs:
-            attrs['grade_scale'] = gradeutils.preset_grade_scale(template)
-
-        if 'grade_scale' in attrs:
-            attrs['grade_scale_template'] = gradeutils.preset_for(attrs['grade_scale'])
-            if template is not None and attrs['grade_scale_template'] != template:
+        template = attrs.pop('grade_scale_template', None)
+        if template is not None:
+            if 'grade_scale' not in attrs:
+                attrs['grade_scale'] = gradeutils.preset_grade_scale(template)
+            elif gradeutils.preset_for(attrs['grade_scale']) != template:
                 raise serializers.ValidationError(
                     {'grade_scale_template': "Doesn't match 'grade_scale'. Send one or the other, or values that "
                                              "match the preset."})
-        elif self.instance is not None:
-            attrs['grade_scale_template'] = gradeutils.preset_for(self.instance.grade_scale)
-        else:
-            attrs.pop('grade_scale_template', None)
 
         return attrs
 
     def create(self, validated_data):
         if 'grade_scale' not in validated_data:
             validated_data['grade_scale'] = _inherited_grade_scale(validated_data['user'])
-            validated_data['grade_scale_template'] = gradeutils.preset_for(validated_data['grade_scale'])
 
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        previous_grade_scale = instance.grade_scale
-
         instance = super().update(instance, validated_data)
-
-        if instance.grade_scale != previous_grade_scale:
-            recalculate_course_group_gpa.apply(args=(instance.pk,))
-            instance.refresh_from_db(fields=['gpa'])
+        instance.refresh_from_db(fields=['gpa'])
 
         return instance
 

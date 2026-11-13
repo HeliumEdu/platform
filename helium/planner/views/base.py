@@ -12,6 +12,7 @@ from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
 
 from helium.common.serializers.fields import TzAwareDateTimeField
+from helium.common.utils import datetimeutils
 from helium.common.views.base import HeliumAPIView
 from helium.planner.services import recurrenceservice
 
@@ -77,6 +78,24 @@ def occurrence_start_param(request, required):
         raise ValidationError({'occurrence_start': ex.detail})
 
 
+def _with_both_occurrence_bounds(instance, occurrence_start, data):
+    if ('start' in data) == ('end' in data):
+        return data
+
+    start, end = recurrenceservice.find_occurrence(instance, occurrence_start)
+    data = data.copy()
+    if 'end' in data:
+        data['start'] = start.isoformat()
+    else:
+        try:
+            new_start = TzAwareDateTimeField().run_validation(data['start'])
+        except ValidationError as ex:
+            raise ValidationError({'start': ex.detail})
+        tz = ZoneInfo(instance.get_user().settings.time_zone)
+        data['end'] = datetimeutils.occurrence_end(start, end, new_start, tz, instance.all_day).isoformat()
+    return data
+
+
 def _parse_date_param_to_utc(date_str, user_tz_name):
     """
     Parse a date/datetime string and convert to UTC.
@@ -140,7 +159,7 @@ class RepeatingItemDetailMixin:
 
         if scope == SCOPE_THIS:
             if 'recurrence_rule' in request.data or 'exception_dates' in request.data:
-                raise ValidationError({'scope': 'A repeat changes with `scope=all`.'})
+                raise ValidationError({'scope': 'Change `recurrence_rule` or `exception_dates` with `scope=all`.'})
             with transaction.atomic():
                 detached = recurrenceservice.detach_occurrence(instance, occurrence_start)
                 serializer = self.get_serializer(detached, data=request.data, partial=True)
@@ -152,14 +171,17 @@ class RepeatingItemDetailMixin:
 
             return Response(response_serializer_class(serializer.instance).data)
 
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        data = request.data
+        if occurrence_start is not None and instance.recurrence_rule:
+            data = _with_both_occurrence_bounds(instance, occurrence_start, data)
+        serializer = self.get_serializer(instance, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
 
         if occurrence_start is not None and instance.recurrence_rule and 'start' in serializer.validated_data:
-            occurrence_end = serializer.validated_data.get('end', serializer.validated_data['start'])
             serializer.validated_data['start'], serializer.validated_data['end'] = \
                 recurrenceservice.series_bounds_for_occurrence_move(instance, occurrence_start,
-                                                                    serializer.validated_data['start'], occurrence_end)
+                                                                    serializer.validated_data['start'],
+                                                                    serializer.validated_data['end'])
 
         self.perform_update(serializer)
 

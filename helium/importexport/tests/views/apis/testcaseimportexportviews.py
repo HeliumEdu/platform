@@ -491,20 +491,23 @@ class TestCaseImportExportViews(APITestCase):
             },
         )
 
-    def test_import_with_an_unsupported_event_recurrence_rule_returns_400(self):
+    def test_import_drops_recurrence_rule_sfcalendar_cannot_expand_instead_of_failing(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         eventhelper.given_event_exists(user, title='Monthly series', recurrence_rule='FREQ=MONTHLY;BYDAY=MO,WE')
+        eventhelper.given_event_exists(user, title='Hourly series', recurrence_rule='FREQ=DAILY;BYHOUR=9,15',
+                                       exception_dates=['2017-05-09T12:00:00Z'])
         export_data = importexporthelper.get_export_data(self, verify_status=False)
 
         # WHEN
         import_response = importexporthelper.post_import(self.client, export_data, filename='_unsupported_rrule.json')
 
         # THEN
-        self.assertEqual(import_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(f"events id {export_data['events'][0]['id']}, recurrence_rule",
-                      str(import_response.data['events']))
-        self.assertEqual(Event.objects.filter(user=user).count(), 1)
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        for title in ('Monthly series', 'Hourly series'):
+            imported = Event.objects.filter(user=user, title=title).order_by('pk').last()
+            self.assertIsNone(imported.recurrence_rule, 'the event is kept as a single occurrence')
+            self.assertIsNone(imported.exception_dates)
 
     def test_export_import_preserves_homework_recurrence(self):
         # GIVEN
