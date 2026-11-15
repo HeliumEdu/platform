@@ -100,13 +100,15 @@ class NeededGradeAssignmentSerializer(NeededGradeTargetSerializer):
 class NeededGradeSerializer(serializers.Serializer):
     state = serializers.ChoiceField(
         choices=['achievable', 'above_target', 'unachievable', 'target_category_has_no_weight',
-                 'invalid_total_weight'],
+                 'invalid_total_weight', 'gpa_unreachable'],
         help_text='`achievable`: the desired grade can be reached. `above_target`: the class is already there. '
                   '`unachievable`: it would take more than 100%. `target_category_has_no_weight` or '
-                  '`invalid_total_weight`: the class\'s category weights don\'t allow an accurate answer.')
+                  '`invalid_total_weight`: the class\'s category weights don\'t allow an accurate answer. '
+                  '`gpa_unreachable`: even the top band of the class\'s grade scale can\'t bring the term GPA to '
+                  '`desired_gpa`.')
     needed_grade = serializers.FloatField(
         help_text='The percentage needed on `assignment`, or as the `category` average when there\'s no '
-                  '`assignment`. `0` when the category weights don\'t allow an answer.')
+                  '`assignment`. `0` when the category weights don\'t allow an answer, or with `gpa_unreachable`.')
     weighted = serializers.BooleanField(help_text='Whether the class uses weighted grading.')
     category = NeededGradeTargetSerializer(allow_null=True,
                                            help_text='The category, for a class with weighted grading.')
@@ -116,3 +118,7 @@ class NeededGradeSerializer(serializers.Serializer):
     total_weight_accounted_for = serializers.FloatField(
         allow_null=True,
         help_text='The total of the class\'s category weights, when it isn\'t 100% (`invalid_total_weight`).')
+    grade_band = GradeScaleBandSerializer(
+        allow_null=True,
+        help_text='With `desired_gpa`: the band of the class\'s `grade_scale` whose `min_grade` is the class grade '
+                  'solved for, or its top band with `gpa_unreachable`. Null with `desired_grade`.')

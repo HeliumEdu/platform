@@ -57,14 +57,19 @@ class NeededGradeApiResourceView(HeliumAPIView):
                 name='target', type=int, required=True,
                 description='For a class with weighted grading, the ID of a category that is down to its last '
                             'ungraded assignment. Otherwise, the ID of an ungraded assignment in the class.'),
-            OpenApiParameter(name='desired_grade', type=float, required=True,
-                             description='The overall class grade to reach, from 0 to 100.'),
+            OpenApiParameter(name='desired_grade', type=float, required=False,
+                             description='The overall class grade to reach, from 0 to 100. Give this or '
+                                         '`desired_gpa`.'),
+            OpenApiParameter(name='desired_gpa', type=float, required=False,
+                             description='The term GPA to reach, on the class\'s `grade_scale`. Give this or '
+                                         '`desired_grade`. Needs the class to have credits and a grade scale.'),
         ],
     )
     def get(self, request, *args, **kwargs):
         """
-        Return the score needed to bring a class's overall grade to `desired_grade`. This is the "What Do I Need?"
-        grade calculator in the app, worked out from the same grades `GET /planner/grades/` returns.
+        Return the score needed to bring a class's overall grade to `desired_grade`, or its term GPA to `desired_gpa`.
+        This is the "What Do I Need?" grade calculator in the app, worked out from the same grades
+        `GET /planner/grades/` returns. With `desired_gpa`, the GPA is counted as the app shows it, to two places.
 
         For a class with weighted grading, the result is the score needed on the category's last ungraded assignment
         (or the category average, when that assignment isn't in the class's ungraded work). Categories with nothing
@@ -73,10 +78,16 @@ class NeededGradeApiResourceView(HeliumAPIView):
         try:
             course_id = int(request.query_params['course'])
             target_id = int(request.query_params['target'])
-            desired_grade = float(request.query_params['desired_grade'])
+            desired_grade = _optional_float(request.query_params.get('desired_grade'))
+            desired_gpa = _optional_float(request.query_params.get('desired_gpa'))
         except (KeyError, ValueError):
-            raise ValidationError("'course', 'target', and 'desired_grade' must be given as numbers")
+            raise ValidationError("'course', 'target', 'desired_grade', and 'desired_gpa' must be given as numbers")
 
-        needed = neededgradeservice.get_needed_grade(request.user.pk, course_id, target_id, desired_grade)
+        needed = neededgradeservice.get_needed_grade(request.user.pk, course_id, target_id,
+                                                     desired_grade=desired_grade, desired_gpa=desired_gpa)
 
         return Response(NeededGradeSerializer(needed).data)
+
+
+def _optional_float(value):
+    return None if value is None else float(value)
