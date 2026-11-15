@@ -19,9 +19,9 @@ class CourseSerializer(serializers.ModelSerializer):
     """
     A single class within a class group. A Course may have more than one
     CourseSchedule (e.g. a lecture plus a lab), each of which supports
-    per-day start/end times. See "Common pitfalls" in the API description
-    for when sections of the same class should be modeled as separate
-    Courses.
+    per-day start/end times. See "Importing a schedule from a syllabus" in
+    the API description for when sections of the same class should be
+    modeled as separate Courses.
 
     Each schedule's `recurrence_groups` carries the pre-computed, renderable
     form of that schedule (see `CourseScheduleSerializer`).

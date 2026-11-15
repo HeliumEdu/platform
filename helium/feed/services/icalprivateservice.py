@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.http import parse_http_date_safe
 
-from helium.planner.models import Homework, Course, CourseSchedule, CourseGroup, Category
+from helium.planner.models import Homework, Course, CourseSchedule, CourseGroup, Category, Note, Resource
 
 from helium.planner.services import coursescheduleservice
 from helium.planner.utils import noteutils
@@ -19,20 +19,22 @@ logger = logging.getLogger(__name__)
 
 def get_events_last_modified(user) -> datetime.datetime | None:
     """
-    Get the maximum updated_at timestamp from all events for a user, also
+    Get the maximum updated_at timestamp from all events and notes for a user, also
     accounting for any deletions via the user's last_deletion_at timestamp.
 
     :param user: The user whose events to check.
     :return: The max updated_at datetime, or None if no events exist and no deletions have occurred.
     """
     event_max = user.events.aggregate(Max('updated_at'))['updated_at__max']
-    timestamps = [t for t in [event_max, user.settings.last_deletion_at] if t is not None]
+    note_max = Note.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    timestamps = [t for t in [event_max, note_max, user.settings.last_deletion_at] if t is not None]
     return max(timestamps) if timestamps else None
 
 
 def get_homework_last_modified(user) -> datetime.datetime | None:
     """
-    Get the maximum updated_at timestamp from homework, courses, categories, and course groups for a user.
+    Get the maximum updated_at timestamp from homework, courses, categories, course groups, resources, and notes for a
+    user.
 
     :param user: The user whose homework-related models to check.
     :return: The max updated_at datetime across all related models, or None if no data exists.
@@ -42,8 +44,10 @@ def get_homework_last_modified(user) -> datetime.datetime | None:
     category_max = Category.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
     # Hiding a course group removes its homework from the feed
     course_group_max = CourseGroup.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    resource_max = Resource.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    note_max = Note.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
 
-    timestamps = [t for t in [homework_max, course_max, category_max, course_group_max,
+    timestamps = [t for t in [homework_max, course_max, category_max, course_group_max, resource_max, note_max,
                               user.settings.last_deletion_at] if t is not None]
     return max(timestamps) if timestamps else None
 
@@ -184,11 +188,12 @@ def _create_course_schedule_description(course):
     return description
 
 
-def _to_vevent(user, item):
+def _to_vevent(user, item, generated_at, last_modified):
     calendar_event = icalendar.Event()
     calendar_event["UID"] = f"he-{user.pk}-{item.pk}"
     calendar_event["SUMMARY"] = item.title
-    calendar_event["DTSTAMP"] = icalendar.vDatetime(timezone.localtime(item.created_at))
+    calendar_event["DTSTAMP"] = icalendar.vDatetime(generated_at)
+    calendar_event["LAST-MODIFIED"] = icalendar.vDatetime(last_modified)
     if not item.all_day:
         calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(item.start))
         calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(item.end))
@@ -196,6 +201,10 @@ def _to_vevent(user, item):
         calendar_event["DTSTART"] = icalendar.vDate(timezone.localtime(item.start).date())
         calendar_event["DTEND"] = icalendar.vDate(timezone.localtime(item.end).date())
     return calendar_event
+
+
+def _last_modified(*timestamps):
+    return max(timestamp for timestamp in timestamps if timestamp is not None)
 
 
 def _add_recurrence(calendar_event, item):
@@ -216,9 +225,12 @@ def events_to_private_ical_feed(user):
 
     try:
         calendar = _create_calendar(f"{settings.PROJECT_NAME} Events")
+        generated_at = timezone.now()
 
         for event in user.events.prefetch_related('notes_set'):
-            calendar_event = _to_vevent(user, event)
+            last_modified = _last_modified(event.updated_at, user.settings.last_deletion_at,
+                                           *(note.updated_at for note in event.notes_set.all()))
+            calendar_event = _to_vevent(user, event, generated_at, last_modified)
             if event.recurrence_rule:
                 _add_recurrence(calendar_event, event)
             calendar_event["DESCRIPTION"] = _create_event_description(event)
@@ -241,10 +253,16 @@ def homework_to_private_ical_feed(user):
 
     try:
         calendar = _create_calendar(f"{settings.PROJECT_NAME} Assignments")
+        generated_at = timezone.now()
 
         homework_shown = Homework.objects.for_user(user.pk).filter(course__course_group__shown_on_calendar=True)
         for homework in homework_shown.select_related('category', 'course').prefetch_related('resources', 'notes_set'):
-            calendar_event = _to_vevent(user, homework)
+            last_modified = _last_modified(
+                homework.updated_at, homework.course.updated_at, user.settings.last_deletion_at,
+                homework.category.updated_at if homework.category else None,
+                *(resource.updated_at for resource in homework.resources.all()),
+                *(note.updated_at for note in homework.notes_set.all()))
+            calendar_event = _to_vevent(user, homework, generated_at, last_modified)
             if homework.recurrence_rule:
                 _add_recurrence(calendar_event, homework)
             calendar_event["DESCRIPTION"] = _create_homework_description(homework)
@@ -275,13 +293,16 @@ def courseschedules_to_private_ical_feed(user):
                                                    'course_group__user__settings').prefetch_related('schedules')
     ]
 
+    generated_at = timezone.now()
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
         for course, events in events_by_course:
             description = _create_course_schedule_description(course)
+            last_modified = _last_modified(course.updated_at, course.course_group.updated_at,
+                                           *(schedule.updated_at for schedule in course.schedules.all()))
             for event in events:
-                calendar_event = _to_vevent(user, event)
+                calendar_event = _to_vevent(user, event, generated_at, last_modified)
                 calendar_event["DESCRIPTION"] = description
 
                 calendar.add_component(calendar_event)

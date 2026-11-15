@@ -37,6 +37,20 @@
     .api-content table td { background-color: #131a1c !important; color: #e2e6e8; }
     .api-content table tr { background-color: transparent !important; }
     .api-content table td, .api-content table th { border-color: rgba(255, 255, 255, 0.12); }
+    /* Vocabulary table: wire names stay on one line; on phones each row stacks so the table fits the screen. */
+    .api-content table.vocabulary th:first-child, .api-content table.vocabulary td:first-child {
+      white-space: nowrap; width: 1%; }
+    @media (max-width: 50rem) {
+      .api-content table.vocabulary, .api-content table.vocabulary tbody, .api-content table.vocabulary tr,
+      .api-content table.vocabulary td, .api-content table.vocabulary td:first-child { display: block; width: auto; }
+      .api-content table.vocabulary thead { display: none; }
+      .api-content table.vocabulary tr { background-color: #131a1c !important; }
+      .api-content table.vocabulary tr + tr { border-top: 1px solid rgba(255, 255, 255, 0.12); }
+      .api-content table.vocabulary td { background-color: transparent !important; border: 0; }
+      .api-content table.vocabulary td:first-child { display: inline-block; padding-right: 0; padding-bottom: 0; }
+      .api-content table.vocabulary td:nth-child(2) { display: inline-block; padding-bottom: 0; }
+      .api-content table.vocabulary td:last-child { padding-top: 6px; }
+    }
     /* Right-panel sample tabs (Payload / language / response code): ReDoc derives the selected tab's
        background from the (now light) text color, washing out the header — force it to the panel grey. */
     .react-tabs__tab--selected { background: #1b2023 !important; color: #e2e6e8 !important; }

@@ -1,6 +1,8 @@
 import datetime
 import json
+import time
 
+import icalendar
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -8,7 +10,7 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.helpers import commonhelper
 from helium.planner.models import CourseGroup
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
+from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
 
 
 class TestCaseCourseGroupViews(APITestCase):
@@ -150,6 +152,48 @@ class TestCaseCourseGroupViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(CourseGroup.objects.filter(pk=course_group.pk).exists())
         self.assertEqual(CourseGroup.objects.count(), 0)
+
+    def test_delete_older_coursegroup_updates_feeds(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.enable_private_slug()
+        older_course_group = coursegrouphelper.given_course_group_exists(user, title='Older Term')
+        older_course = coursehelper.given_course_exists(older_course_group, title='Older Class')
+        homeworkhelper.given_homework_exists(older_course, title='Older Assignment')
+        courseschedulehelper.given_course_schedule_exists(older_course)
+        newer_course_group = coursegrouphelper.given_course_group_exists(user, title='Newer Term',
+                                                                         start_date=datetime.date(2017, 8, 20),
+                                                                         end_date=datetime.date(2017, 12, 15))
+        newer_course = coursehelper.given_course_exists(newer_course_group, title='Newer Class',
+                                                        start_date=datetime.date(2017, 8, 20),
+                                                        end_date=datetime.date(2017, 12, 15))
+        homeworkhelper.given_homework_exists(newer_course, title='Newer Assignment')
+        courseschedulehelper.given_course_schedule_exists(newer_course)
+        homework_url = reverse('feed_private_homework_ical', kwargs={'private_slug': user.settings.private_slug})
+        courseschedules_url = reverse('feed_private_courseschedules_ical',
+                                      kwargs={'private_slug': user.settings.private_slug})
+        initial_homework_response = self.client.get(homework_url)
+        initial_courseschedules_response = self.client.get(courseschedules_url)
+
+        time.sleep(1.1)
+
+        # WHEN
+        response = self.client.delete(reverse('planner_coursegroups_detail', kwargs={'pk': older_course_group.pk}))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        homework_response = self.client.get(homework_url, HTTP_IF_NONE_MATCH=initial_homework_response['ETag'])
+        self.assertEqual(homework_response.status_code, status.HTTP_200_OK)
+        homework_summaries = {component['SUMMARY'] for component in
+                              icalendar.Calendar.from_ical(homework_response.content.decode('utf-8')).subcomponents}
+        self.assertEqual(homework_summaries, {'Newer Assignment'})
+        courseschedules_response = self.client.get(courseschedules_url,
+                                                   HTTP_IF_NONE_MATCH=initial_courseschedules_response['ETag'])
+        self.assertEqual(courseschedules_response.status_code, status.HTTP_200_OK)
+        courseschedule_summaries = {component['SUMMARY'] for component in
+                                    icalendar.Calendar.from_ical(
+                                        courseschedules_response.content.decode('utf-8')).subcomponents}
+        self.assertEqual(courseschedule_summaries, {'Newer Class'})
 
     def test_error_on_object_owned_by_another_user(self):
         # GIVEN
