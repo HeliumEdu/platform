@@ -1989,7 +1989,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(Reminder.objects.filter(course__isnull=False, sent=False,
                                                   dismissed=False).count(), 2)
 
-    def test_example_schedule_gets_the_4_0_grade_scale_and_gpa(self):
+    def test_example_schedule_gets_the_4_0_plus_minus_grade_scale_and_gpa(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         exampleschedulehelper.given_example_import_allowed(user)
@@ -2000,8 +2000,9 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         course_group = CourseGroup.objects.get(user=user)
-        self.assertEqual(course_group.grade_scale_template, enums.GRADE_SCALE_4_0)
-        self.assertEqual(course_group.grade_scale, enums.GRADE_SCALE_TEMPLATES[enums.GRADE_SCALE_4_0]['scale'])
+        self.assertEqual(course_group.grade_scale_template, enums.GRADE_SCALE_4_0_PLUS_MINUS)
+        self.assertEqual(course_group.grade_scale,
+                         enums.GRADE_SCALE_TEMPLATES[enums.GRADE_SCALE_4_0_PLUS_MINUS]['scale'])
         self.assertNotEqual(float(course_group.gpa), -1)
         for course in Course.objects.filter(course_group=course_group):
             self.assertNotEqual(float(course.grade_point), -1, course.title)
