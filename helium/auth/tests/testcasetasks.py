@@ -20,6 +20,7 @@ from helium.auth.tasks import (
     rollup_client_activity
 )
 from helium.auth.tests.helpers import oauthhelper, userhelper
+from helium.common import enums
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
 
 
@@ -224,6 +225,150 @@ class TestCaseTasks(APITestCase):
                           if c.args[0] == 'users.adoption.class_schedules.pct']
         self.assertTrue(adoption_calls)
         self.assertTrue(any(c.args[1] == 100 for c in adoption_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_does_not_count_ungraded_assignments_as_grade_tracking(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+        homeworkhelper.given_homework_exists(course)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.grade_tracking.pct']
+        self.assertTrue(adoption_calls)
+        self.assertTrue(all(c.args[1] == 0 for c in adoption_calls),
+                        'saving an assignment creates an Uncategorized category, which is not grading')
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_counts_an_entered_grade_as_grade_tracking(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+        homeworkhelper.given_homework_exists(course, completed=True, current_grade='85/100')
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.grade_tracking.pct']
+        self.assertTrue(any(c.args[1] == 100 for c in adoption_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_does_not_count_a_grade_on_an_incomplete_assignment(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+        homeworkhelper.given_homework_exists(course, completed=False, current_grade='85/100')
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.grade_tracking.pct']
+        self.assertTrue(adoption_calls)
+        self.assertTrue(all(c.args[1] == 0 for c in adoption_calls),
+                        'an incomplete assignment is left out of grades, so it is not grade tracking')
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_counts_work_from_before_an_example_schedule_reimport(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        first_imported_at = timezone.now()
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+        homeworkhelper.given_homework_exists(course, completed=True, current_grade='85/100')
+        userhelper.given_example_schedule_imported(user, first_imported_at, imported_at=timezone.now())
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list
+                          if c.args[0] == 'users.adoption.grade_tracking.pct']
+        self.assertTrue(any(c.args[1] == 100 for c in adoption_calls),
+                      'grading done between the first import and a re-import is still the user\'s own work')
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_counts_an_own_grade_in_a_credited_class_as_gpa(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        coursehelper.given_graded_course_exists(coursegrouphelper.given_course_group_exists(user), 85, credits=3)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.adoption.gpa.pct']
+        self.assertTrue(any(c.args[1] == 100 for c in adoption_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_does_not_count_an_edited_adopted_example_term_as_gpa(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        coursehelper.given_graded_course_exists(course_group, 85, credits=3)
+        userhelper.given_example_schedule_imported(user, timezone.now())
+        course_group.title = 'Renamed'
+        course_group.save()
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.adoption.gpa.pct']
+        self.assertTrue(adoption_calls)
+        self.assertTrue(all(c.args[1] == 0 for c in adoption_calls),
+                        'renaming an adopted example term is not using GPA; its grades are seed data')
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_counts_an_own_grade_in_an_adopted_example_term_as_gpa(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_graded_course_exists(course_group, 85, credits=3)
+        userhelper.given_example_schedule_imported(user, timezone.now())
+        homeworkhelper.given_homework_exists(course, completed=True, current_grade='92/100')
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.adoption.gpa.pct']
+        self.assertTrue(any(c.args[1] == 100 for c in adoption_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_does_not_count_a_class_without_credits_as_gpa(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        coursehelper.given_graded_course_exists(coursegrouphelper.given_course_group_exists(user), 85, credits=0)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.adoption.gpa.pct']
+        self.assertTrue(adoption_calls)
+        self.assertTrue(all(c.args[1] == 0 for c in adoption_calls))
+
+    @mock.patch('helium.auth.tasks.metricutils.gauge')
+    def test_emit_nightly_metrics_does_not_count_a_term_without_a_grade_scale_as_gpa(self, mock_gauge):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user, grade_scale_template=enums.GRADE_SCALE_NONE)
+        coursehelper.given_graded_course_exists(course_group, 85, credits=3)
+
+        # WHEN
+        emit_nightly_metrics()
+
+        # THEN
+        adoption_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.adoption.gpa.pct']
+        self.assertTrue(adoption_calls)
+        self.assertTrue(all(c.args[1] == 0 for c in adoption_calls))
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
     def test_emit_nightly_metrics_excludes_weekly_schedules_from_rotating_adoption(self, mock_gauge):

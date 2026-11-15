@@ -1074,15 +1074,20 @@ def import_example_schedule(user):
             for course in (Course.objects.for_user(user.pk)
                     .filter(course_group__example_schedule=True)
                     .select_related('course_group')):
-                gradingservice.recalculate_course_grade(course.pk, course.course_group.grade_scale)
+                gradingservice.recalculate_course_grade(
+                    course.pk, gradeutils.effective_grade_scale(course.grade_scale_template,
+                                                                course.course_group.grade_scale))
                 course_group_ids.add(course.course_group_id)
 
             for course_group_id in course_group_ids:
                 gradingservice.recalculate_course_group_grade(course_group_id)
 
             user.example_schedule_imported_at = timezone.now()
+            if user.example_schedule_first_imported_at is None:
+                user.example_schedule_first_imported_at = user.example_schedule_imported_at
             get_user_model().objects.filter(pk=user.pk).update(
-                example_schedule_imported_at=user.example_schedule_imported_at)
+                example_schedule_imported_at=user.example_schedule_imported_at,
+                example_schedule_first_imported_at=user.example_schedule_first_imported_at)
     except ValueError:
         raise ValidationError({
             'details': 'Invalid JSON.'

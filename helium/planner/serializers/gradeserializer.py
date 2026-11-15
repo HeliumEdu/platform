@@ -55,8 +55,14 @@ class GradeCourseSerializer(GradeHolderSerializer):
                                        help_text='The class\'s weight in its group\'s `gpa`.')
     grade_point = serializers.DecimalField(
         5, 2, coerce_to_string=False,
-        help_text='The grade point `overall_grade` earns on the group\'s `grade_scale`, or `-1` when ungraded or '
+        help_text='The grade point `overall_grade` earns on the class\'s `grade_scale`, or `-1` when ungraded or '
                   'the group has no grade scale.')
+    grade_scale_template = serializers.IntegerField(
+        allow_null=True,
+        help_text='The class\'s preset grade scale, or null when it uses the group\'s `grade_scale`.')
+    grade_scale = GradeScaleBandSerializer(
+        many=True,
+        help_text='The bands that turn the class\'s grade into its `grade_point`: its preset\'s, else the group\'s.')
     categories = GradeCategorySerializer(many=True)
 
 

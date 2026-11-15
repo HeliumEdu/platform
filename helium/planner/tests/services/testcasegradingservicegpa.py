@@ -231,3 +231,101 @@ class TestCaseGradingServiceGpa(TestCase):
 
         # THEN
         self.assertEqual(ids, [])
+
+    def test_class_preset_sets_its_grade_point(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(
+            user, grade_scale_template=enums.GRADE_SCALE_4_0_PLUS_MINUS)
+
+        # WHEN
+        on_group_scale = coursehelper.given_graded_course_exists(course_group, 91, credits=3)
+        whole_letter = coursehelper.given_graded_course_exists(course_group, 91, credits=3,
+                                                                grade_scale_template=enums.GRADE_SCALE_4_0)
+
+        # THEN
+        on_group_scale.refresh_from_db()
+        whole_letter.refresh_from_db()
+        course_group.refresh_from_db()
+        self.assertEqual(float(on_group_scale.grade_point), 3.7)
+        self.assertEqual(float(whole_letter.grade_point), 4.0)
+        self.assertAlmostEqual(float(course_group.gpa), 3.85)
+
+    def test_changing_a_class_preset_recalculates_its_grade_point_and_gpa(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(
+            user, grade_scale_template=enums.GRADE_SCALE_4_0_PLUS_MINUS)
+        course = coursehelper.given_graded_course_exists(course_group, 91, credits=3)
+
+        # WHEN
+        course = Course.objects.get(pk=course.pk)
+        course.grade_scale_template = enums.GRADE_SCALE_4_0
+        course.save()
+
+        # THEN
+        course.refresh_from_db()
+        course_group.refresh_from_db()
+        self.assertEqual(float(course.grade_point), 4.0)
+        self.assertEqual(float(course_group.gpa), 4.0)
+
+    def test_recalculate_course_group_gpa_uses_each_class_preset(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(
+            user, grade_scale_template=enums.GRADE_SCALE_4_0_PLUS_MINUS)
+        course = coursehelper.given_graded_course_exists(course_group, 91, credits=3,
+                                                         grade_scale_template=enums.GRADE_SCALE_4_0)
+        Course.objects.filter(pk=course.pk).update(grade_point=-1)
+
+        # WHEN
+        gradingservice.recalculate_course_group_gpa(course_group.pk)
+
+        # THEN
+        course.refresh_from_db()
+        self.assertEqual(float(course.grade_point), 4.0)
+
+    def test_changing_the_group_scale_clears_class_presets_that_no_longer_fit(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(
+            user, grade_scale_template=enums.GRADE_SCALE_4_0_PLUS_MINUS)
+        course = coursehelper.given_graded_course_exists(course_group, 91, credits=3,
+                                                         grade_scale_template=enums.GRADE_SCALE_4_0)
+
+        # WHEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course_group.grade_scale = gradeutils.preset_grade_scale(enums.GRADE_SCALE_10_0)
+        course_group.save()
+
+        # THEN
+        course.refresh_from_db()
+        course_group.refresh_from_db()
+        self.assertIsNone(course.grade_scale_template)
+        self.assertEqual(float(course.grade_point), 10.0)
+        self.assertEqual(float(course_group.gpa), 10.0)
+
+    def test_changing_the_group_scale_keeps_class_presets_that_still_fit(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(
+            user, grade_scale_template=enums.GRADE_SCALE_4_0_PLUS_MINUS)
+        course = coursehelper.given_graded_course_exists(course_group, 91, credits=3,
+                                                         grade_scale_template=enums.GRADE_SCALE_4_0)
+
+        # WHEN
+        course_group = CourseGroup.objects.get(pk=course_group.pk)
+        course_group.grade_scale = gradeutils.preset_grade_scale(enums.GRADE_SCALE_4_33_PLUS_MINUS)
+        course_group.save()
+
+        # THEN
+        course.refresh_from_db()
+        self.assertEqual(course.grade_scale_template, enums.GRADE_SCALE_4_0)
+        self.assertEqual(float(course.grade_point), 4.0)
+
+    def test_effective_grade_scale_of_a_deleted_class_is_empty(self):
+        # WHEN
+        grade_scale = gradingservice.effective_grade_scale_for_course(999999)
+
+        # THEN
+        self.assertEqual(grade_scale, [])

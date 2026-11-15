@@ -309,6 +309,30 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(courses[ungraded.pk]['grade_point'], -1)
         self.assertEqual(response.data['cumulative_gpa'], 3.0)
 
+    def test_get_grades_includes_each_class_grade_scale(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(
+            user, grade_scale_template=enums.GRADE_SCALE_4_0_PLUS_MINUS)
+        on_group_scale = coursehelper.given_graded_course_exists(course_group, 91, credits=3)
+        whole_letter = coursehelper.given_graded_course_exists(course_group, 91, credits=3,
+                                                                grade_scale_template=enums.GRADE_SCALE_4_0)
+
+        # WHEN
+        response = self.client.get(reverse('planner_resource_grades'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        courses = {course['id']: course for course in response.data['course_groups'][0]['courses']}
+        self.assertIsNone(courses[on_group_scale.pk]['grade_scale_template'])
+        self.assertEqual(_as_floats(courses[on_group_scale.pk]['grade_scale']),
+                         enums.GRADE_SCALE_TEMPLATES[enums.GRADE_SCALE_4_0_PLUS_MINUS]['scale'])
+        self.assertEqual(float(courses[on_group_scale.pk]['grade_point']), 3.7)
+        self.assertEqual(courses[whole_letter.pk]['grade_scale_template'], enums.GRADE_SCALE_4_0)
+        self.assertEqual(_as_floats(courses[whole_letter.pk]['grade_scale']),
+                         enums.GRADE_SCALE_TEMPLATES[enums.GRADE_SCALE_4_0]['scale'])
+        self.assertEqual(courses[whole_letter.pk]['grade_point'], 4.0)
+
     def test_cumulative_gpa_pools_classes_of_groups_on_the_most_recent_scale(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -367,3 +391,8 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(course_group_data['courses'][0]['id'], graded.pk)
         self.assertEqual(course_group_data['courses'][0]['grade_point'], 3.0)
         self.assertEqual(response.data['cumulative_gpa'], -1)
+
+
+def _as_floats(grade_scale):
+    return [{**band, 'min_grade': float(band['min_grade']), 'grade_point': float(band['grade_point'])}
+            for band in grade_scale]

@@ -4,7 +4,7 @@ from django.db import models
 
 from helium.common import enums
 from helium.common.models import BaseModel
-from helium.common.utils.gradeutils import default_grade_scale, preset_for
+from helium.common.utils.gradeutils import compatible_presets, default_grade_scale, preset_for
 from helium.common.utils.validators import validate_and_normalize_date_csv
 from helium.planner.managers.coursegroupmanager import CourseGroupManager
 
@@ -60,10 +60,17 @@ class CourseGroup(BaseModel):
 
     def save(self, *args, **kwargs):
         self.grade_scale_template = preset_for(self.grade_scale)
+        if self.pk:
+            self._clear_incompatible_course_grade_scales()
         super().save(*args, **kwargs)
 
     def __str__(self):  # pragma: no cover
         return f'{self.title} ({self.get_user().get_username()})'
+
+    def _clear_incompatible_course_grade_scales(self):
+        (self.courses.filter(grade_scale_template__isnull=False)
+         .exclude(grade_scale_template__in=compatible_presets(self.grade_scale))
+         .update(grade_scale_template=None))
 
     def get_user(self):
         return self.user

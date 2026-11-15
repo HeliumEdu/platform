@@ -9,7 +9,7 @@ from helium.planner.tests.helpers import categoryhelper, coursegrouphelper, home
 def given_course_exists(course_group, title='🧪 Test Course', room='DNC 201', credits=0, color='#4986e7',
                         website='http://mycourse.com', is_online=False, teacher_name='My Teacher',
                         teacher_email='teacher@email.com', start_date=datetime.date(2017, 1, 6),
-                        end_date=datetime.date(2017, 5, 8)):
+                        end_date=datetime.date(2017, 5, 8), grade_scale_template=None):
     course = Course.objects.create(title=title,
                                    room=room,
                                    credits=credits,
@@ -20,6 +20,7 @@ def given_course_exists(course_group, title='🧪 Test Course', room='DNC 201', 
                                    teacher_email=teacher_email,
                                    start_date=start_date,
                                    end_date=end_date,
+                                   grade_scale_template=grade_scale_template,
                                    course_group=course_group)
 
     return course
@@ -33,8 +34,8 @@ def given_course_with_category_exists(user, course_group_kwargs=None, course_kwa
     return course_group, course, category
 
 
-def given_graded_course_exists(course_group, grade, credits=0):
-    course = given_course_exists(course_group, credits=credits)
+def given_graded_course_exists(course_group, grade, credits=0, grade_scale_template=None):
+    course = given_course_exists(course_group, credits=credits, grade_scale_template=grade_scale_template)
     category = categoryhelper.given_category_exists(course)
     homeworkhelper.given_homework_exists(course, category=category, completed=True, current_grade=f'{grade}/100')
 

@@ -10,7 +10,7 @@ from django.utils import timezone
 from conf.celery import app
 from helium.common import enums
 from helium.common.periodic import register_periodic
-from helium.common.utils import commonutils, datetimeutils, metricutils, taskutils
+from helium.common.utils import commonutils, datetimeutils, gradeutils, metricutils, taskutils
 from helium.common.utils.course_exception_helpers import get_course_exceptions
 from helium.planner.models import Course, Category, Event, Homework
 from helium.planner.models import Reminder
@@ -62,9 +62,11 @@ def recalculate_course_grade(self, course_id, retries=0, recalculate_group=True)
     metrics = metricutils.task_start("grade.recalculate.course", priority="low", published_at_ms=published_at_ms)
 
     try:
-        course_group = Course.objects.select_related('course_group').get(pk=course_id).course_group
+        course = Course.objects.select_related('course_group').get(pk=course_id)
+        course_group = course.course_group
 
-        gradingservice.recalculate_course_grade(course_id, course_group.grade_scale)
+        gradingservice.recalculate_course_grade(
+            course_id, gradeutils.effective_grade_scale(course.grade_scale_template, course_group.grade_scale))
 
         if recalculate_group:
             recalculate_course_group_grade(course_group.id)

@@ -35,9 +35,15 @@ class Course(BaseModel):
     current_grade = models.DecimalField(max_digits=7, default=enums.NO_GRADE, decimal_places=4)
 
     grade_point = models.DecimalField(
-        help_text="The grade point `current_grade` earns on the group's `grade_scale`, or `-1` when ungraded or the "
-                  "group has no grade scale.",
+        help_text="The grade point `current_grade` earns on the class's grade scale (`grade_scale_template`, else "
+                  "the group's `grade_scale`), or `-1` when ungraded or the group has no grade scale.",
         max_digits=5, default=enums.NO_GRADE, decimal_places=2)
+
+    grade_scale_template = models.PositiveSmallIntegerField(
+        help_text="A preset grade scale for this class, when its syllabus grades differently from its group: one whose "
+                  "grades (grade point and label) the group's `grade_scale` also awards. Null to use the group's "
+                  "`grade_scale`.",
+        choices=enums.COURSE_GRADE_SCALE_TEMPLATE_CHOICES, default=None, blank=True, null=True)
 
     trend = models.FloatField(default=None, blank=True, null=True)
 
