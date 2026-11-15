@@ -4,7 +4,7 @@ from contextlib import contextmanager
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models.signals import post_delete, post_save, pre_delete
+from django.db.models.signals import m2m_changed, post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -65,6 +65,8 @@ def _mark_user_data_deleted(instance):
 
 @receiver(post_save, sender=CourseGroup)
 def save_course_group(sender, instance, **kwargs):
+    for course in instance.courses.all():
+        coursescheduleservice.clear_cached_course_schedule(course)
     recalculate_course_group_gpa.apply(args=(instance.pk,))
 
 
@@ -222,21 +224,34 @@ def delete_course_schedule(sender, instance, **kwargs):
         return
 
     _mark_user_data_deleted(instance)
+    try:
+        coursescheduleservice.clear_cached_course_schedule(instance.course)
+    except ObjectDoesNotExist:
+        pass
 
 
 @receiver(post_delete, sender=CourseGroup)
 def delete_course_group(sender, instance, **kwargs):
     reconcile_show_getting_started_async(instance)
-
-    if _suppressed(sender):
-        return
-
     _mark_user_data_deleted(instance)
 
 
 @receiver(post_delete, sender=Note)
 def delete_note(sender, instance, **kwargs):
     reconcile_show_getting_started_async(instance)
+    _mark_user_data_deleted(instance)
+
+
+@receiver(m2m_changed, sender=Note.homework.through)
+@receiver(m2m_changed, sender=Note.events.through)
+def unlink_note(sender, instance, action, **kwargs):
+    if action in ('post_remove', 'post_clear'):
+        _mark_user_data_deleted(instance)
+
+
+@receiver(post_delete, sender=Resource)
+def delete_resource(sender, instance, **kwargs):
+    _mark_user_data_deleted(instance)
 
 
 @receiver(post_delete, sender=ResourceGroup)

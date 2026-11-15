@@ -1795,7 +1795,7 @@
           {"insert": "A Study Session Template"},
           {"insert": "\n", "attributes": {"header": 2}},
           {"insert": "\n"},
-          {"insert": "Standalone notes aren't linked to any class or assignment \u2014 use them for anything that spans multiple subjects or doesn't belong to one thing in particular.", "attributes": {"italic": true}},
+          {"insert": "Standalone notes aren't linked to any class or assignment. Use them for anything that spans multiple subjects or doesn't belong to one thing in particular.", "attributes": {"italic": true}},
           {"insert": "\n\n"},
           {"insert": "Before You Start"},
           {"insert": "\n", "attributes": {"header": 2}},
@@ -1991,7 +1991,7 @@
       "title": "Final Review",
       "content": {
         "ops": [
-          {"insert": "Covers chapters 7\u201312.", "attributes": {"bold": true}},
+          {"insert": "Covers chapters 7-12.", "attributes": {"bold": true}},
           {"insert": " Study group:\n"},
           {"insert": "Jenna"},
           {"insert": "\n", "attributes": {"list": "bullet"}},
@@ -2047,7 +2047,7 @@
       "title": "Learning & Memory",
       "content": {
         "ops": [
-          {"insert": "Covers chapters 1\u20136.", "attributes": {"bold": true}},
+          {"insert": "Covers chapters 1-6.", "attributes": {"bold": true}},
           {"insert": " One page of handwritten notes allowed.\n"}
         ]
       },
@@ -2097,7 +2097,7 @@
       "title": "Personality Theories",
       "content": {
         "ops": [
-          {"insert": "Covers chapters 7\u201312.", "attributes": {"bold": true}},
+          {"insert": "Covers chapters 7-12.", "attributes": {"bold": true}},
           {"insert": "\n"}
         ]
       },

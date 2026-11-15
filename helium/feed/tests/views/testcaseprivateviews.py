@@ -541,3 +541,207 @@ class TestCasePrivateViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(response['ETag'], etag)
+
+    def test_events_feed_stamps_events_in_utc_with_their_last_change(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        event = eventhelper.given_event_exists(user)
+        before_request = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+
+        # WHEN
+        response = self.client.get(reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        self.assertIn(b'DTSTAMP:', response.content)
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertEqual(component['DTSTAMP'].dt.utcoffset(), datetime.timedelta(0))
+        self.assertGreaterEqual(component['DTSTAMP'].dt, before_request)
+        self.assertEqual(component['LAST-MODIFIED'].dt, event.updated_at.replace(microsecond=0))
+
+    def test_homework_feed_last_modified_follows_its_class(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homeworkhelper.given_homework_exists(course)
+        time.sleep(1.1)
+        course.room = 'SSC 456'
+        course.save()
+
+        # WHEN
+        response = self.client.get(
+            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertEqual(component['LAST-MODIFIED'].dt, course.updated_at.replace(microsecond=0))
+
+    def test_homework_feed_returns_200_after_resource_change(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group, courses=[course])
+        homework = homeworkhelper.given_homework_exists(course, category=category)
+        homework.resources.add(resource)
+
+        initial_response = self.client.get(
+            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+        etag = initial_response['ETag']
+
+        time.sleep(1.1)
+
+        resource.title = 'Renamed Resource'
+        resource.save()
+
+        # WHEN
+        response = self.client.get(
+            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}),
+            HTTP_IF_NONE_MATCH=etag)
+
+        # THEN
+        self.assertEqual(response.status_code, 200)
+        self.assertNotEqual(response['ETag'], etag)
+        self.assertIn(b'Resources: Renamed Resource', response.content)
+
+    def test_events_feed_returns_200_after_note_linked(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        event = eventhelper.given_event_exists(user)
+
+        initial_response = self.client.get(
+            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+        etag = initial_response['ETag']
+
+        time.sleep(1.1)
+
+        note = notehelper.given_note_linked_to_event(user, event)
+
+        # WHEN
+        response = self.client.get(
+            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}),
+            HTTP_IF_NONE_MATCH=etag)
+
+        # THEN
+        self.assertEqual(response.status_code, 200)
+        self.assertNotEqual(response['ETag'], etag)
+        self.assertIn(f'notebook/{note.pk}'.encode(), response.content)
+
+    def test_courseschedules_feed_leaves_out_a_new_term_holiday(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        url = reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug})
+        initial_components = icalendar.Calendar.from_ical(self.client.get(url).content.decode('utf-8')).subcomponents
+        holiday = initial_components[0]['DTSTART'].dt.date()
+
+        course_group.exceptions = holiday.strftime('%Y%m%d')
+        course_group.save()
+
+        # WHEN
+        response = self.client.get(url)
+
+        # THEN
+        components = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents
+        self.assertEqual(len(components), len(initial_components) - 1)
+        self.assertNotIn(holiday, [component['DTSTART'].dt.date() for component in components])
+
+    def test_courseschedules_feed_leaves_out_a_deleted_schedule(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_course_schedule_exists(course)
+        url = reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug})
+        self.client.get(url)
+
+        course_schedule.delete()
+
+        # WHEN
+        response = self.client.get(url)
+
+        # THEN
+        self.assertEqual(len(icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents), 0)
+
+    def test_events_feed_last_modified_advances_when_its_note_is_deleted(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event)
+        url = reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug})
+        initial_response = self.client.get(url)
+        initial_last_modified = icalendar.Calendar.from_ical(
+            initial_response.content.decode('utf-8')).subcomponents[0]['LAST-MODIFIED'].dt
+
+        time.sleep(1.1)
+
+        note.delete()
+
+        # WHEN
+        response = self.client.get(url, HTTP_IF_NONE_MATCH=initial_response['ETag'])
+
+        # THEN
+        self.assertEqual(response.status_code, 200)
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertGreater(component['LAST-MODIFIED'].dt, initial_last_modified)
+        self.assertNotIn(f'notebook/{note.pk}', component['DESCRIPTION'])
+
+    def test_homework_feed_last_modified_advances_when_its_note_is_unlinked(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        note = notehelper.given_note_linked_to_homework(user, homework)
+        url = reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug})
+        initial_last_modified = icalendar.Calendar.from_ical(
+            self.client.get(url).content.decode('utf-8')).subcomponents[0]['LAST-MODIFIED'].dt
+
+        time.sleep(1.1)
+
+        note.homework.remove(homework)
+
+        # WHEN
+        response = self.client.get(url)
+
+        # THEN
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertGreater(component['LAST-MODIFIED'].dt, initial_last_modified)
+        self.assertNotIn(f'notebook/{note.pk}', component['DESCRIPTION'])
+
+    def test_homework_feed_returns_200_after_resource_deleted(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group, course, category = coursehelper.given_course_with_category_exists(user)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group, courses=[course])
+        homework = homeworkhelper.given_homework_exists(course, category=category)
+        homework.resources.add(resource)
+        url = reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug})
+        initial_response = self.client.get(url)
+        initial_last_modified = icalendar.Calendar.from_ical(
+            initial_response.content.decode('utf-8')).subcomponents[0]['LAST-MODIFIED'].dt
+
+        time.sleep(1.1)
+
+        resource.delete()
+
+        # WHEN
+        response = self.client.get(url, HTTP_IF_NONE_MATCH=initial_response['ETag'])
+
+        # THEN
+        self.assertEqual(response.status_code, 200)
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertGreater(component['LAST-MODIFIED'].dt, initial_last_modified)
+        self.assertNotIn('Resources:', component['DESCRIPTION'])
