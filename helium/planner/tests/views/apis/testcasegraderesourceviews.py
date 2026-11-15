@@ -16,6 +16,22 @@ def _graded_series(holder):
 
 
 class TestCaseGradeResourceViews(APITestCase):
+    def _given_class_to_plan_for_gpa(self, user, grade_scale_template=enums.GRADE_SCALE_4_0_PLUS_MINUS,
+                                     other_grade=85, other_credits=3, credits=3, class_grade_scale_template=None):
+        course_group = coursegrouphelper.given_course_group_exists(user, grade_scale_template=grade_scale_template)
+        coursehelper.given_graded_course_exists(course_group, other_grade, credits=other_credits)
+        course = coursehelper.given_course_exists(course_group, title='Biology', credits=credits,
+                                                  grade_scale_template=class_grade_scale_template)
+        category = categoryhelper.given_category_exists(course, weight=0)
+        homeworkhelper.given_homework_exists(course, category=category, completed=True, current_grade='45/50')
+        project = homeworkhelper.given_homework_exists(course, title='Project', category=category,
+                                                       current_grade='-1/100')
+        return course, project
+
+    def _get_needed(self, course, target, **desired):
+        return self.client.get(reverse('planner_resource_grades_needed'),
+                               {'course': course.pk, 'target': target.pk, **desired})
+
     def test_grade_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
@@ -269,7 +285,121 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual('Select a category that is down to its last ungraded assignment.', responses[0].data['target'])
         self.assertEqual('Select an ungraded assignment in this class.', responses[1].data['target'])
         self.assertEqual('Enter a valid grade between 0 and 100.', responses[2].data['desired_grade'])
-        self.assertEqual(["'course', 'target', and 'desired_grade' must be given as numbers"], responses[3].data)
+        self.assertEqual(["'course', 'target', 'desired_grade', and 'desired_gpa' must be given as numbers"],
+                         responses[3].data)
+
+    def test_needed_grade_for_a_gpa_solves_for_the_lowest_band_that_reaches_it(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course, project = self._given_class_to_plan_for_gpa(user)
+
+        # WHEN
+        response = self._get_needed(course, project, desired_gpa=3.35)
+        same_as_grade = self._get_needed(course, project, desired_grade=90)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual({'min_grade': 90.0, 'grade_point': 3.7, 'label': 'A-'}, _floats(response.data['grade_band']),
+                         'the other class is a B (3.0), so (3.0 + x) / 2 >= 3.35 needs x >= 3.7, an A-')
+        self.assertEqual('achievable', response.data['state'])
+        self.assertAlmostEqual(same_as_grade.data['needed_grade'], response.data['needed_grade'], places=4)
+        self.assertEqual(project.pk, response.data['assignment']['id'])
+        self.assertIsNone(same_as_grade.data['grade_band'])
+
+    def test_needed_grade_for_a_gpa_counts_the_gpa_as_displayed(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course, project = self._given_class_to_plan_for_gpa(user, other_grade=85, other_credits=1, credits=3)
+
+        # WHEN
+        response = self._get_needed(course, project, desired_gpa=3.53)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(3.7, float(response.data['grade_band']['grade_point']),
+                         '(3.0 + 3 × 3.7) / 4 = 3.525 shows as 3.53, so an A- reaches it')
+
+    def test_needed_grade_for_an_out_of_reach_gpa(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course, project = self._given_class_to_plan_for_gpa(user)
+
+        # WHEN
+        response = self._get_needed(course, project, desired_gpa=3.9)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual('gpa_unreachable', response.data['state'])
+        self.assertEqual({'min_grade': 97.0, 'grade_point': 4.0, 'label': 'A+'}, _floats(response.data['grade_band']),
+                         'even an A+ (4.0) only brings (3.0 + 4.0) / 2 to 3.5')
+        self.assertEqual(0, response.data['needed_grade'])
+        self.assertIsNone(response.data['assignment'])
+
+    def test_needed_grade_for_a_gpa_already_reached(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course, project = self._given_class_to_plan_for_gpa(user)
+
+        # WHEN
+        response = self._get_needed(course, project, desired_gpa=1.5)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(0.0, float(response.data['grade_band']['min_grade']), 'even an F (0.0) keeps the GPA at 1.5')
+        self.assertEqual('above_target', response.data['state'])
+
+    def test_needed_grade_for_a_gpa_on_a_scale_where_lower_is_better(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course, project = self._given_class_to_plan_for_gpa(user, grade_scale_template=enums.GRADE_SCALE_1_5_PASS_50)
+
+        # WHEN
+        response = self._get_needed(course, project, desired_gpa=1.5)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(90.0, float(response.data['grade_band']['min_grade']),
+                         'the other class earns 1.7, so (1.7 + x) / 2 <= 1.5 needs x <= 1.3, from 90%')
+
+    def test_needed_grade_for_a_gpa_uses_the_class_grade_scale(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course, project = self._given_class_to_plan_for_gpa(user, class_grade_scale_template=enums.GRADE_SCALE_4_0)
+
+        # WHEN
+        response = self._get_needed(course, project, desired_gpa=3.35)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual({'min_grade': 90.0, 'grade_point': 4.0, 'label': 'A'}, _floats(response.data['grade_band']),
+                         'on whole letters, the lowest band at or above 3.7 is an A')
+
+    def test_needed_grade_for_a_gpa_refuses_invalid_requests(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course, project = self._given_class_to_plan_for_gpa(user)
+        no_credits, no_credits_project = self._given_class_to_plan_for_gpa(user, credits=0)
+        no_scale, no_scale_project = self._given_class_to_plan_for_gpa(user,
+                                                                        grade_scale_template=enums.GRADE_SCALE_NONE)
+
+        # WHEN
+        responses = [
+            self._get_needed(no_credits, no_credits_project, desired_gpa=3.0),
+            self._get_needed(no_scale, no_scale_project, desired_gpa=3.0),
+            self._get_needed(course, project, desired_gpa=3.0, desired_grade=90),
+            self._get_needed(course, project),
+            self._get_needed(course, project, desired_gpa=-1),
+            self._get_needed(course, project, desired_gpa='nan'),
+        ]
+
+        # THEN
+        self.assertEqual([status.HTTP_400_BAD_REQUEST] * 6, [response.status_code for response in responses])
+        self.assertEqual('Add credits to this class to plan for a GPA.', responses[0].data['desired_gpa'])
+        self.assertEqual("Set a grade scale on the class's group to plan for a GPA.", responses[1].data['desired_gpa'])
+        self.assertEqual(["Only one of 'desired_grade' or 'desired_gpa' may be given."], responses[2].data)
+        self.assertEqual(["One of 'desired_grade' or 'desired_gpa' must be given."], responses[3].data)
+        self.assertEqual('Enter a valid GPA.', responses[4].data['desired_gpa'])
+        self.assertEqual('Enter a valid GPA.', responses[5].data['desired_gpa'])
 
     def test_needed_grade_for_another_users_class_is_not_found(self):
         # GIVEN
@@ -394,5 +524,9 @@ class TestCaseGradeResourceViews(APITestCase):
 
 
 def _as_floats(grade_scale):
-    return [{**band, 'min_grade': float(band['min_grade']), 'grade_point': float(band['grade_point'])}
-            for band in grade_scale]
+    return [_floats(band) for band in grade_scale]
+
+
+def _floats(grade_band):
+    return {**grade_band, 'min_grade': float(grade_band['min_grade']),
+            'grade_point': float(grade_band['grade_point'])}

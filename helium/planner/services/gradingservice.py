@@ -272,6 +272,14 @@ def gpa_for(classes: Iterable[Tuple[Decimal, Union[Decimal, float]]]) -> float:
     return round(float(gpa), 4)
 
 
+def displayed_gpa(gpa: Union[Decimal, float]) -> Decimal:
+    """
+    :param gpa: A GPA from `gpa_for`.
+    :return: The GPA as the app displays it (two places).
+    """
+    return Decimal(str(gpa)).quantize(_DISPLAYED_GRADE_PLACES, rounding=ROUND_HALF_UP)
+
+
 def most_recent_course_group(course_groups: Iterable[dict]) -> Optional[dict]:
     """
     :param course_groups: Dicts with `id` and `start_date`.
