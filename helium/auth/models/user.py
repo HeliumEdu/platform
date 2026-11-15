@@ -67,6 +67,11 @@ class User(AbstractBaseUser, BaseModel):
         help_text='When the example schedule last finished importing. Anything in it created or changed after '
                   'this is the user\'s own work.')
 
+    example_schedule_first_imported_at = models.DateTimeField(
+        blank=True, null=True,
+        help_text='When the example schedule first finished importing. Write-once: set by the first import and '
+                  'never updated by a re-import, unlike `example_schedule_imported_at`.')
+
     deletion_requested_at = models.DateTimeField(
         blank=True, null=True, db_index=True,
         help_text='When the user requested account deletion. Non-null means the account is '

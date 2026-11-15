@@ -245,3 +245,5 @@ GRADE_SCALE_TEMPLATES = {
         (91, 1.5, ''), (94, 1.25, ''), (97, 1, ''))},
 }
 GRADE_SCALE_TEMPLATE_CHOICES = tuple((key, template['label']) for key, template in GRADE_SCALE_TEMPLATES.items())
+COURSE_GRADE_SCALE_TEMPLATE_CHOICES = tuple(choice for choice in GRADE_SCALE_TEMPLATE_CHOICES
+                                            if choice[0] != GRADE_SCALE_NONE)

@@ -138,6 +138,8 @@ class TestCaseImportExampleSchedule(APITestCase):
         self.assertFalse(CourseGroup.objects.get(pk=example.course_group.pk).example_schedule)
         user.refresh_from_db()
         self.assertGreater(user.example_schedule_imported_at, example.imported_at)
+        self.assertEqual(user.example_schedule_first_imported_at, example.imported_at,
+                         'the first import time never moves, so metrics keep counting work from before the re-import')
 
         # WHEN
         response = exampleschedulehelper.delete_example_schedule(self.client)

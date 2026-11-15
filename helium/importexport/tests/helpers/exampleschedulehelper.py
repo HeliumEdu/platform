@@ -49,7 +49,9 @@ def given_example_schedule_exists(user, stamped=True, imported_ago=timedelta(day
     for model in USER_OWNED_MODELS:
         model.objects.for_user(user.pk).update(created_at=imported_at, updated_at=imported_at)
 
-    get_user_model().objects.filter(pk=user.pk).update(example_schedule_imported_at=imported_at if stamped else None)
+    stamp = imported_at if stamped else None
+    get_user_model().objects.filter(pk=user.pk).update(example_schedule_imported_at=stamp,
+                                                       example_schedule_first_imported_at=stamp)
     user.refresh_from_db()
 
     return SimpleNamespace(course_group=course_group, course=course, schedule=schedule, category=category,

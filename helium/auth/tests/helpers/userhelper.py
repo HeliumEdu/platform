@@ -30,6 +30,11 @@ def given_a_user_exists(username='test_user', email='user@test.com', password='t
     return user
 
 
+def given_example_schedule_imported(user, first_imported_at, imported_at=None):
+    get_user_model().objects.filter(pk=user.pk).update(example_schedule_first_imported_at=first_imported_at,
+                                                       example_schedule_imported_at=imported_at or first_imported_at)
+
+
 def given_users_exist(count, domain='school.edu'):
     return [given_a_user_exists(username=f'student{i}', email=f'student{i}@{domain}') for i in range(count)]
 

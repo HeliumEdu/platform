@@ -226,7 +226,8 @@ class CourseAdmin(ObjectActionsMixin, BaseModelAdmin):
         readonly_fields = super().get_readonly_fields(request, obj)
 
         if obj:
-            return readonly_fields + self.readonly_fields + ('course_group', 'current_grade', 'grade_point', 'trend', 'linked_notes')
+            return readonly_fields + self.readonly_fields + ('course_group', 'current_grade', 'grade_point',
+                                                             'grade_scale_template', 'trend', 'linked_notes')
 
         return readonly_fields + self.readonly_fields
 

@@ -1,4 +1,5 @@
 import copy
+from typing import List, Optional, Set, Tuple
 
 from helium.common import enums
 from helium.common.timezones import COUNTRY_BY_TIME_ZONE
@@ -35,6 +36,46 @@ def preset_for(grade_scale):
     """
     return next((template for template, preset in enums.GRADE_SCALE_TEMPLATES.items()
                  if preset['scale'] == grade_scale), None)
+
+
+def is_compatible_preset(template: int, grade_scale: List[dict]) -> bool:
+    """
+    Whether a class in a group with `grade_scale` can use the `template` preset: every grade the preset awards (its
+    grade point and label) is one the group's scale awards too, so the class grades on the group's scale with its own
+    cutoffs, and the group's GPA stays on one scale.
+
+    :param template: A `GRADE_SCALE_TEMPLATES` id.
+    :param grade_scale: The group's bands, or empty for no grade scale.
+    :return: True if the class can use the preset.
+    """
+    if not grade_scale or template not in enums.GRADE_SCALE_TEMPLATES or template == enums.GRADE_SCALE_NONE:
+        return False
+
+    return _grades_awarded(enums.GRADE_SCALE_TEMPLATES[template]['scale']) <= _grades_awarded(grade_scale)
+
+
+def compatible_presets(grade_scale: List[dict]) -> List[int]:
+    """
+    :param grade_scale: The group's bands, or empty for no grade scale.
+    :return: The `GRADE_SCALE_TEMPLATES` ids a class in the group can use.
+    """
+    return [template for template in enums.GRADE_SCALE_TEMPLATES if is_compatible_preset(template, grade_scale)]
+
+
+def effective_grade_scale(template: Optional[int], group_grade_scale: List[dict]) -> List[dict]:
+    """
+    :param template: The class's `grade_scale_template`, or None to use the group's scale.
+    :param group_grade_scale: The group's bands, or empty for no grade scale.
+    :return: The bands that turn the class's grade into its grade point.
+    """
+    if template is None or not group_grade_scale:
+        return group_grade_scale
+
+    return preset_grade_scale(template)
+
+
+def _grades_awarded(grade_scale: List[dict]) -> Set[Tuple[float, str]]:
+    return {(round(float(band['grade_point']), 2), band['label']) for band in grade_scale}
 
 
 def default_grade_scale():

@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from helium.common import enums
 from helium.common.serializers.validation import validate_date_range_and_exceptions
+from helium.common.utils import gradeutils
 from helium.common.utils.openapiutils import support_article_url
 from helium.planner.models import Course, CourseGroup
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
@@ -46,7 +47,8 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = (
-            'id', 'title', 'room', 'credits', 'color', 'website', 'is_online', 'current_grade', 'grade_point', 'trend',
+            'id', 'title', 'room', 'credits', 'color', 'website', 'is_online', 'current_grade', 'grade_point',
+            'grade_scale_template', 'trend',
             'teacher_name', 'teacher_email', 'start_date', 'end_date', 'exceptions', 'schedules', 'template',
             'course_group', 'notes', 'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
@@ -59,6 +61,9 @@ class CourseSerializer(serializers.ModelSerializer):
         # `None` means the field was omitted; a provided template can be `0` (a falsy enum value), so
         # test against None rather than truthiness.
         template = validated_data.pop('template', None)
+        _validate_grade_scale_template(validated_data,
+                                       CourseGroup.objects.filter(pk=validated_data['course_group_id'])
+                                       .values_list('grade_scale', flat=True).first())
 
         with transaction.atomic():
             course = super().create(validated_data)
@@ -71,6 +76,7 @@ class CourseSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # Provisioning only applies at create time; a template on update is a no-op.
         validated_data.pop('template', None)
+        _validate_grade_scale_template(validated_data, instance.course_group.grade_scale)
 
         return super().update(instance, validated_data)
 
@@ -119,3 +125,15 @@ class CourseSerializer(serializers.ModelSerializer):
         validate_date_range_and_exceptions(attrs, self.instance, 'class date range')
 
         return attrs
+
+
+def _validate_grade_scale_template(validated_data, group_grade_scale):
+    template = validated_data.get('grade_scale_template')
+    if template is None or gradeutils.is_compatible_preset(template, group_grade_scale):
+        return
+
+    compatible = [enums.GRADE_SCALE_TEMPLATES[preset]['label']
+                  for preset in gradeutils.compatible_presets(group_grade_scale)]
+    raise serializers.ValidationError({'grade_scale_template': (
+        "Doesn't fit the group's grade scale: a class's preset can only award grades the group's scale does. "
+        + (f"Compatible presets: {', '.join(compatible)}." if compatible else "The group has no grade scale."))})

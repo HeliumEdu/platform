@@ -10,7 +10,7 @@ Reads ``helium/common/enums.py`` and writes:
   (``RESOURCE_STATUS_CHOICES``, ``CONDITION_CHOICES``).
 * ``projects/frontend/lib/utils/preferred_colors.dart`` — the course color palette (``PREFERRED_COLORS``).
 * ``projects/connector/helium_connector/platform_enums.py`` — resource status and condition labels, the ungraded
-  sentinels, and the recurrence horizon.
+  sentinels, the recurrence horizon, and the grade scale preset names and ids.
 """
 
 import sys
@@ -127,14 +127,23 @@ def _render_connector(enums):
     def as_tuple(labels):
         return "(\n" + "".join(f'    "{label}",\n' for label in labels) + ")"
 
+    presets = {key: template['label'] for key, template in enums.GRADE_SCALE_TEMPLATES.items()
+               if key != enums.GRADE_SCALE_NONE}
+    grade_scale_preset_names = "".join(f'    "{label}",\n' for label in presets.values())
+    grade_scale_presets = "".join(f'    "{label}": {key},\n' for key, label in presets.items())
+
     return f"""{_PY_BANNER}
-from typing import Final
+from typing import Final, Literal
 
 RESOURCE_STATUSES: Final = {as_tuple(_labels(enums.RESOURCE_STATUS_CHOICES))}
 RESOURCE_CONDITIONS: Final = {as_tuple(_labels(enums.CONDITION_CHOICES))}
 UNGRADED: Final = "{enums.UNGRADED}"
 NO_GRADE: Final = {enums.NO_GRADE}
 RECURRENCE_HORIZON_YEARS: Final = {enums.RECURRENCE_HORIZON_YEARS}
+GradeScalePreset = Literal[
+{grade_scale_preset_names}]
+GRADE_SCALE_PRESETS: Final[dict[GradeScalePreset, int]] = {{
+{grade_scale_presets}}}
 """
 
 

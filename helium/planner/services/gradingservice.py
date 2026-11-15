@@ -17,7 +17,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import F, Count, Q, Case, When, Exists, OuterRef, FloatField, Value
 
 from helium.common import enums
-from helium.common.utils import commonutils, datetimeutils
+from helium.common.utils import commonutils, datetimeutils, gradeutils
 from helium.planner.models import CourseGroup, Course, Category, Homework
 
 logger = logging.getLogger(__name__)
@@ -116,6 +116,7 @@ def get_grade_data(user_id):
                                            'current_grade',
                                            'credits',
                                            'grade_point',
+                                           'grade_scale_template',
                                            'trend',
                                            'annotated_num_homework',
                                            'annotated_num_homework_completed',
@@ -180,6 +181,8 @@ def get_grade_data(user_id):
             course.pop('annotated_num_homework_graded')
             course.pop('annotated_has_weighted_grading')
             course.pop('current_grade')
+            course['grade_scale'] = gradeutils.effective_grade_scale(course['grade_scale_template'],
+                                                                     course_group['grade_scale'])
             course_graded_items = graded_items_by_course.get(course['id'], [])
             course['points_earned'], course['points_possible'] = _points_totals(course_graded_items)
             points_by_category = _points_totals_by_category(course_graded_items)
@@ -300,12 +303,28 @@ def cumulative_gpa_course_group_ids(course_groups: Iterable[dict]) -> List[int]:
 
 def recalculate_course_group_gpa(course_group_id) -> None:
     grade_scale = CourseGroup.objects.filter(pk=course_group_id).values_list('grade_scale', flat=True).first()
-    courses = list(Course.objects.for_course_group(course_group_id).only('pk', 'current_grade', 'grade_point'))
+    courses = list(Course.objects.for_course_group(course_group_id).only('pk', 'current_grade', 'grade_point',
+                                                                         'grade_scale_template'))
     for course in courses:
-        course.grade_point = grade_point_for(course.current_grade, grade_scale)
+        course.grade_point = grade_point_for(
+            course.current_grade, gradeutils.effective_grade_scale(course.grade_scale_template, grade_scale))
     Course.objects.bulk_update(courses, ['grade_point'])
 
     _update_course_group_gpa(course_group_id)
+
+
+def effective_grade_scale_for_course(course_id) -> List[dict]:
+    """
+    :param course_id: The class.
+    :return: The bands that turn the class's grade into its grade point: its preset, else its group's scale; empty
+             when the class no longer exists.
+    """
+    row = (Course.objects.filter(pk=course_id)
+           .values_list('grade_scale_template', 'course_group__grade_scale').first())
+    if row is None:
+        return []
+
+    return gradeutils.effective_grade_scale(*row)
 
 
 def recalculate_course_group_grade(course_group_id):
@@ -326,6 +345,12 @@ def recalculate_course_group_grade(course_group_id):
 
 
 def recalculate_course_grade(course_id, grade_scale=None):
+    """
+    Recalculate a class's grade, trend, grade point, and category breakdown.
+
+    :param course_id: The class.
+    :param grade_scale: The class's effective grade scale, if already loaded; otherwise it's looked up.
+    """
     grade_points = [(point.cumulative_grade / 100) for point in _get_grade_points_for_course(course_id)]
     current_grade = grade_points[-1] * 100 if len(grade_points) > 0 else enums.NO_GRADE
     trend = commonutils.calculate_trend(range(len(grade_points)), grade_points)
@@ -335,7 +360,7 @@ def recalculate_course_grade(course_id, grade_scale=None):
     logger.debug(f'Course {course_id} trend recalculated to {trend}')
 
     if grade_scale is None:
-        grade_scale = CourseGroup.objects.filter(courses=course_id).values_list('grade_scale', flat=True).first()
+        grade_scale = effective_grade_scale_for_course(course_id)
     grade_point = grade_point_for(current_grade, grade_scale)
 
     # Update the values in the datastore, circumventing signals

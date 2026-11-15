@@ -1290,6 +1290,7 @@ class TestCaseImportExportViews(APITestCase):
         # --- Import stamp ---
         user.refresh_from_db()
         self.assertIsNotNone(user.example_schedule_imported_at)
+        self.assertEqual(user.example_schedule_first_imported_at, user.example_schedule_imported_at)
         for model in (CourseGroup, Course, CourseSchedule, Category, ResourceGroup, Resource, Event, Homework, Note):
             for row in model.objects.for_user(user.pk):
                 self.assertLessEqual(row.updated_at, user.example_schedule_imported_at,
@@ -2040,6 +2041,37 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(CourseGroup.objects.exists())
+
+    def test_import_round_trips_a_class_grade_scale(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['course_groups'][0]['grade_scale_template'] = enums.GRADE_SCALE_4_0_PLUS_MINUS
+        payload['courses'][0]['grade_scale_template'] = enums.GRADE_SCALE_4_0
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload)
+        exported = self.client.get(reverse('importexport_export'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Course.objects.get(course_group__user=user).grade_scale_template, enums.GRADE_SCALE_4_0)
+        self.assertEqual(json.loads(exported.content)['courses'][0]['grade_scale_template'], enums.GRADE_SCALE_4_0)
+
+    def test_import_rejects_a_class_grade_scale_that_does_not_fit_its_group(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['course_groups'][0]['grade_scale_template'] = enums.GRADE_SCALE_4_0
+        payload['courses'][0]['grade_scale_template'] = enums.GRADE_SCALE_10_0
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('courses id 1, grade_scale_template', str(response.data))
         self.assertFalse(CourseGroup.objects.exists())
 
     def test_import_rejects_a_template_that_conflicts_with_its_schedule(self):

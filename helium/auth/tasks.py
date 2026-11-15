@@ -24,7 +24,7 @@ from helium.common.utils import commonutils, metricutils, redisutils, taskutils
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists, redact_email
 from helium.feed.models import ExternalCalendar
 from helium.planner.handlers.signals import suppress_cascade_recalculation
-from helium.planner.models import Attachment, Category, Course, CourseGroup, CourseSchedule, Event, Homework, \
+from helium.planner.models import Attachment, Course, CourseGroup, CourseSchedule, Event, Homework, \
     Resource, Note, Reminder
 
 logger = logging.getLogger(__name__)
@@ -305,13 +305,13 @@ def _emit_per_entity_distribution(metric, qs, group_field, all_entity_ids, tags)
 
 
 def _changed_since_example_import(user_path):
-    imported_at = f'{user_path}__example_schedule_imported_at'
+    imported_at = f'{user_path}__example_schedule_first_imported_at'
     return Q(**{f'{imported_at}__isnull': True}) | Q(updated_at__gt=F(imported_at))
 
 
 def _reminder_item_changed_since_example_import():
-    imported_at = F('user__example_schedule_imported_at')
-    return (Q(user__example_schedule_imported_at__isnull=True) |
+    imported_at = F('user__example_schedule_first_imported_at')
+    return (Q(user__example_schedule_first_imported_at__isnull=True) |
             Q(homework__updated_at__gt=imported_at) |
             Q(event__updated_at__gt=imported_at) |
             Q(course__updated_at__gt=imported_at))
@@ -519,14 +519,16 @@ def emit_nightly_metrics(self):
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
                     ).filter(_changed_since_example_import('course__course_group__user')).rotating())),
-                    ('grade_tracking', Exists(Category.objects.filter(
+                    ('grade_tracking', Exists(Homework.objects.graded().filter(
                         course__course_group__user=OuterRef('pk'),
                         course__course_group__example_schedule=False,
                     ).filter(_changed_since_example_import('course__course_group__user')))),
-                    ('gpa', Exists(CourseGroup.objects.filter(
-                        user=OuterRef('pk'),
-                        example_schedule=False,
-                    ).exclude(gpa=enums.NO_GRADE).filter(_changed_since_example_import('user')))),
+                    ('gpa', Exists(Homework.objects.graded().filter(
+                        course__course_group__user=OuterRef('pk'),
+                        course__course_group__example_schedule=False,
+                        course__credits__gt=0,
+                    ).exclude(course__grade_point=enums.NO_GRADE).filter(
+                        _changed_since_example_import('course__course_group__user')))),
                     ('external_calendars', Exists(ExternalCalendar.objects.filter(
                         user=OuterRef('pk'),
                         example_schedule=False,
