@@ -188,12 +188,13 @@ def _create_course_schedule_description(course):
     return description
 
 
-def _to_vevent(user, item, generated_at, last_modified):
+def _to_vevent(user, item, generated_at, created_at, last_modified):
     calendar_event = icalendar.Event()
     calendar_event["UID"] = f"he-{user.pk}-{item.pk}"
     calendar_event["SUMMARY"] = item.title
     calendar_event["DTSTAMP"] = icalendar.vDatetime(generated_at)
     calendar_event["LAST-MODIFIED"] = icalendar.vDatetime(last_modified)
+    calendar_event["SEQUENCE"] = max(0, int((last_modified - created_at).total_seconds()))
     if not item.all_day:
         calendar_event["DTSTART"] = icalendar.vDatetime(timezone.localtime(item.start))
         calendar_event["DTEND"] = icalendar.vDatetime(timezone.localtime(item.end))
@@ -230,7 +231,7 @@ def events_to_private_ical_feed(user):
         for event in user.events.prefetch_related('notes_set'):
             last_modified = _last_modified(event.updated_at, user.settings.last_deletion_at,
                                            *(note.updated_at for note in event.notes_set.all()))
-            calendar_event = _to_vevent(user, event, generated_at, last_modified)
+            calendar_event = _to_vevent(user, event, generated_at, event.created_at, last_modified)
             if event.recurrence_rule:
                 _add_recurrence(calendar_event, event)
             calendar_event["DESCRIPTION"] = _create_event_description(event)
@@ -262,7 +263,7 @@ def homework_to_private_ical_feed(user):
                 homework.category.updated_at if homework.category else None,
                 *(resource.updated_at for resource in homework.resources.all()),
                 *(note.updated_at for note in homework.notes_set.all()))
-            calendar_event = _to_vevent(user, homework, generated_at, last_modified)
+            calendar_event = _to_vevent(user, homework, generated_at, homework.created_at, last_modified)
             if homework.recurrence_rule:
                 _add_recurrence(calendar_event, homework)
             calendar_event["DESCRIPTION"] = _create_homework_description(homework)
@@ -302,7 +303,7 @@ def courseschedules_to_private_ical_feed(user):
             last_modified = _last_modified(course.updated_at, course.course_group.updated_at,
                                            *(schedule.updated_at for schedule in course.schedules.all()))
             for event in events:
-                calendar_event = _to_vevent(user, event, generated_at, last_modified)
+                calendar_event = _to_vevent(user, event, generated_at, course.created_at, last_modified)
                 calendar_event["DESCRIPTION"] = description
 
                 calendar.add_component(calendar_event)
