@@ -673,6 +673,28 @@ class TestCaseReminderService(TestCase):
         self.assertEqual(next_start, datetime.datetime(2026, 3, 6, 9, 0, 0, tzinfo=datetime.timezone.utc))
 
     @mock.patch('django.utils.timezone.now')
+    def test_get_next_course_occurrence_start_skips_a_cancelled_meeting_but_not_the_other_schedule(self, mock_now):
+        # GIVEN
+        mock_now.return_value = datetime.datetime(2026, 3, 4, 8, 0, 0, tzinfo=datetime.timezone.utc)
+        user = userhelper.given_a_user_exists(time_zone='UTC')
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 31))
+        lecture = courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(9, 0, 0), datetime.time(9, 50, 0), days_of_week='0001000')
+        lecture.exceptions = '20260304'
+        lecture.save()
+        courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(14, 0, 0), datetime.time(15, 50, 0), days_of_week='0001000')
+        reminder = Reminder(course=course, user=user, offset=30, offset_type=enums.MINUTES, type=enums.PUSH)
+
+        # WHEN
+        next_start = reminder._get_next_course_occurrence_start()
+
+        # THEN
+        self.assertEqual(next_start, datetime.datetime(2026, 3, 4, 14, 0, 0, tzinfo=datetime.timezone.utc))
+
+    @mock.patch('django.utils.timezone.now')
     def test_get_next_course_occurrence_start_skips_off_week_for_week_based(self, mock_now):
         # GIVEN
         mock_now.return_value = datetime.datetime(2026, 3, 9, 8, 0, 0, tzinfo=datetime.timezone.utc)

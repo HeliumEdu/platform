@@ -580,6 +580,7 @@ def _bulk_import_example_schedule(data, user):
             fri_end_time=cs['fri_end_time'],
             sat_start_time=cs['sat_start_time'],
             sat_end_time=cs['sat_end_time'],
+            exceptions=cs.get('exceptions', ''),
             course_id=course_remap[cs['course']],
         ))
     CourseSchedule.objects.bulk_create(schedule_objects)

@@ -389,6 +389,89 @@ class TestCaseCourseScheduleService(TestCase):
         self.assertEqual({e.date() for e in groups[0].exception_dates},
                          {datetime.date(2026, 3, 3), datetime.date(2026, 3, 4), datetime.date(2026, 3, 6)})
 
+    def test_course_schedules_to_events_schedule_cancellation_removes_only_that_meeting(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists(time_zone='UTC')
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 6))
+        courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(9, 0, 0), datetime.time(9, 50, 0), days_of_week='0101010')
+        lab = courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(14, 0, 0), datetime.time(15, 50, 0), days_of_week='0001000')
+        lab.exceptions = '20260304'
+        lab.save()
+
+        # WHEN
+        events = coursescheduleservice.course_schedules_to_events(course, course.schedules)
+
+        # THEN
+        self.assertEqual(sorted(event.start for event in events), [
+            datetime.datetime(2026, 3, 2, 9, 0, 0, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2026, 3, 4, 9, 0, 0, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2026, 3, 6, 9, 0, 0, tzinfo=datetime.timezone.utc),
+        ])
+
+    def test_course_schedule_to_recurrence_groups_weekly_schedule_cancellation_is_that_schedules_exdate(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists(time_zone='UTC')
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 13))
+        lecture = courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(9, 0, 0), datetime.time(9, 50, 0), days_of_week='0101010')
+        lab = courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(14, 0, 0), datetime.time(15, 50, 0), days_of_week='0001000')
+        lab.exceptions = '20260304'
+        lab.save()
+
+        # WHEN
+        lab_groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, lab)
+        lecture_groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, lecture)
+
+        # THEN
+        self.assertEqual(lab_groups[0].exception_dates,
+                         [datetime.datetime(2026, 3, 4, 14, 0, 0, tzinfo=datetime.timezone.utc)])
+        self.assertEqual(lecture_groups[0].exception_dates, [])
+
+    def test_course_schedule_to_recurrence_groups_week_based_schedule_cancellation_is_an_exdate(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists(time_zone='UTC')
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 27))
+        course_schedule = courseschedulehelper.given_week_based_schedule_exists(
+            course, days_of_week='0100000', week_offset=0, anchor_date=datetime.date(2026, 3, 2))
+        course_schedule.exceptions = '20260316'
+        course_schedule.save()
+
+        # WHEN
+        groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
+
+        # THEN
+        self.assertIn(datetime.date(2026, 3, 16), {e.date() for e in groups[0].exception_dates})
+        self.assertNotIn(datetime.date(2026, 3, 2), {e.date() for e in groups[0].exception_dates})
+
+    def test_course_schedule_to_recurrence_groups_cycle_schedule_cancellation_does_not_shift_later_days(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists(time_zone='UTC')
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(
+            course_group, start_date=datetime.date(2026, 3, 2), end_date=datetime.date(2026, 3, 6))
+        course_schedule = courseschedulehelper.given_cycle_schedule_exists(
+            course, cycle_length=2, anchor_date=datetime.date(2026, 3, 2),
+            cycle_slots=[{'indices': [1], 'start_time': '09:00:00', 'end_time': '09:50:00'}])
+        course_schedule.exceptions = '20260304'
+        course_schedule.save()
+
+        # WHEN
+        groups = coursescheduleservice.course_schedule_to_recurrence_groups(course, course_schedule)
+
+        # THEN
+        self.assertEqual(groups[0].start.date(), datetime.date(2026, 3, 2))
+        self.assertEqual({e.date() for e in groups[0].exception_dates},
+                         {datetime.date(2026, 3, 3), datetime.date(2026, 3, 4), datetime.date(2026, 3, 5)})
+
     def test_course_schedule_to_recurrence_groups_week_based(self):
         # GIVEN
         user = userhelper.given_a_user_exists(time_zone='UTC')

@@ -72,3 +72,13 @@ def get_course_group_exceptions(course) -> set:
     :param course: A ``Course`` instance with a ``course_group.exceptions`` CSV field.
     """
     return set(parse_csv_exceptions(course.course_group.exceptions))
+
+
+def get_course_schedule_exceptions(course_schedule) -> set:
+    """
+    Return the set of dates on which ``course_schedule`` alone doesn't meet. Like a class's own cancellations, they
+    remove the meeting without shifting a day cycle's rotation.
+
+    :param course_schedule: A ``CourseSchedule`` instance with an ``exceptions`` CSV field.
+    """
+    return set(parse_csv_exceptions(course_schedule.exceptions))

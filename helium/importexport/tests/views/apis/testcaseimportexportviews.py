@@ -695,6 +695,44 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(imported.start_date, datetime.date(2026, 3, 9))
         self.assertEqual(imported.end_date, datetime.date(2026, 4, 24))
 
+    def test_export_import_preserves_schedule_exceptions(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        schedule = courseschedulehelper.given_course_schedule_exists(course)
+        schedule.exceptions = '20170215,20170301'
+        schedule.save()
+
+        # WHEN
+        export_data = importexporthelper.get_export_data(self)
+        import_response = importexporthelper.post_import(self.client, export_data, filename='roundtrip.json')
+
+        # THEN
+        self.assertEqual(export_data['course_schedules'][0]['exceptions'], '20170215,20170301')
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        imported_course = Course.objects.exclude(pk=course.pk).get(course_group__user=user)
+        self.assertEqual(CourseSchedule.objects.get(course=imported_course).exceptions, '20170215,20170301')
+
+    def test_export_import_keeps_a_schedule_cancellation_left_outside_its_window(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        schedule = courseschedulehelper.given_course_schedule_exists(course)
+        schedule.end_date = datetime.date(2017, 2, 28)
+        schedule.exceptions = '20170301'
+        schedule.save()
+
+        # WHEN
+        export_data = importexporthelper.get_export_data(self)
+        import_response = importexporthelper.post_import(self.client, export_data, filename='roundtrip.json')
+
+        # THEN
+        self.assertEqual(import_response.status_code, status.HTTP_200_OK)
+        imported_course = Course.objects.exclude(pk=course.pk).get(course_group__user=user)
+        self.assertEqual(CourseSchedule.objects.get(course=imported_course).exceptions, '20170301')
+
     def test_export_import_preserves_schedule_template(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

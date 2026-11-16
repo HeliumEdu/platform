@@ -88,6 +88,10 @@ class CourseSchedule(BaseModel):
         help_text='The template this schedule was created from.',
         choices=enums.SCHEDULE_TEMPLATE_CHOICES, blank=True, null=True)
 
+    exceptions = models.TextField(
+        help_text='Comma-separated dates (YYYYMMDD) when this schedule does not meet.',
+        blank=True, default='')
+
     objects = CourseScheduleManager()
 
     class Meta:
