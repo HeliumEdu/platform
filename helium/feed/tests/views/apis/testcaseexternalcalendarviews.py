@@ -10,7 +10,7 @@ from rest_framework.test import APITestCase
 from helium.auth.tests.helpers import userhelper
 from helium.common.tests.helpers import commonhelper
 from helium.feed.models import ExternalCalendar
-from helium.feed.tests.helpers import externalcalendarhelper, icalfeedhelper
+from helium.feed.tests.helpers import externalcalendarhelper, externalcalendarfetchhelper
 
 
 class TestCaseExternalCalendarViews(APITestCase):
@@ -198,10 +198,10 @@ class TestCaseExternalCalendarViews(APITestCase):
         self.assertIn('url', response.data)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
-    def test_create_invalid_ical_returns_400(self, mock_urlopen):
+    def test_create_invalid_icalendar_returns_400(self, mock_urlopen):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
+        externalcalendarfetchhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
 
         # WHEN
         data = {
@@ -218,11 +218,11 @@ class TestCaseExternalCalendarViews(APITestCase):
         self.assertIn('url', response.data)
 
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
-    def test_update_invalid_ical_returns_400(self, mock_urlopen):
+    def test_update_invalid_icalendar_returns_400(self, mock_urlopen):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
+        externalcalendarfetchhelper.given_urlopen_mock_from_file(os.path.join('resources', 'bad.ical'), mock_urlopen)
 
         # WHEN
         data = {
@@ -284,7 +284,7 @@ class TestCaseExternalCalendarViews(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
-        icalfeedhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
+        externalcalendarfetchhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
 
         # WHEN
         response = self.client.patch(
@@ -296,5 +296,5 @@ class TestCaseExternalCalendarViews(APITestCase):
         external_calendar.refresh_from_db()
         self.assertFalse(external_calendar.shown_on_calendar)
         disabled_calls = [c for c in mock_increment.call_args_list
-                          if c.args and c.args[0] == 'feed.ical.disabled']
+                          if c.args and c.args[0] == 'external_calendar.disabled']
         self.assertEqual(len(disabled_calls), 0)

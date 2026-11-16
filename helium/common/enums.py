@@ -1,7 +1,7 @@
 from helium.common.timezones import TIME_ZONE_CHOICES  # noqa: F401
 
 PYTHON_TO_HELIUM_DAY_OF_WEEK = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 0}
-WEEKDAY_TO_ICAL = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
+WEEKDAY_TO_ICALENDAR = {0: 'MO', 1: 'TU', 2: 'WE', 3: 'TH', 4: 'FR', 5: 'SA', 6: 'SU'}
 RECURRENCE_HORIZON_YEARS = 5
 
 MONTH = 0

@@ -11,9 +11,10 @@ from django.core.cache import cache
 from helium.common import enums
 from helium.common.utils import datetimeutils, metricutils
 from helium.common.utils.commonutils import HeliumError, deterministic_id
-from helium.common.utils.course_exception_helpers import get_course_exceptions
+from helium.common.utils.course_exception_helpers import get_course_exceptions, get_course_group_exceptions
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import GeneratedEventSerializer
+from helium.planner.utils import deeplinkutils
 
 logger = logging.getLogger(__name__)
 
@@ -85,17 +86,16 @@ def _get_end_time_for_weekday(course_schedule, weekday):
         return course_schedule.sat_end_time
 
 
-def get_comments(course, link=True):
+def get_comments(course):
     """
-    Describe where a course meets, for its schedule's events: its title, and its room unless it's online.
+    Describe where a course meets, for its schedule's events: its title (linked to the course's website, as HTML the
+    app renders), and its room unless it's online.
 
     :param course: The course.
-    :param link: Whether to link the title to the course's website, as HTML (the app renders it). A calendar feed's
-        description is plain text, so it passes ``False``.
     :return: The comments, or an empty string when there's nothing to say.
     """
     title = course.title
-    if link and course.website:
+    if course.website:
         title = f"<a href=\"{course.website}\">{title}</a>"
 
     if not course.is_online and course.room:
@@ -123,11 +123,11 @@ def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=No
                           start=parser.parse(event['start']),
                           end=parser.parse(event['end']),
                           url=event['url'],
+                          color=course.color,
                           owner_id=event['owner_id'],
                           user_id=event['user'],
                           calendar_item_type=event['calendar_item_type'],
                           comments=event['comments'])
-            event.color = course.color
 
             if datetimeutils.event_in_range(event, _from, to):
                 events.append(event)
@@ -141,15 +141,16 @@ def _get_events_from_cache(course, cache_prefix, cached_value, _from=None, to=No
     return events, not invalid_data
 
 
-def schedule_meeting_times_for_day(course_schedule, day, exceptions):
+def schedule_meeting_times_for_day(course_schedule, day, exceptions, group_exceptions):
     """
     The (start_time, end_time) slots a schedule meets on ``day`` — 0 or 1 tuple. Resolved by:
     cycle-day index for a cycle schedule; weekday for a weekly schedule; and weekday *within a
     matching rotation week* for a week-based ("Week A/B") schedule. This is the single source of
-    truth every consumer routes through (recurrence groups, the ICS feed, and reminders), so each
+    truth every consumer routes through (recurrence groups, Feeds, and reminders), so each
     schedule type resolves consistently everywhere.
 
-    :param exceptions: Course/course-group exception dates — a cycle needs them to count school days.
+    :param exceptions: The dates the course doesn't meet.
+    :param group_exceptions: The course group's Holidays & Breaks — a cycle needs them to count school days.
     """
     # A schedule with its own date window only meets within it; its callers already bound the walk by
     # the course dates, so its own overrides are the only extra constraint here.
@@ -158,7 +159,9 @@ def schedule_meeting_times_for_day(course_schedule, day, exceptions):
         return []
 
     if course_schedule.is_cycle:
-        index = resolve_cycle_index(course_schedule, day, exceptions)
+        if day in exceptions:
+            return []
+        index = resolve_cycle_index(course_schedule, day, group_exceptions)
         if index is None:
             return []
         for slot in course_schedule.cycle_slots:
@@ -184,6 +187,7 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
     events_filtered = []
 
     exceptions = get_course_exceptions(course)
+    group_exceptions = get_course_group_exceptions(course)
     course_user = course.get_user()
     user_tz = ZoneInfo(course_user.settings.time_zone)
     comments = get_comments(course)
@@ -197,7 +201,8 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
             continue
 
         for course_schedule in schedule_list:
-            for start_time, end_time in schedule_meeting_times_for_day(course_schedule, day, exceptions):
+            for start_time, end_time in schedule_meeting_times_for_day(course_schedule, day, exceptions,
+                                                                       group_exceptions):
                 start = datetimeutils.local_time_as_utc(day, start_time, user_tz)
                 end = datetimeutils.local_time_as_utc(day, end_time, user_tz)
 
@@ -208,12 +213,12 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
                               show_end_time=True,
                               start=start,
                               end=end,
-                              url=course.website,
+                              url=deeplinkutils.class_schedule_url(course),
+                              color=course.color,
                               owner_id=course.pk,
                               user=course_user,
                               calendar_item_type=enums.COURSE,
                               comments=comments)
-                event.color = course.color
 
                 events.append(event)
 
@@ -224,10 +229,10 @@ def _create_events_from_course_schedules(course, course_schedules, _from=None, t
 
     serializer = GeneratedEventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)
-    if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
-        cache.set(_get_cache_prefix(course), events_json, settings.FEED_CACHE_TTL_SECONDS)
+    if len(events_json.encode('utf-8')) <= settings.GENERATED_EVENTS_MAX_CACHEABLE_SIZE:
+        cache.set(_get_cache_prefix(course), events_json, settings.GENERATED_EVENTS_CACHE_TTL_SECONDS)
     else:
-        logger.warning("Cache size {max_cache_size} exceeded max, External Calendar {id}".format(
+        logger.warning("Cache size {max_cache_size} exceeded max, Course {id}".format(
             max_cache_size=len(events_json.encode('utf-8')),
             id=course.pk))
 
@@ -308,7 +313,7 @@ class CourseScheduleRecurrenceGroup:
     One recurrence group for a `CourseSchedule` — a unique (days, start_time,
     end_time) combination among its active days. Deliberately excludes fields
     the client already has from `Course` (title, color) or doesn't use here
-    (`url`, `comments`, unlike `course_schedules_to_events`'s ICS-feed shape).
+    (`url`, `comments`, unlike `course_schedules_to_events`'s Feed shape).
     """
     start: datetime.datetime
     end: datetime.datetime
@@ -316,33 +321,34 @@ class CourseScheduleRecurrenceGroup:
     exception_dates: list[datetime.datetime]
 
 
-def _is_school_day(date, exceptions):
-    """A cycle only advances on school weekdays that aren't course/course-group exceptions."""
-    return date.weekday() in _SCHOOL_WEEKDAYS and date not in exceptions
+def _is_school_day(date, group_exceptions):
+    """A cycle only advances on school weekdays that aren't Holidays & Breaks; a class's own cancellations don't
+    shift it."""
+    return date.weekday() in _SCHOOL_WEEKDAYS and date not in group_exceptions
 
 
-def resolve_cycle_index(course_schedule, date, exceptions):
+def resolve_cycle_index(course_schedule, date, group_exceptions):
     """
     For a cycle (rotating / A-B / block) schedule, return the 1-based cycle-day index
     that ``date`` falls on — counting school days forward from ``anchor_date`` (cycle
-    "Day 1"), skipping weekends and exception dates so a holiday pushes the cycle onto
+    "Day 1"), skipping weekends and holidays so a holiday pushes the cycle onto
     the next school day. Returns ``None`` for a weekly schedule, a date before the
-    anchor, a weekend, or an exception date.
+    anchor, a weekend, or a holiday.
 
     :param course_schedule: The schedule (its ``cycle_length``/``anchor_date`` drive the count).
     :param date: The calendar date to resolve.
-    :param exceptions: A set of course/course-group exception dates (see ``get_course_exceptions``).
+    :param group_exceptions: The course group's Holidays & Breaks.
     :return: The 1-based cycle-day index, or ``None``.
     """
     if not course_schedule.is_cycle or course_schedule.anchor_date is None:
         return None
-    if date < course_schedule.anchor_date or not _is_school_day(date, exceptions):
+    if date < course_schedule.anchor_date or not _is_school_day(date, group_exceptions):
         return None
 
     school_days = 0
     day = course_schedule.anchor_date
     while day <= date:
-        if _is_school_day(day, exceptions):
+        if _is_school_day(day, group_exceptions):
             school_days += 1
         day += datetime.timedelta(days=1)
 
@@ -389,7 +395,8 @@ def course_schedule_to_recurrence_groups(course, course_schedule):
     window = schedule_window(course, course_schedule)
 
     if course_schedule.is_cycle:
-        return _cycle_recurrence_groups(course_schedule, exceptions, user_tz, window)
+        return _cycle_recurrence_groups(course_schedule, exceptions, get_course_group_exceptions(course), user_tz,
+                                        window)
 
     if course_schedule.is_week_based:
         return _week_based_recurrence_groups(course_schedule, exceptions, user_tz, window)
@@ -427,7 +434,7 @@ def _weekly_recurrence_groups(course_schedule, exceptions, user_tz, window):
             for exception in sorted_exceptions
         ]
 
-        byday = ','.join(enums.WEEKDAY_TO_ICAL[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
+        byday = ','.join(enums.WEEKDAY_TO_ICALENDAR[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
         recurrence_rule = f'FREQ=WEEKLY;BYDAY={byday};UNTIL={until.strftime("%Y%m%dT%H%M%SZ")}'
 
         groups.append(CourseScheduleRecurrenceGroup(
@@ -436,13 +443,13 @@ def _weekly_recurrence_groups(course_schedule, exceptions, user_tz, window):
     return groups
 
 
-def _cycle_recurrence_groups(course_schedule, exceptions, user_tz, window):
+def _cycle_recurrence_groups(course_schedule, exceptions, group_exceptions, user_tz, window):
     """
     A cycle schedule can't be a single periodic RRULE (its day-count "skips and shifts"
     around holidays). Since the course window is finite, each `cycle_slots` entry is
     expressed as a **superset weekly RRULE over every school weekday** plus an
     **exclusion list** of every weekday in range that isn't actually an occurrence of
-    that slot (which naturally absorbs holidays too). Identical `CourseScheduleRecurrenceGroup`
+    that slot (which naturally absorbs holidays and cancellations too). Identical `CourseScheduleRecurrenceGroup`
     shape as the weekly path — the client can't tell them apart.
     """
     groups = []
@@ -450,7 +457,8 @@ def _cycle_recurrence_groups(course_schedule, exceptions, user_tz, window):
     window_start, window_end = window
     until = datetimeutils.local_time_as_utc(window_end, datetime.time(23, 59, 59), user_tz)
 
-    # Single walk of the term: every school weekday, mapped to its cycle index (holidays absent → None).
+    # Single walk of the term: every school weekday, mapped to its cycle index (holidays and cancellations absent →
+    # None). Only holidays shift the count.
     school_days = 0
     index_by_weekday = {}
     all_weekdays = []
@@ -459,13 +467,13 @@ def _cycle_recurrence_groups(course_schedule, exceptions, user_tz, window):
         if day.weekday() in _SCHOOL_WEEKDAYS:
             if day >= window_start:
                 all_weekdays.append(day)
-            if _is_school_day(day, exceptions):
+            if _is_school_day(day, group_exceptions):
                 school_days += 1
-                if day >= window_start:
+                if day >= window_start and day not in exceptions:
                     index_by_weekday[day] = (school_days - 1) % course_schedule.cycle_length + 1
         day += datetime.timedelta(days=1)
 
-    byday = ','.join(enums.WEEKDAY_TO_ICAL[weekday] for weekday in _SCHOOL_WEEKDAYS)
+    byday = ','.join(enums.WEEKDAY_TO_ICALENDAR[weekday] for weekday in _SCHOOL_WEEKDAYS)
 
     for slot in course_schedule.cycle_slots:
         indices = set(slot['indices'])
@@ -536,7 +544,7 @@ def _week_based_recurrence_groups(course_schedule, exceptions, user_tz, window):
             for exception in sorted_exceptions
         ]
 
-        byday = ','.join(enums.WEEKDAY_TO_ICAL[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
+        byday = ','.join(enums.WEEKDAY_TO_ICALENDAR[_HELIUM_TO_PYTHON_WEEKDAY[weekday]] for weekday in weekdays)
         recurrence_rule = (f'FREQ=WEEKLY;INTERVAL={_WEEK_ROTATION_INTERVAL};BYDAY={byday};'
                            f'UNTIL={until.strftime("%Y%m%dT%H%M%SZ")}')
 

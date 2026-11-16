@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 #: The most occurrences a repeating Homework may have.
 MAX_HOMEWORK_OCCURRENCES = 366
 
-_SHARED_FIELDS = ('title', 'all_day', 'show_end_time', 'priority', 'url')
+_SHARED_FIELDS = ('title', 'all_day', 'show_end_time', 'priority')
 
 #: What an occurrence keeps from its series when it becomes its own item.
 _OCCURRENCE_FIELDS = {

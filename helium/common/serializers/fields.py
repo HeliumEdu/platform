@@ -5,12 +5,12 @@ from rest_framework import serializers
 
 class ExceptionDatesField(serializers.ListField):
     """
-    Serializer field for a JSON list of iCal EXDATE datetimes, like ``Event.exception_dates``.
+    Serializer field for a JSON list of iCalendar EXDATE datetimes, like ``Event.exception_dates``.
     Wraps a :class:`TzAwareDateTimeField` so per-item parsing, validation, and
     output formatting all flow through the same DRF DateTimeField machinery as
     every other datetime in the API — meaning the wire form is uniformly
     ``Z``-suffixed ISO-8601 UTC regardless of whether the column was populated
-    by user POST, iCal import, or anything else.
+    by user POST, iCalendar import, or anything else.
 
     Without this, JSON-stored strings would pass through DRF as-is and the wire
     format would drift away from the rest of the API's datetime convention.
@@ -35,7 +35,7 @@ class ExceptionDatesField(serializers.ListField):
         if data is None:
             return data
         # Stored values are already Z-suffixed ISO strings (written by
-        # ``to_internal_value`` for user input, or by the iCal import service
+        # ``to_internal_value`` for user input, or by the iCalendar import service
         # which writes any ISO form). Parse and re-emit through DateTimeField
         # so values stored in the ``+00:00`` form still come out as ``Z`` on the wire.
         normalized = []

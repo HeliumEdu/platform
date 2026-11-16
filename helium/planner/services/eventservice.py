@@ -24,7 +24,6 @@ def clone_event(source, occurrence_start=None):
         start=start,
         end=end,
         priority=source.priority,
-        url=source.url,
         user=source.user,
     )
 

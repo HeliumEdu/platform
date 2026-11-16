@@ -84,7 +84,6 @@ class EventsApiListView(HeliumCalendarItemAPIView, CreateModelMixin):
                     'start': '2026-09-23T15:00:00-07:00',
                     'end': '2026-09-23T16:30:00-07:00',
                     'priority': 30,
-                    'url': 'https://example.edu/zoom/abc123',
                     'recurrence_rule': 'FREQ=WEEKLY;BYDAY=WE',
                 },
                 request_only=True,

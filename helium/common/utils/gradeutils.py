@@ -1,4 +1,5 @@
 import copy
+from decimal import ROUND_HALF_UP, Decimal
 from typing import List, Optional, Set, Tuple
 
 from helium.common import enums
@@ -72,6 +73,27 @@ def effective_grade_scale(template: Optional[int], group_grade_scale: List[dict]
         return group_grade_scale
 
     return preset_grade_scale(template)
+
+
+def format_grade_percent(grade: str, number_format: int) -> str:
+    """
+    A grade as the app shows it: a percent with two decimals in the user's number format (e.g. "1,234.50%", or
+    "1.234,50%" with a comma). Mirrors the app's `GradeHelper.gradeForDisplay`.
+
+    :param grade: The grade, as "earned/possible".
+    :param number_format: The user's `number_format`.
+    :return: The formatted grade, or an empty string when it's ungraded.
+    """
+    earned, _, possible = grade.partition('/')
+    if grade == enums.UNGRADED or not possible:
+        return ''
+
+    percent = (Decimal(earned) / Decimal(possible) * 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    formatted = f'{percent:,.2f}'
+    if number_format == enums.COMMA:
+        formatted = formatted.translate(str.maketrans(',.', '.,'))
+
+    return f'{formatted}%'
 
 
 def _grades_awarded(grade_scale: List[dict]) -> Set[Tuple[float, str]]:

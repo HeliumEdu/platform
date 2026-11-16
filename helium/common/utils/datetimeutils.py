@@ -100,7 +100,7 @@ def expand_recurrence(rule, start, end, tz, all_day=False, exception_dates=None,
     :param end: The aware first occurrence end.
     :param tz: A `tzinfo` (e.g. `ZoneInfo`), the zone the series is expanded in.
     :param all_day: Whether the series is all-day.
-    :param exception_dates: ISO-8601 datetimes (iCal EXDATE) whose local date is skipped, or None.
+    :param exception_dates: ISO-8601 datetimes (iCalendar EXDATE) whose local date is skipped, or None.
     :param not_before: Aware datetime; occurrences starting before it are not yielded, or None.
     :return: A generator of ``(start, end)`` UTC tuples.
     """
@@ -162,7 +162,7 @@ def shift_exception_dates(exception_dates, old_start, new_start, tz):
     Move a series' exception dates by the wall-clock distance its start moved in ``tz``, so each still lands on the
     same occurrence of the moved series.
 
-    :param exception_dates: ISO-8601 datetimes (iCal EXDATE), or None.
+    :param exception_dates: ISO-8601 datetimes (iCalendar EXDATE), or None.
     :param old_start: The aware series start before the move.
     :param new_start: The aware series start after the move.
     :param tz: A `tzinfo` (e.g. `ZoneInfo`), the zone the series is expanded in.
@@ -194,7 +194,7 @@ def wall_clock_distance(old, new, tz):
 
 def end_of_day_until(date, tz):
     """
-    Format the end of ``date`` in ``tz`` as an iCal ``UNTIL`` value, the last moment a series may occur that day.
+    Format the end of ``date`` in ``tz`` as an iCalendar ``UNTIL`` value, the last moment a series may occur that day.
 
     :param date: A `date`.
     :param tz: A `tzinfo` (e.g. `ZoneInfo`), the zone the series is expanded in.

@@ -2,7 +2,7 @@ from django.test import SimpleTestCase
 
 from helium.common import enums
 from helium.common.utils.gradeutils import at_risk_threshold_for_time_zone, compatible_presets, \
-    effective_grade_scale, is_compatible_preset, preset_grade_scale
+    effective_grade_scale, format_grade_percent, is_compatible_preset, preset_grade_scale
 
 
 class TestCaseGradeUtils(SimpleTestCase):
@@ -82,3 +82,35 @@ class TestCaseGradeUtils(SimpleTestCase):
 
         # THEN
         self.assertEqual(scale, [])
+
+    def test_format_grade_percent_rounds_half_up_to_two_decimals(self):
+        # WHEN
+        thirds = format_grade_percent('2/3', enums.POINT)
+        half = format_grade_percent('90.125/100', enums.POINT)
+
+        # THEN
+        self.assertEqual(thirds, '66.67%')
+        self.assertEqual(half, '90.13%')
+
+    def test_format_grade_percent_uses_the_comma_number_format(self):
+        # WHEN
+        grade = format_grade_percent('1234.5/100', enums.COMMA)
+
+        # THEN
+        self.assertEqual(grade, '1.234,50%')
+
+    def test_format_grade_percent_groups_thousands_with_the_point_number_format(self):
+        # WHEN
+        grade = format_grade_percent('1234.5/100', enums.POINT)
+
+        # THEN
+        self.assertEqual(grade, '1,234.50%')
+
+    def test_format_grade_percent_is_empty_when_ungraded(self):
+        for grade in (enums.UNGRADED, ''):
+            with self.subTest(grade=grade):
+                # WHEN
+                formatted = format_grade_percent(grade, enums.POINT)
+
+                # THEN
+                self.assertEqual(formatted, '')

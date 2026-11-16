@@ -7,7 +7,7 @@ from rest_framework import serializers
 from helium.common import enums
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.serializers.validation import validate_start_before_end
-from helium.common.utils.validators import validate_hex_color, validate_recurrence_rule
+from helium.common.utils.validators import validate_recurrence_rule
 from helium.planner.models import Event
 from helium.planner.serializers.attachmentserializer import AttachmentSerializer
 from helium.planner.serializers.reminderserializer import ReminderSerializer
@@ -22,8 +22,6 @@ class EventSerializer(serializers.ModelSerializer):
         django_models.DateTimeField: TzAwareDateTimeField,
     }
 
-    color = serializers.CharField(max_length=7, validators=[validate_hex_color], read_only=True, required=False)
-    location = serializers.CharField(read_only=True, required=False, allow_null=True)
     exception_dates = ExceptionDatesField(required=False, allow_null=True,
                                           help_text=Event._meta.get_field('exception_dates').help_text)
     notes = serializers.PrimaryKeyRelatedField(source='notes_set', many=True, read_only=True)
@@ -33,9 +31,9 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = (
-            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority', 'url',
+            'id', 'title', 'all_day', 'show_end_time', 'start', 'end', 'priority',
             'owner_id',
-            'color', 'location', 'attachments', 'reminders', 'notes', 'user',
+            'attachments', 'reminders', 'notes', 'user',
             'recurrence_rule', 'exception_dates', 'created_at', 'updated_at',
             # Property fields (which should also be declared as read-only)
             'calendar_item_type',)
@@ -81,10 +79,13 @@ class GeneratedEventSerializer(EventSerializer):
     attachments = serializers.SerializerMethodField()
     reminders = serializers.SerializerMethodField()
     notes = serializers.SerializerMethodField()
+    url = serializers.CharField(read_only=True, allow_null=True)
+    color = serializers.CharField(read_only=True)
+    location = serializers.CharField(read_only=True, allow_null=True)
     comments = serializers.CharField(read_only=True)
 
     class Meta(EventSerializer.Meta):
-        fields = EventSerializer.Meta.fields + ('comments',)
+        fields = EventSerializer.Meta.fields + ('url', 'color', 'location', 'comments')
 
     def get_attachments(self, obj) -> list:
         return []

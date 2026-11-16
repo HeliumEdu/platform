@@ -9,7 +9,7 @@ from helium.planner.models import Homework
 def given_homework_exists(course, title='💻 Test Homework', all_day=False, show_end_time=True,
                           start=datetime.datetime(2017, 5, 8, 16, 0, 0, tzinfo=datetime.timezone.utc),
                           end=datetime.datetime(2017, 5, 8, 18, 0, 0, tzinfo=datetime.timezone.utc),
-                          priority=65, url='', current_grade='-1/100',
+                          priority=65, current_grade='-1/100',
                           completed=False, category=None, resources=None, recurrence_rule=None,
                           exception_dates=None):
     if resources is None:
@@ -21,7 +21,6 @@ def given_homework_exists(course, title='💻 Test Homework', all_day=False, sho
                                        start=start,
                                        end=end,
                                        priority=priority,
-                                       url=url,
                                        current_grade=current_grade,
                                        completed=completed,
                                        category=category,
@@ -50,8 +49,6 @@ def verify_homework_matches_data(test_case, homework, data):
     test_case.assertEqual(homework.start, parser.parse(data['start']))
     test_case.assertEqual(homework.end, parser.parse(data['end']))
     test_case.assertEqual(homework.priority, data['priority'])
-    if 'url' in data:
-        test_case.assertEqual(homework.url, data['url'])
     test_case.assertEqual(homework.current_grade, data['current_grade'])
     test_case.assertEqual(homework.completed, data['completed'])
     if 'calendar_item_type' in data:

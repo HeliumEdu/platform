@@ -6,15 +6,15 @@ from helium.auth.tests.helpers import userhelper
 from helium.common.tests.helpers import commonhelper
 
 
-class TestCasePrivateFeedResourceViews(APITestCase):
+class TestCaseFeedResourceViews(APITestCase):
     def test_private_url_resource_login_required(self):
         # GIVEN
         userhelper.given_a_user_exists()
 
         # WHEN
         responses = [
-            self.client.put(reverse('feed_private_resource_enable')),
-            self.client.put(reverse('feed_private_resource_disable'))
+            self.client.put(reverse('feed_enable')),
+            self.client.put(reverse('feed_disable'))
         ]
 
         # THEN
@@ -25,7 +25,7 @@ class TestCasePrivateFeedResourceViews(APITestCase):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
 
         # WHEN
-        response = self.client.put(reverse('feed_private_resource_enable'))
+        response = self.client.put(reverse('feed_enable'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -45,18 +45,18 @@ class TestCasePrivateFeedResourceViews(APITestCase):
         private_slug = user.settings.private_slug
 
         # WHEN
-        response = self.client.put(reverse('feed_private_resource_disable'))
+        response = self.client.put(reverse('feed_disable'))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         user.refresh_from_db()
         self.assertIsNone(user.settings.private_slug)
         self.assertEqual(
-            self.client.get(reverse('feed_private_events_ical', kwargs={'private_slug': private_slug})).status_code,
+            self.client.get(reverse('feed_events', kwargs={'private_slug': private_slug})).status_code,
             status.HTTP_404_NOT_FOUND)
         self.assertEqual(
-            self.client.get(reverse('feed_private_homework_ical', kwargs={'private_slug': private_slug})).status_code,
+            self.client.get(reverse('feed_homework', kwargs={'private_slug': private_slug})).status_code,
             status.HTTP_404_NOT_FOUND)
         self.assertEqual(
-            self.client.get(reverse('feed_private_courseschedules_ical', kwargs={'private_slug': private_slug})).status_code,
+            self.client.get(reverse('feed_courseschedules', kwargs={'private_slug': private_slug})).status_code,
             status.HTTP_404_NOT_FOUND)

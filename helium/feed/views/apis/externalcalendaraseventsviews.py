@@ -10,7 +10,7 @@ from helium.common.search import HeliumSearchFilter
 from helium.feed.models import ExternalCalendar
 from helium.feed.services import icalexternalcalendarservice
 from helium.planner.models import Event
-from helium.feed.services.icalexternalcalendarservice import HeliumICalError
+from helium.feed.services.icalexternalcalendarservice import HeliumICalendarError
 from helium.planner.serializers.eventserializer import GeneratedEventSerializer
 from helium.planner.views.base import HeliumCalendarItemAPIView, CALENDAR_DATE_RANGE_PARAMETERS, \
     _parse_date_param_to_utc
@@ -28,8 +28,6 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     search_description = 'Search by title.'
 
     def get_queryset(self):
-        if getattr(self, "swagger_fake_view", False):
-            return Event.objects.none()
         return Event.objects.none()
 
     @extend_schema(
@@ -43,12 +41,12 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         Return all external calendar events the user has shown on their calendar, flattened across every
         subscribed external calendar.
 
-        The `id` on each event is derived from the event's ICS UID (or its title, as a fallback) and is stable
+        The `id` on each event is derived from the event's iCalendar UID (or its title, as a fallback) and is stable
         across requests, but it is not an `Event` primary key.
 
         Side effect: a subscribed external calendar that fails to fetch or parse repeatedly in a row is
         auto-disabled (`shown_on_calendar` flipped to `false`), so a transient upstream outage does not take
-        it offline. PATCH it back to `true` once the upstream feed is fixed; the feed is re-validated at that
+        it offline. PATCH it back to `true` once the upstream calendar is fixed; it's re-validated at that
         point.
         """
         return super().get(request, *args, **kwargs)
@@ -71,8 +69,8 @@ class UserExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
         for external_calendar in external_calendars:
             try:
                 events += icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to)
-            except HeliumICalError as e:
-                icalexternalcalendarservice.record_feed_failure(external_calendar, e)
+            except HeliumICalendarError as e:
+                icalexternalcalendarservice.record_fetch_failure(external_calendar, e)
 
         events = HeliumSearchFilter().filter_queryset(request, events, self)
         serializer = self.get_serializer(events, many=True)
@@ -90,8 +88,6 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     search_description = 'Search by title.'
 
     def get_queryset(self):
-        if getattr(self, "swagger_fake_view", False):
-            return Event.objects.none()
         return Event.objects.none()
 
     @extend_schema(
@@ -103,14 +99,14 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
     )
     def get(self, request, *args, **kwargs):
         """
-        Return the events from a single subscribed external calendar's iCal feed.
+        Return the events from a single subscribed external calendar.
 
-        The `id` on each event is derived from the event's ICS UID (or its title, as a fallback) and is stable
+        The `id` on each event is derived from the event's iCalendar UID (or its title, as a fallback) and is stable
         across requests, but it is not an `Event` primary key.
 
-        If the upstream iCal fetch fails or the feed cannot be parsed, the request fails. Repeated
+        If the upstream iCalendar fetch fails or the calendar cannot be parsed, the request fails. Repeated
         consecutive failures also auto-disable the external calendar (`shown_on_calendar` flipped to
-        `false`). PATCH it back to `true` once the upstream feed is fixed; the feed is re-validated at that
+        `false`). PATCH it back to `true` once the upstream calendar is fixed; it's re-validated at that
         point.
         """
         return super().get(request, *args, **kwargs)
@@ -132,9 +128,9 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
 
         try:
             events = icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to)
-        except HeliumICalError as e:
-            if icalexternalcalendarservice.record_feed_failure(external_calendar, e):
-                raise ValidationError(f"External Calendar {external_calendar.pk} is not a valid ICAL feed, disabled.")
+        except HeliumICalendarError as e:
+            if icalexternalcalendarservice.record_fetch_failure(external_calendar, e):
+                raise ValidationError(f"External Calendar {external_calendar.pk} is not a valid calendar, disabled.")
 
             raise ValidationError(str(e))
 

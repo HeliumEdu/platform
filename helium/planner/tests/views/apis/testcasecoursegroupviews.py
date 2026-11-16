@@ -169,8 +169,8 @@ class TestCaseCourseGroupViews(APITestCase):
                                                         end_date=datetime.date(2017, 12, 15))
         homeworkhelper.given_homework_exists(newer_course, title='Newer Assignment')
         courseschedulehelper.given_course_schedule_exists(newer_course)
-        homework_url = reverse('feed_private_homework_ical', kwargs={'private_slug': user.settings.private_slug})
-        courseschedules_url = reverse('feed_private_courseschedules_ical',
+        homework_url = reverse('feed_homework', kwargs={'private_slug': user.settings.private_slug})
+        courseschedules_url = reverse('feed_courseschedules',
                                       kwargs={'private_slug': user.settings.private_slug})
         initial_homework_response = self.client.get(homework_url)
         initial_courseschedules_response = self.client.get(courseschedules_url)

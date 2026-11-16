@@ -51,8 +51,8 @@ def get_course_exceptions(course) -> set:
     Return the set of dates on which ``course`` does not meet — the merge of
     course-level (professor cancellations) and course-group-level (holidays,
     breaks) exceptions. Shared by every call site that needs to skip
-    non-meeting days when walking a course's schedule (reminders, the ICS
-    feed, RRULE generation).
+    non-meeting days when walking a course's schedule (reminders, Feeds,
+    RRULE generation).
 
     :param course: A ``Course`` instance with ``exceptions`` and
                    ``course_group.exceptions`` CSV fields.
@@ -61,3 +61,14 @@ def get_course_exceptions(course) -> set:
         parse_csv_exceptions(course.exceptions),
         parse_csv_exceptions(course.course_group.exceptions),
     ))
+
+
+def get_course_group_exceptions(course) -> set:
+    """
+    Return the set of dates on which ``course``'s group has no classes (Holidays & Breaks). These are the only
+    dates a day cycle skips when counting school days: a class's own cancellations remove its meeting without
+    shifting the rotation.
+
+    :param course: A ``Course`` instance with a ``course_group.exceptions`` CSV field.
+    """
+    return set(parse_csv_exceptions(course.course_group.exceptions))

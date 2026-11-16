@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(bind=True)
-def reindex_feeds(self, calendar_id=None):
+def reindex_external_calendars(self, calendar_id=None):
     """
     Reindex one calendar, or queue a task for every calendar whose cache has gone stale.
 
@@ -21,28 +21,29 @@ def reindex_feeds(self, calendar_id=None):
     """
     published_at_ms = metricutils.get_published_at_ms(self)
     dispatching = calendar_id is None
-    metrics = metricutils.task_start("feed.reindex" if dispatching else "feed.reindex.calendar",
-                                     priority="low", published_at_ms=published_at_ms)
+    metrics = metricutils.task_start(
+        "external_calendar.reindex" if dispatching else "external_calendar.reindex.calendar",
+        priority="low", published_at_ms=published_at_ms)
 
     try:
         if dispatching:
             calendar_ids = list(ExternalCalendar.objects.needs_recached().values_list('pk', flat=True))
             for stale_id in calendar_ids:
-                taskutils.safe_apply_async(reindex_feeds,
+                taskutils.safe_apply_async(reindex_external_calendars,
                                            kwargs={'calendar_id': stale_id},
                                            priority=settings.CELERY_PRIORITY_LOW)
             count = len(calendar_ids)
             logger.info(f"Queued {count} stale calendar(s) for reindexing")
         else:
-            icalexternalcalendarservice.reindex_stale_feed_caches(calendar_ids=[calendar_id])
+            icalexternalcalendarservice.reindex_stale_caches(calendar_ids=[calendar_id])
             count = 1
     except Exception as e:
-        logger.error(f"Failed to reindex feeds: {e}", exc_info=True)
+        logger.error(f"Failed to reindex external calendars: {e}", exc_info=True)
         raise
 
     metricutils.task_stop(metrics, value=count)
 
 
-register_periodic(reindex_feeds, settings.REINDEX_FEED_FREQUENCY_SEC,
+register_periodic(reindex_external_calendars, settings.EXTERNAL_CALENDAR_REINDEX_FREQUENCY_SEC,
                   priority=settings.CELERY_PRIORITY_LOW,
                   manually_triggerable=False)

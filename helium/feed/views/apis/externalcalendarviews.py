@@ -49,7 +49,7 @@ class ExternalCalendarsApiListView(HeliumAPIView, ListModelMixin, CreateModelMix
         """
         Create a new external calendar instance for the authenticated user.
 
-        The server will fetch `url` and validate the response is a valid iCal feed, and if not a
+        The server will fetch `url` and validate the response is valid iCalendar data, and if not a
         400 is returned.
         """
         response = self.create(request, *args, **kwargs)
@@ -87,7 +87,7 @@ class ExternalCalendarsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveM
         """
         Update the given external calendar instance.
 
-        The server will fetch `url` and validate the response is a valid iCal feed, and if not a
+        The server will fetch `url` and validate the response is valid iCalendar data, and if not a
         400 is returned.
         """
         response = self.update(request, *args, **kwargs)
@@ -102,7 +102,7 @@ class ExternalCalendarsApiDetailView(PreconditionMixin, HeliumAPIView, RetrieveM
         """
         Partially update the given external calendar instance.
 
-        If `url` is given, the server will fetch it and validate the response is a valid iCal feed, and if not a
+        If `url` is given, the server will fetch it and validate the response is valid iCalendar data, and if not a
         400 is returned.
         """
         response = self.partial_update(request, *args, **kwargs)

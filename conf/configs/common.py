@@ -157,20 +157,23 @@ GETTING_STARTED_DAILY_WINDOW = timedelta(days=7)
 GETTING_STARTED_DAILY_GAP = timedelta(hours=20)
 GETTING_STARTED_WEEKLY_GAP = timedelta(days=7)
 
-FEED_MAX_CACHEABLE_SIZE = 3000000
+GENERATED_EVENTS_MAX_CACHEABLE_SIZE = 3000000
 
-FEED_CACHE_TTL_SECONDS = 60 * 60 * 3
+GENERATED_EVENTS_CACHE_TTL_SECONDS = 60 * 60 * 3
 # Refresh cache before it expires
-FEED_CACHE_REFRESH_TTL_SECONDS = FEED_CACHE_TTL_SECONDS - (60 * 10)
-REINDEX_FEED_FREQUENCY_SEC = 300
-FEED_CONSECUTIVE_FAILURE_THRESHOLD = 10
+EXTERNAL_CALENDAR_CACHE_REFRESH_TTL_SECONDS = GENERATED_EVENTS_CACHE_TTL_SECONDS - (60 * 10)
+EXTERNAL_CALENDAR_REINDEX_FREQUENCY_SEC = 300
+EXTERNAL_CALENDAR_CONSECUTIVE_FAILURE_THRESHOLD = 10
 
-# How long calendar clients may cache ICS feeds before revalidating (15 minutes).
+# How long calendar clients may cache Feeds before revalidating (15 minutes).
 # ETags still ensure correctness on revalidation; this only reduces server-side
 # aggregation query load from high-frequency pollers (e.g. iOS Calendar).
 FEED_ICS_MAX_AGE_SECONDS = 60 * 15
 
-# How long each day's set of fetched private feeds is kept for usage metrics (about six months)
+# Bump when a change alters what Feeds contain, so calendar apps download them again
+FEEDS_VERSION = 1
+
+# How long each day's set of fetched Feeds is kept for usage metrics (about six months)
 FEED_FETCH_SET_TTL_SECONDS = 86400 * 181
 
 DB_INTEGRITY_RETRIES = 2
@@ -352,8 +355,8 @@ SPECTACULAR_SETTINGS = {
         "The API exposes all entities in the app: class groups "
         "(terms), classes, recurring class schedules, weighted grading categories, "
         "assignments, events, reminders, notes, file attachments, resources, external "
-        "calendar feeds (Google Calendar, Apple Calendar, Outlook, etc.), private iCal "
-        "subscription feeds, and full account import/export.\n\n"
+        "calendars (Google Calendar, Apple Calendar, Outlook, etc.) shown in Helium, Feeds that publish "
+        "Helium's calendars to other calendar apps, and full account import/export.\n\n"
         "## Authentication\n\n"
         "Three flows are supported:\n\n"
         "- **JWT**: POST `{\"email\": \"...\", \"password\": \"...\"}` to `/auth/token/` for an "

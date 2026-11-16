@@ -25,7 +25,7 @@ class TestCaseImportService(TestCase):
         other_category = categoryhelper.given_category_exists(other_course)
         homework = [{'id': 1, 'title': 'Imported', 'all_day': False, 'show_end_time': True,
                      'start': '2026-09-08T14:00:00Z', 'end': '2026-09-08T15:00:00Z', 'priority': 50,
-                     'url': '', 'current_grade': '-1/100', 'completed': False, 'course': 10, 'category': 20}]
+                     'current_grade': '-1/100', 'completed': False, 'course': 10, 'category': 20}]
 
         # WHEN
         importservice._import_homework(homework, {10: course.pk}, {20: other_category.pk}, {}, user, False)

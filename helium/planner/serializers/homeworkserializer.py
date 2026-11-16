@@ -61,10 +61,10 @@ class HomeworkSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'recurrence_rule': {
                 'validators': [validate_recurrence_rule],
-                'help_text': 'iCal RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats it from `start`, or '
-                             'null. Without `COUNT` or `UNTIL`, it repeats through the class\'s `end_date`. A '
-                             'repeating Homework isn\'t completed or graded itself; complete each occurrence '
-                             'with `scope=this`.',
+                'help_text': 'iCalendar RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats it from '
+                             '`start`, or null. Without `COUNT` or `UNTIL`, it repeats through the class\'s '
+                             '`end_date`. A repeating Homework isn\'t completed or graded itself; complete each '
+                             'occurrence with `scope=this`.',
             },
             'current_grade': {
                 'help_text': help_text_with_support_article(

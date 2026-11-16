@@ -8,12 +8,13 @@ from django.test import TestCase
 from django.urls import reverse
 
 from helium.auth.tests.helpers import userhelper
+from helium.common import enums
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     homeworkhelper, eventhelper, notehelper, resourcegrouphelper, resourcehelper
 
 logger = logging.getLogger(__name__)
 
-class TestCasePrivateViews(TestCase):
+class TestCaseFeedViews(TestCase):
     def test_events_feed(self):
         # GIVEN
         user1 = userhelper.given_a_user_exists()
@@ -25,19 +26,21 @@ class TestCasePrivateViews(TestCase):
         eventhelper.given_event_exists(user2)
 
         # WHEN
-        response = self.client.get(reverse("feed_private_events_ical", kwargs={"private_slug": user1.settings.private_slug}))
+        response = self.client.get(reverse("feed_events", kwargs={"private_slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 2)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], event1.title)
-        self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'], '')
+        self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
+                         f'\U0001F517 Open in Helium: {settings.PROJECT_APP_HOST}/planner/event/{event1.pk}/details')
         self.assertEqual(calendar.subcomponents[0]['DTSTART'].dt, event1.start)
         self.assertEqual(calendar.subcomponents[0]['DTEND'].dt, event1.end)
         self.assertEqual(calendar.subcomponents[1]['SUMMARY'], event1.title)
         self.assertEqual(calendar.subcomponents[1]['DTSTART'].dt, event2.start)
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, event2.end)
-        self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'], '')
+        self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'],
+                         f'\U0001F517 Open in Helium: {settings.PROJECT_APP_HOST}/planner/event/{event2.pk}/details')
 
     def _all_day_feed_components(self, user, url_name):
         response = self.client.get(
@@ -55,7 +58,7 @@ class TestCasePrivateViews(TestCase):
             end=datetime.datetime(2025, 9, 4, 22, 0, 0, tzinfo=datetime.timezone.utc))
 
         # WHEN
-        subcomponents = self._all_day_feed_components(user, "feed_private_events_ical")
+        subcomponents = self._all_day_feed_components(user, "feed_events")
 
         # THEN
         self.assertEqual(subcomponents[0]['DTSTART'].dt, datetime.date(2025, 9, 4))
@@ -72,7 +75,7 @@ class TestCasePrivateViews(TestCase):
             end=datetime.datetime(2025, 9, 5, 7, 0, 0, tzinfo=datetime.timezone.utc))
 
         # WHEN
-        subcomponents = self._all_day_feed_components(user, "feed_private_events_ical")
+        subcomponents = self._all_day_feed_components(user, "feed_events")
 
         # THEN
         self.assertEqual(subcomponents[0]['DTSTART'].dt, datetime.date(2025, 9, 4))
@@ -89,7 +92,7 @@ class TestCasePrivateViews(TestCase):
             end=datetime.datetime(2025, 9, 5, 22, 0, 0, tzinfo=datetime.timezone.utc))
 
         # WHEN
-        subcomponents = self._all_day_feed_components(user, "feed_private_events_ical")
+        subcomponents = self._all_day_feed_components(user, "feed_events")
 
         # THEN
         self.assertEqual(subcomponents[0]['DTSTART'].dt, datetime.date(2025, 9, 4))
@@ -108,7 +111,7 @@ class TestCasePrivateViews(TestCase):
             end=datetime.datetime(2025, 9, 4, 22, 0, 0, tzinfo=datetime.timezone.utc))
 
         # WHEN
-        subcomponents = self._all_day_feed_components(user, "feed_private_homework_ical")
+        subcomponents = self._all_day_feed_components(user, "feed_homework")
 
         # THEN
         self.assertEqual(subcomponents[0]['DTSTART'].dt, datetime.date(2025, 9, 4))
@@ -124,29 +127,15 @@ class TestCasePrivateViews(TestCase):
         )
 
         # WHEN
-        response = self.client.get(reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+        response = self.client.get(reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 1)
         description = calendar.subcomponents[0]['DESCRIPTION']
-        self.assertIn(f'{settings.PROJECT_APP_HOST}/notebook/{note.pk}', description)
-        self.assertNotIn('Note content from linked note', description)
-
-    def test_events_feed_with_url(self):
-        # GIVEN
-        user = userhelper.given_a_user_exists()
-        user.settings.enable_private_slug()
-        event = eventhelper.given_event_exists(user, url='https://example.com/event')
-
-        # WHEN
-        response = self.client.get(reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
-
-        # THEN
-        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
-        self.assertEqual(len(calendar.subcomponents), 1)
-        description = calendar.subcomponents[0]['DESCRIPTION']
-        self.assertEqual(description, 'URL: https://example.com/event')
+        self.assertEqual(description,
+                         f'\U0001F4DD Note: {settings.PROJECT_APP_HOST}/notebook/{note.pk}\n'
+                         f'\U0001F517 Open in Helium: {settings.PROJECT_APP_HOST}/planner/event/{event.pk}/details')
 
     def test_homework_feed(self):
         # GIVEN
@@ -169,21 +158,25 @@ class TestCasePrivateViews(TestCase):
         homeworkhelper.given_homework_exists(course3, category=category3, completed=True, current_grade="-1/100")
 
         # WHEN
-        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"private_slug": user1.settings.private_slug}))
+        response = self.client.get(reverse("feed_homework", kwargs={"private_slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 2)
         self.assertEqual(calendar.subcomponents[0]['SUMMARY'], homework1.title)
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
-                         f'Class Info: {homework1.course.title}\nStatus: Complete\nGrade: {homework1.current_grade}')
+                         f'Class Info: {homework1.course.title}\n\nStatus: Complete\nGrade: 66.67%\n\n'
+                         f'\U0001F517 Open in Helium: '
+                         f'{settings.PROJECT_APP_HOST}/planner/assignment/{homework1.pk}/details')
         self.assertEqual(calendar.subcomponents[0]['DTSTART'].dt, homework1.start)
         self.assertEqual(calendar.subcomponents[0]['DTEND'].dt, homework1.end)
         self.assertEqual(calendar.subcomponents[1]['SUMMARY'], homework2.title)
         self.assertEqual(calendar.subcomponents[1]['DTSTART'].dt, homework2.start)
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, homework2.end)
         self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'],
-                         f'Class Info: {homework2.category.title} for {homework2.course.title} in {homework2.course.room}')
+                         f'Class Info: {homework2.category.title} for {homework2.course.title} '
+                         f'in {homework2.course.room}\n\n\U0001F517 Open in Helium: '
+                         f'{settings.PROJECT_APP_HOST}/planner/assignment/{homework2.pk}/details')
 
     def test_homework_feed_shows_status_only_when_complete(self):
         # GIVEN
@@ -191,19 +184,23 @@ class TestCasePrivateViews(TestCase):
         user.settings.enable_private_slug()
         course_group, course, category = coursehelper.given_course_with_category_exists(
             user, course_kwargs={'room': ''}, category_kwargs={'title': 'Uncategorized'})
-        homeworkhelper.given_homework_exists(course, category=category, title='Complete ungraded', completed=True,
-                                             current_grade="-1/100")
-        homeworkhelper.given_homework_exists(course, category=category, title='Incomplete graded', completed=False,
-                                             current_grade="20/30")
+        complete = homeworkhelper.given_homework_exists(course, category=category, title='Complete ungraded',
+                                                        completed=True, current_grade="-1/100")
+        incomplete = homeworkhelper.given_homework_exists(course, category=category, title='Incomplete graded',
+                                                          completed=False, current_grade="20/30")
 
         # WHEN
-        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+        response = self.client.get(reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         descriptions = {str(component['SUMMARY']): component['DESCRIPTION'] for component in calendar.subcomponents}
-        self.assertEqual(descriptions['Complete ungraded'], f'Class Info: {course.title}\nStatus: Complete')
-        self.assertEqual(descriptions['Incomplete graded'], f'Class Info: {course.title}')
+        self.assertEqual(descriptions['Complete ungraded'],
+                         f'Class Info: {course.title}\n\nStatus: Complete\n\n\U0001F517 Open in Helium: '
+                         f'{settings.PROJECT_APP_HOST}/planner/assignment/{complete.pk}/details')
+        self.assertEqual(descriptions['Incomplete graded'],
+                         f'Class Info: {course.title}\n\n\U0001F517 Open in Helium: '
+                         f'{settings.PROJECT_APP_HOST}/planner/assignment/{incomplete.pk}/details')
 
     def test_homework_feed_with_linked_note(self):
         # GIVEN
@@ -217,36 +214,33 @@ class TestCasePrivateViews(TestCase):
         )
 
         # WHEN
-        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+        response = self.client.get(reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 1)
         description = calendar.subcomponents[0]['DESCRIPTION']
-        self.assertIn(f'{settings.PROJECT_APP_HOST}/notebook/{note.pk}', description)
+        self.assertIn(f'\U0001F4DD Note: {settings.PROJECT_APP_HOST}/notebook/{note.pk}', description)
         self.assertNotIn('Homework note content', description)
 
-    def test_homework_feed_with_resources_and_url(self):
+    def test_homework_feed_with_resources(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
         user.settings.enable_private_slug()
         course_group, course, category = coursehelper.given_course_with_category_exists(user)
         resource_group = resourcegrouphelper.given_resource_group_exists(user)
         resource = resourcehelper.given_resource_exists(resource_group, courses=[course])
-        homework = homeworkhelper.given_homework_exists(
-            course, category=category, url='https://example.com/assignment'
-        )
+        homework = homeworkhelper.given_homework_exists(course, category=category)
         homework.resources.add(resource)
 
         # WHEN
-        response = self.client.get(reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+        response = self.client.get(reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
         self.assertEqual(len(calendar.subcomponents), 1)
         description = calendar.subcomponents[0]['DESCRIPTION']
         self.assertIn(f'Resources: {resource.title}', description)
-        self.assertIn('URL: https://example.com/assignment', description)
 
     def test_courseschedules_feed(self):
         # GIVEN
@@ -266,7 +260,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user1.settings.private_slug}))
+            reverse("feed_courseschedules", kwargs={"private_slug": user1.settings.private_slug}))
 
         # THEN
         calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
@@ -275,7 +269,162 @@ class TestCasePrivateViews(TestCase):
         self.assertEqual(str(calendar.subcomponents[0]['DTSTART'].dt), '2017-01-06 02:30:00-08:00')
         self.assertEqual(str(calendar.subcomponents[0]['DTEND'].dt), '2017-01-06 05:00:00-08:00')
         self.assertEqual(calendar.subcomponents[0]['DESCRIPTION'],
-                         f'URL: {course1.website}\nComments: {course1.title} in {course1.room}')
+                         f'Class Info: {course1.title} in {course1.room}\nClass Website: {course1.website}\n\n'
+                         f'\U0001F517 Open in Helium: {settings.PROJECT_APP_HOST}/classes/{course1.pk}/schedule')
+
+    def test_homework_feed_description_sections_details_status_and_links(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        user.settings.number_format = enums.COMMA
+        user.settings.save()
+        course_group, course, category = coursehelper.given_course_with_category_exists(
+            user, course_kwargs={'room': 'SSC 123'}, category_kwargs={'title': 'Essay'})
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        textbook = resourcehelper.given_resource_exists(resource_group, title='Textbook', courses=[course])
+        workbook = resourcehelper.given_resource_exists(resource_group, title='Workbook', courses=[course])
+        homework = homeworkhelper.given_homework_exists(course, category=category, completed=True,
+                                                        current_grade='2/3')
+        homework.resources.add(textbook, workbook)
+        note = notehelper.given_note_linked_to_homework(user, homework)
+
+        # WHEN
+        response = self.client.get(reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        assignment_url = f'{settings.PROJECT_APP_HOST}/planner/assignment/{homework.pk}/details'
+        self.assertEqual(component['DESCRIPTION'],
+                         f'Class Info: Essay for {course.title} in SSC 123\nResources: Textbook, Workbook\n\n'
+                         f'Status: Complete\nGrade: 66,67%\n\n'
+                         f'\U0001F4DD Note: {settings.PROJECT_APP_HOST}/notebook/{note.pk}\n'
+                         f'\U0001F517 Open in Helium: {assignment_url}')
+        self.assertEqual(str(component['URL']), assignment_url)
+
+    def test_homework_feed_leaves_out_the_room_of_an_online_class(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group, course, category = coursehelper.given_course_with_category_exists(
+            user, course_kwargs={'room': 'SSC 123', 'is_online': True}, category_kwargs={'title': 'Uncategorized'})
+        homeworkhelper.given_homework_exists(course, category=category)
+
+        # WHEN
+        response = self.client.get(reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertTrue(component['DESCRIPTION'].startswith(f'Class Info: {course.title}\n\n'))
+
+    def test_events_feed_url_opens_the_event_in_helium(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        event = eventhelper.given_event_exists(user)
+
+        # WHEN
+        response = self.client.get(reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertEqual(str(component['URL']), f'{settings.PROJECT_APP_HOST}/planner/event/{event.pk}/details')
+
+    def test_courseschedules_feed_describes_resources_note_and_links_to_the_class(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, room='', website='')
+        courseschedulehelper.given_course_schedule_exists(course)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resourcehelper.given_resource_exists(resource_group, title='Lab Manual', courses=[course])
+        note = notehelper.given_note_linked_to_course(user, course)
+
+        # WHEN
+        response = self.client.get(
+            reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        class_url = f'{settings.PROJECT_APP_HOST}/classes/{course.pk}/schedule'
+        self.assertEqual(component['DESCRIPTION'],
+                         f'Class Info: {course.title}\nResources: Lab Manual\n\n'
+                         f'\U0001F4DD Note: {settings.PROJECT_APP_HOST}/notebook/{note.pk}\n'
+                         f'\U0001F517 Open in Helium: {class_url}')
+        self.assertEqual(str(component['URL']), class_url)
+
+    def test_courseschedules_feed_last_modified_advances_when_its_resource_is_deleted(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group, courses=[course])
+        url = reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug})
+        initial_response = self.client.get(url)
+        initial_component = icalendar.Calendar.from_ical(initial_response.content.decode('utf-8')).subcomponents[0]
+
+        time.sleep(1.1)
+
+        resource.delete()
+
+        # WHEN
+        response = self.client.get(url, HTTP_IF_NONE_MATCH=initial_response['ETag'])
+
+        # THEN
+        self.assertEqual(response.status_code, 200)
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertGreater(component['SEQUENCE'], initial_component['SEQUENCE'])
+        self.assertNotIn('Resources:', component['DESCRIPTION'])
+
+    def test_new_feeds_version_makes_every_feed_download_again(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        eventhelper.given_event_exists(user)
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
+        homeworkhelper.given_homework_exists(course)
+        courseschedulehelper.given_course_schedule_exists(course)
+        urls = [reverse(name, kwargs={"private_slug": user.settings.private_slug})
+                for name in ("feed_events", "feed_homework", "feed_courseschedules")]
+        initial_responses = [self.client.get(url) for url in urls]
+
+        # WHEN
+        with self.settings(FEEDS_VERSION=settings.FEEDS_VERSION + 1):
+            responses = [self.client.get(url, HTTP_IF_NONE_MATCH=initial_response['ETag'],
+                                         HTTP_IF_MODIFIED_SINCE=initial_response['Last-Modified'])
+                         for url, initial_response in zip(urls, initial_responses)]
+
+        # THEN
+        for url, response in zip(urls, responses):
+            with self.subTest(url=url):
+                self.assertEqual(response.status_code, 200)
+
+    def test_courseschedules_feed_last_modified_advances_when_its_note_changes(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        url = reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug})
+        initial_response = self.client.get(url)
+        initial_component = icalendar.Calendar.from_ical(initial_response.content.decode('utf-8')).subcomponents[0]
+
+        time.sleep(1.1)
+
+        note = notehelper.given_note_linked_to_course(user, course)
+
+        # WHEN
+        response = self.client.get(url, HTTP_IF_NONE_MATCH=initial_response['ETag'])
+
+        # THEN
+        self.assertEqual(response.status_code, 200)
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertGreater(component['SEQUENCE'], initial_component['SEQUENCE'])
+        self.assertIn(f'notebook/{note.pk}', component['DESCRIPTION'])
 
     def test_events_feed_returns_etag_and_last_modified_headers(self):
         # GIVEN
@@ -285,7 +434,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         self.assertEqual(response.status_code, 200)
@@ -302,12 +451,12 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         self.assertEqual(response.status_code, 200)
         self.assertIn('ETag', response)
-        self.assertEqual(response['ETag'], f'"{user.pk}:0"')
+        self.assertEqual(response['ETag'], f'"{user.pk}:0:{settings.FEEDS_VERSION}"')
         self.assertNotIn('Last-Modified', response)
 
     def test_events_feed_returns_304_on_matching_etag(self):
@@ -317,12 +466,12 @@ class TestCasePrivateViews(TestCase):
         eventhelper.given_event_exists(user)
 
         initial_response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_NONE_MATCH=etag)
 
         # THEN
@@ -337,12 +486,12 @@ class TestCasePrivateViews(TestCase):
         eventhelper.given_event_exists(user)
 
         initial_response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}))
         last_modified = initial_response['Last-Modified']
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_MODIFIED_SINCE=last_modified)
 
         # THEN
@@ -355,7 +504,7 @@ class TestCasePrivateViews(TestCase):
         event = eventhelper.given_event_exists(user)
 
         initial_response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
         time.sleep(1.1)
@@ -365,7 +514,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_NONE_MATCH=etag)
 
         # THEN
@@ -382,7 +531,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         self.assertEqual(response.status_code, 200)
@@ -400,12 +549,12 @@ class TestCasePrivateViews(TestCase):
         homeworkhelper.given_homework_exists(course)
 
         initial_response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_NONE_MATCH=etag)
 
         # THEN
@@ -420,12 +569,12 @@ class TestCasePrivateViews(TestCase):
         homeworkhelper.given_homework_exists(course)
 
         initial_response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
         last_modified = initial_response['Last-Modified']
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_MODIFIED_SINCE=last_modified)
 
         # THEN
@@ -440,7 +589,7 @@ class TestCasePrivateViews(TestCase):
         homework = homeworkhelper.given_homework_exists(course)
 
         initial_response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
         time.sleep(1.1)
@@ -450,7 +599,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_NONE_MATCH=etag)
 
         # THEN
@@ -467,7 +616,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         self.assertEqual(response.status_code, 200)
@@ -485,12 +634,12 @@ class TestCasePrivateViews(TestCase):
         courseschedulehelper.given_course_schedule_exists(course)
 
         initial_response = self.client.get(
-            reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_NONE_MATCH=etag)
 
         # THEN
@@ -505,12 +654,12 @@ class TestCasePrivateViews(TestCase):
         courseschedulehelper.given_course_schedule_exists(course)
 
         initial_response = self.client.get(
-            reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug}))
         last_modified = initial_response['Last-Modified']
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_MODIFIED_SINCE=last_modified)
 
         # THEN
@@ -525,7 +674,7 @@ class TestCasePrivateViews(TestCase):
         courseschedulehelper.given_course_schedule_exists(course)
 
         initial_response = self.client.get(
-            reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
         time.sleep(1.1)
@@ -535,7 +684,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_NONE_MATCH=etag)
 
         # THEN
@@ -550,7 +699,7 @@ class TestCasePrivateViews(TestCase):
         before_request = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
 
         # WHEN
-        response = self.client.get(reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+        response = self.client.get(reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         self.assertIn(b'DTSTAMP:', response.content)
@@ -564,7 +713,7 @@ class TestCasePrivateViews(TestCase):
         user = userhelper.given_a_user_exists()
         user.settings.enable_private_slug()
         event = eventhelper.given_event_exists(user)
-        url = reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug})
+        url = reverse("feed_events", kwargs={"private_slug": user.settings.private_slug})
         initial_response = self.client.get(url)
         initial_sequence = icalendar.Calendar.from_ical(initial_response.content.decode('utf-8')).subcomponents[0][
             'SEQUENCE']
@@ -592,7 +741,7 @@ class TestCasePrivateViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
-        url = reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug})
+        url = reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug})
         initial_response = self.client.get(url)
         initial_component = icalendar.Calendar.from_ical(initial_response.content.decode('utf-8')).subcomponents[0]
 
@@ -621,7 +770,7 @@ class TestCasePrivateViews(TestCase):
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
         note = notehelper.given_note_linked_to_homework(user, homework)
-        url = reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug})
+        url = reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug})
 
         time.sleep(1.1)
 
@@ -654,7 +803,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
 
         # THEN
         component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
@@ -671,7 +820,7 @@ class TestCasePrivateViews(TestCase):
         homework.resources.add(resource)
 
         initial_response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
         time.sleep(1.1)
@@ -681,7 +830,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_NONE_MATCH=etag)
 
         # THEN
@@ -696,7 +845,7 @@ class TestCasePrivateViews(TestCase):
         event = eventhelper.given_event_exists(user)
 
         initial_response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}))
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}))
         etag = initial_response['ETag']
 
         time.sleep(1.1)
@@ -705,7 +854,7 @@ class TestCasePrivateViews(TestCase):
 
         # WHEN
         response = self.client.get(
-            reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug}),
+            reverse("feed_events", kwargs={"private_slug": user.settings.private_slug}),
             HTTP_IF_NONE_MATCH=etag)
 
         # THEN
@@ -720,7 +869,7 @@ class TestCasePrivateViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         course_schedule = courseschedulehelper.given_course_schedule_exists(course)
-        url = reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug})
+        url = reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug})
         initial_components = icalendar.Calendar.from_ical(self.client.get(url).content.decode('utf-8')).subcomponents
 
         time.sleep(1.1)
@@ -745,7 +894,7 @@ class TestCasePrivateViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         courseschedulehelper.given_course_schedule_exists(course)
-        url = reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug})
+        url = reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug})
         initial_components = icalendar.Calendar.from_ical(self.client.get(url).content.decode('utf-8')).subcomponents
         holiday = initial_components[0]['DTSTART'].dt.date()
 
@@ -767,7 +916,7 @@ class TestCasePrivateViews(TestCase):
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group)
         course_schedule = courseschedulehelper.given_course_schedule_exists(course)
-        url = reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug})
+        url = reverse("feed_courseschedules", kwargs={"private_slug": user.settings.private_slug})
         self.client.get(url)
 
         course_schedule.delete()
@@ -784,7 +933,7 @@ class TestCasePrivateViews(TestCase):
         user.settings.enable_private_slug()
         event = eventhelper.given_event_exists(user)
         note = notehelper.given_note_linked_to_event(user, event)
-        url = reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug})
+        url = reverse("feed_events", kwargs={"private_slug": user.settings.private_slug})
         initial_response = self.client.get(url)
         initial_last_modified = icalendar.Calendar.from_ical(
             initial_response.content.decode('utf-8')).subcomponents[0]['LAST-MODIFIED'].dt
@@ -810,7 +959,7 @@ class TestCasePrivateViews(TestCase):
         course = coursehelper.given_course_exists(course_group)
         homework = homeworkhelper.given_homework_exists(course)
         note = notehelper.given_note_linked_to_homework(user, homework)
-        url = reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug})
+        url = reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug})
         initial_last_modified = icalendar.Calendar.from_ical(
             self.client.get(url).content.decode('utf-8')).subcomponents[0]['LAST-MODIFIED'].dt
 
@@ -835,7 +984,7 @@ class TestCasePrivateViews(TestCase):
         resource = resourcehelper.given_resource_exists(resource_group, courses=[course])
         homework = homeworkhelper.given_homework_exists(course, category=category)
         homework.resources.add(resource)
-        url = reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug})
+        url = reverse("feed_homework", kwargs={"private_slug": user.settings.private_slug})
         initial_response = self.client.get(url)
         initial_last_modified = icalendar.Calendar.from_ical(
             initial_response.content.decode('utf-8')).subcomponents[0]['LAST-MODIFIED'].dt

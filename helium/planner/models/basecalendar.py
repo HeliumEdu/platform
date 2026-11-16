@@ -33,15 +33,12 @@ class BaseCalendar(BaseModel):
         help_text='Should be stored in increments of 10.',
         default=50, validators=[MaxValueValidator(100)])
 
-    url = models.URLField(max_length=3000, help_text='An optional URL that the calendar item references.',
-                          blank=True, null=True)
-
     recurrence_rule = models.CharField(
-        help_text='iCal RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats it from `start`, or null.',
+        help_text='iCalendar RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats it from `start`, or null.',
         max_length=500, blank=True, null=True)
 
     exception_dates = models.JSONField(
-        help_text='List of ISO-8601 datetimes of occurrences to skip (iCal EXDATE).',
+        help_text='List of ISO-8601 datetimes of occurrences to skip (iCalendar EXDATE).',
         blank=True, null=True)
 
     class Meta:

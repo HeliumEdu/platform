@@ -20,7 +20,7 @@ from helium.common import enums
 from helium.common.utils import datetimeutils, gradeutils, metricutils, taskutils
 from helium.common.utils.datetimeutils import local_midnight_as_utc
 from helium.common.utils.validators import shift_recurrence_rule_for_user, validate_recurrence_rule
-from helium.common.utils.course_exception_helpers import get_course_exceptions
+from helium.common.utils.course_exception_helpers import get_course_exceptions, get_course_group_exceptions
 from helium.feed.serializers.externalcalendarserializer import ExternalCalendarSerializer
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Homework, Event, Category, Reminder, \
@@ -655,7 +655,6 @@ def _bulk_import_example_schedule(data, user):
             start=e['start'],
             end=e['end'],
             priority=e.get('priority', 50),
-            url=e.get('url') or None,
             owner_id=e.get('owner_id') or None,
             recurrence_rule=e.get('recurrence_rule'),
             exception_dates=e.get('exception_dates'),
@@ -674,7 +673,6 @@ def _bulk_import_example_schedule(data, user):
             start=h['start'],
             end=h['end'],
             priority=h.get('priority', 50),
-            url=h.get('url') or None,
             current_grade=h.get('current_grade', ''),
             completed=h.get('completed', False),
             category_id=category_remap.get(h['category']) if h.get('category') else None,
@@ -874,6 +872,7 @@ def _get_most_recent_course_occurrence_start(reminder):
     today = now.date()
 
     exceptions = get_course_exceptions(course)
+    group_exceptions = get_course_group_exceptions(course)
     day = min(today, course.end_date)
 
     while day >= course.start_date:
@@ -885,7 +884,7 @@ def _get_most_recent_course_occurrence_start(reminder):
         candidates = []
         for course_schedule in course_schedules:
             for start_time, _end_time in coursescheduleservice.schedule_meeting_times_for_day(
-                    course_schedule, day, exceptions):
+                    course_schedule, day, exceptions, group_exceptions):
                 local_start = datetime.datetime.combine(day, start_time).replace(tzinfo=user_tz)
 
                 if local_start <= now:

@@ -11,8 +11,9 @@ from django.utils.http import parse_http_date_safe
 
 from helium.planner.models import Homework, Course, CourseSchedule, CourseGroup, Category, Note, Resource
 
+from helium.common.utils import gradeutils
 from helium.planner.services import coursescheduleservice
-from helium.planner.utils import noteutils
+from helium.planner.utils import deeplinkutils, noteutils
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,8 @@ def get_homework_last_modified(user) -> datetime.datetime | None:
 
 def get_courseschedules_last_modified(user) -> datetime.datetime | None:
     """
-    Get the maximum updated_at timestamp from course schedules, courses, and course groups for a user.
+    Get the maximum updated_at timestamp from course schedules, courses, course groups, resources, and notes for a
+    user.
 
     :param user: The user whose course schedule-related models to check.
     :return: The max updated_at datetime across all related models, or None if no data exists.
@@ -62,28 +64,33 @@ def get_courseschedules_last_modified(user) -> datetime.datetime | None:
     schedule_max = CourseSchedule.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
     course_max = Course.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
     course_group_max = CourseGroup.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    resource_max = Resource.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
+    note_max = Note.objects.for_user(user.pk).aggregate(Max('updated_at'))['updated_at__max']
 
-    timestamps = [t for t in [schedule_max, course_max, course_group_max, user.settings.last_deletion_at] if t is not None]
+    timestamps = [t for t in [schedule_max, course_max, course_group_max, resource_max, note_max,
+                              user.settings.last_deletion_at] if t is not None]
     return max(timestamps) if timestamps else None
 
 
 def generate_etag(user_id: int, last_modified: datetime.datetime | None) -> str:
     """
-    Generate an ETag from user ID and timestamp.
+    Generate an ETag from user ID, timestamp and Feeds version. A change can alter what a Feed contains without
+    changing its data, so a new version makes calendar apps download every Feed again.
 
     :param user_id: The user's primary key.
-    :param last_modified: The last modified datetime, or None for empty feeds.
-    :return: An ETag string in the format '"{user_id}:{timestamp}"' or '"{user_id}:0"' if no timestamp.
+    :param last_modified: The last modified datetime, or None for an empty Feed.
+    :return: An ETag string in the format '"{user_id}:{timestamp}:{version}"', with a timestamp of 0 if there is none.
     """
     if last_modified is None:
-        return f'"{user_id}:0"'
+        return f'"{user_id}:0:{settings.FEEDS_VERSION}"'
     timestamp = int(last_modified.timestamp())
-    return f'"{user_id}:{timestamp}"'
+    return f'"{user_id}:{timestamp}:{settings.FEEDS_VERSION}"'
 
 
 def check_conditional_request(request, etag: str, last_modified: datetime.datetime | None) -> HttpResponse | None:
     """
-    Check if the request contains conditional headers that match the current state.
+    Check if the request contains conditional headers that match the current state. When If-None-Match is sent,
+    If-Modified-Since is ignored (RFC 9110, section 13.1.3).
 
     :param request: The HTTP request object.
     :param etag: The current ETag for the resource.
@@ -99,6 +106,7 @@ def check_conditional_request(request, etag: str, last_modified: datetime.dateti
             response = HttpResponse(status=304)
             response['ETag'] = etag
             return response
+        return None
 
     # Check If-Modified-Since header
     if_modified_since = request.META.get('HTTP_IF_MODIFIED_SINCE')
@@ -116,7 +124,7 @@ def check_conditional_request(request, etag: str, last_modified: datetime.dateti
 
 def _create_calendar(name):
     """
-    Start a feed's calendar. Its name says what the feed holds, never who it belongs to: a feed URL can reach
+    Start a Feed's calendar. Its name says what the Feed holds, never who it belongs to: a Feed URL can reach
     anyone, so nothing in it identifies the user (``UID`` values use the user's pk).
 
     :param name: The calendar's name, e.g. "Helium Assignments".
@@ -133,59 +141,53 @@ def _create_calendar(name):
     return calendar
 
 
+def _description(*sections):
+    sections = ["\n".join(line for line in section if line) for section in sections]
+    return "\n\n".join(section for section in sections if section)
+
+
+def _class_info_line(course, category=None):
+    class_info = course.title
+    if category and category.title != "Uncategorized":
+        class_info = f"{category.title} for {class_info}"
+    if not course.is_online and course.room:
+        class_info += f" in {course.room}"
+    return f"Class Info: {class_info}"
+
+
+def _resources_line(resources):
+    titles = [resource.title for resource in resources]
+    return f"Resources: {', '.join(titles)}" if titles else ""
+
+
 def _note_line(notes_set):
     url = noteutils.note_url(notes_set)
-    return f"\U0001F517 Note: {url}" if url else ""
+    return f"\U0001F4DD Note: {url}" if url else ""
 
 
-def _create_event_description(event):
-    lines = [
-        f"URL: {event.url}" if event.url else "",
-        _note_line(event.notes_set),
-    ]
-
-    return "\n".join(line for line in lines if line)
+def _open_line(url):
+    return f"\U0001F517 Open in Helium: {url}"
 
 
-def _create_homework_description(homework):
-    class_info = homework.course.title
-    if homework.category and homework.category.title != "Uncategorized":
-        class_info = f"{homework.category.title} for {class_info}"
-    if homework.course.room:
-        class_info += f" in {homework.course.room}"
-
-    resources = []
-    for resource in homework.resources.all():
-        resources.append(resource.title)
-
-    description = f"Class Info: {class_info}\n"
-
-    if len(resources) > 0:
-        description += f"Resources: {','.join(resources)}\n"
-
-    if homework.url:
-        description += f"URL: {homework.url}\n"
-
+def _create_homework_description(homework, number_format):
+    status = []
     if homework.completed:
-        description += "Status: Complete\n"
-        if homework.current_grade != "-1/100":
-            description += f"Grade: {homework.current_grade}\n"
+        grade = gradeutils.format_grade_percent(homework.current_grade, number_format)
+        status = ["Status: Complete", f"Grade: {grade}" if grade else ""]
 
-    description += _note_line(homework.notes_set)
-
-    return description.rstrip("\n")
+    return _description(
+        [_class_info_line(homework.course, homework.category), _resources_line(homework.resources.all())],
+        status,
+        [_note_line(homework.notes_set), _open_line(deeplinkutils.assignment_url(homework))],
+    )
 
 
 def _create_course_schedule_description(course):
-    """
-    Describe a class meeting in plain text, as an ICS description must be: the app's comments link the title as HTML,
-    which calendar apps would show as literal tags.
-    """
-    description = f"Comments: {coursescheduleservice.get_comments(course, link=False)}"
-    if course.website:
-        description = f"URL: {course.website}\n" + description
-
-    return description
+    return _description(
+        [_class_info_line(course), _resources_line(course.resources.all()),
+         f"Class Website: {course.website}" if course.website else ""],
+        [_note_line(course.notes_set), _open_line(deeplinkutils.class_schedule_url(course))],
+    )
 
 
 def _to_vevent(user, item, generated_at, created_at, last_modified):
@@ -215,12 +217,12 @@ def _add_recurrence(calendar_event, item):
         calendar_event.add('EXDATE', [d.date() for d in exception_dates] if item.all_day else exception_dates)
 
 
-def events_to_private_ical_feed(user):
+def events_feed(user):
     """
-    Generate an ICAL feed for all events associated with the given user.
+    Generate the Events Feed for the given user.
 
-    :param user: The user to generate an ICAL feed for.
-    :return: An ICAL string of all the user's events.
+    :param user: The user whose Feed it is.
+    :return: The Feed, as iCalendar text.
     """
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
@@ -234,7 +236,9 @@ def events_to_private_ical_feed(user):
             calendar_event = _to_vevent(user, event, generated_at, event.created_at, last_modified)
             if event.recurrence_rule:
                 _add_recurrence(calendar_event, event)
-            calendar_event["DESCRIPTION"] = _create_event_description(event)
+            url = deeplinkutils.event_url(event)
+            calendar_event["DESCRIPTION"] = _description([_note_line(event.notes_set), _open_line(url)])
+            calendar_event.add("URL", url)
 
             calendar.add_component(calendar_event)
 
@@ -243,12 +247,12 @@ def events_to_private_ical_feed(user):
         timezone.deactivate()
 
 
-def homework_to_private_ical_feed(user):
+def homework_feed(user):
     """
-    Generate an ICAL feed for all homework associated with the given user.
+    Generate the Assignments Feed for the given user.
 
-    :param user: The user to generate an ICAL feed for.
-    :return: An ICAL string of all the user's homework.
+    :param user: The user whose Feed it is.
+    :return: The Feed, as iCalendar text.
     """
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
@@ -266,7 +270,8 @@ def homework_to_private_ical_feed(user):
             calendar_event = _to_vevent(user, homework, generated_at, homework.created_at, last_modified)
             if homework.recurrence_rule:
                 _add_recurrence(calendar_event, homework)
-            calendar_event["DESCRIPTION"] = _create_homework_description(homework)
+            calendar_event["DESCRIPTION"] = _create_homework_description(homework, user.settings.number_format)
+            calendar_event.add("URL", deeplinkutils.assignment_url(homework))
 
             calendar.add_component(calendar_event)
 
@@ -275,15 +280,15 @@ def homework_to_private_ical_feed(user):
         timezone.deactivate()
 
 
-def courseschedules_to_private_ical_feed(user):
+def courseschedules_feed(user):
     """
-    Generate an ICAL feed for all course schedules associated with the given user.
+    Generate the Class Schedules Feed for the given user.
 
     The ID given for each event (and thus each VEVENT's UID) is deterministic, derived from the course
     schedule and occurrence, so it is stable across calls.
 
-    :param user: The user to generate an ICAL feed for.
-    :return: An ICAL string of all the user's course schedules.
+    :param user: The user whose Feed it is.
+    :return: The Feed, as iCalendar text.
     """
     calendar = _create_calendar(f"{settings.PROJECT_NAME} Class Schedules")
 
@@ -291,7 +296,8 @@ def courseschedules_to_private_ical_feed(user):
     events_by_course = [
         (course, coursescheduleservice.course_schedules_to_events(course, course.schedules))
         for course in courses_shown.select_related('course_group', 'course_group__user',
-                                                   'course_group__user__settings').prefetch_related('schedules')
+                                                   'course_group__user__settings').prefetch_related(
+            'schedules', 'resources', 'notes_set')
     ]
 
     generated_at = timezone.now()
@@ -300,11 +306,16 @@ def courseschedules_to_private_ical_feed(user):
     try:
         for course, events in events_by_course:
             description = _create_course_schedule_description(course)
+            url = deeplinkutils.class_schedule_url(course)
             last_modified = _last_modified(course.updated_at, course.course_group.updated_at,
-                                           *(schedule.updated_at for schedule in course.schedules.all()))
+                                           user.settings.last_deletion_at,
+                                           *(schedule.updated_at for schedule in course.schedules.all()),
+                                           *(resource.updated_at for resource in course.resources.all()),
+                                           *(note.updated_at for note in course.notes_set.all()))
             for event in events:
                 calendar_event = _to_vevent(user, event, generated_at, course.created_at, last_modified)
                 calendar_event["DESCRIPTION"] = description
+                calendar_event.add("URL", url)
 
                 calendar.add_component(calendar_event)
 

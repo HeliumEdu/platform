@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from helium.common.views.base import HeliumAPIView
-from helium.feed.serializers.privatefeedserializer import PrivateFeedSerializer
+from helium.feed.serializers.feedserializer import FeedUrlsSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -16,31 +16,27 @@ logger = logging.getLogger(__name__)
 @extend_schema(
     tags=['feed.private']
 )
-class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
+class FeedsEnableView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = PrivateFeedSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        return user.external_calendars.all()
+    serializer_class = FeedUrlsSerializer
 
     @extend_schema(
-        summary='Enable private iCal feeds',
+        summary='Enable Feeds',
         request=None
     )
     def enable(self, request, *args, **kwargs):
         """
-        Enable the private feed URLs for the authenticated user. It is safe to make this request multiple times, and if
-        private feeds are already enabled, the response will simply contain links to the feeds.
+        Enable the Feed URLs for the authenticated user. It is safe to make this request multiple times, and if
+        Feeds are already enabled, the response will simply contain links to the Feeds.
         """
         user = self.request.user
 
         user.settings.enable_private_slug()
 
-        serializer = PrivateFeedSerializer({
-            'events_private_url': reverse('feed_private_events_ical', kwargs={'private_slug': user.settings.private_slug}),
-            'homework_private_url': reverse('feed_private_homework_ical', kwargs={'private_slug': user.settings.private_slug}),
-            'courseschedules_private_url': reverse('feed_private_courseschedules_ical',
+        serializer = FeedUrlsSerializer({
+            'events_private_url': reverse('feed_events', kwargs={'private_slug': user.settings.private_slug}),
+            'homework_private_url': reverse('feed_homework', kwargs={'private_slug': user.settings.private_slug}),
+            'courseschedules_private_url': reverse('feed_courseschedules',
                                                    kwargs={'private_slug': user.settings.private_slug})
         })
 
@@ -50,18 +46,18 @@ class PrivateEnableResourceView(GenericViewSet, HeliumAPIView):
 @extend_schema(
     tags=['feed.private']
 )
-class PrivateDisableResourceView(GenericViewSet, HeliumAPIView):
+class FeedsDisableView(GenericViewSet, HeliumAPIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = PrivateFeedSerializer
+    serializer_class = FeedUrlsSerializer
 
     @extend_schema(
-        summary='Disable private iCal feeds',
+        summary='Disable Feeds',
         request=None,
         responses={status.HTTP_204_NO_CONTENT: None}
     )
     def disable(self, request, *args, **kwargs):
         """
-        Disable the private feed URLs for the authenticated user.
+        Disable the Feed URLs for the authenticated user.
         """
         user = self.request.user
 

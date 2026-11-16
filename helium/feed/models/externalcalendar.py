@@ -11,7 +11,7 @@ class ExternalCalendar(BaseModel):
     title = models.CharField(help_text='A display name.',
                              max_length=255, db_index=True)
 
-    url = models.URLField(help_text='A public-facing URL to a valid iCal feed.',
+    url = models.URLField(help_text='A public-facing URL to a calendar in iCalendar format.',
                           max_length=3000)
 
     color = models.CharField(
@@ -24,10 +24,10 @@ class ExternalCalendar(BaseModel):
     last_index = models.DateTimeField(help_text='The last time this calendar was indexed to the cache.',
                                       blank=True, null=True, db_index=True)
 
-    etag = models.CharField(help_text='The ETag header from the last successful iCal fetch.',
+    etag = models.CharField(help_text='The ETag header from the last successful iCalendar fetch.',
                             max_length=255, blank=True, null=True)
 
-    last_modified_header = models.CharField(help_text='The Last-Modified header from the last successful iCal fetch.',
+    last_modified_header = models.CharField(help_text='The Last-Modified header from the last successful iCalendar fetch.',
                                             max_length=255, blank=True, null=True)
 
     last_sync_error = models.TextField(help_text='Error message from the most recent failed sync attempt.',

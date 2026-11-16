@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from helium.feed.models import ExternalCalendar
 from helium.feed.services import icalexternalcalendarservice
-from helium.feed.services.icalexternalcalendarservice import HeliumICalError
+from helium.feed.services.icalexternalcalendarservice import HeliumICalendarError
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
         if url and (self._is_url_changing(attrs) or self._is_being_reenabled(attrs)):
             try:
                 icalexternalcalendarservice.validate_url(url)
-            except HeliumICalError as e:
+            except HeliumICalendarError as e:
                 raise serializers.ValidationError({'url': str(e)})
 
         return attrs
