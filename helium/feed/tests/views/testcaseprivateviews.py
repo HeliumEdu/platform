@@ -559,6 +559,88 @@ class TestCasePrivateViews(TestCase):
         self.assertGreaterEqual(component['DTSTAMP'].dt, before_request)
         self.assertEqual(component['LAST-MODIFIED'].dt, event.updated_at.replace(microsecond=0))
 
+    def test_events_feed_starts_an_event_at_sequence_zero_and_raises_it_when_the_event_changes(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        event = eventhelper.given_event_exists(user)
+        url = reverse("feed_private_events_ical", kwargs={"private_slug": user.settings.private_slug})
+        initial_response = self.client.get(url)
+        initial_sequence = icalendar.Calendar.from_ical(initial_response.content.decode('utf-8')).subcomponents[0][
+            'SEQUENCE']
+
+        time.sleep(1.1)
+
+        event.start += datetime.timedelta(days=1)
+        event.end += datetime.timedelta(days=1)
+        event.save()
+
+        # WHEN
+        response = self.client.get(url, HTTP_IF_NONE_MATCH=initial_response['ETag'])
+
+        # THEN
+        self.assertEqual(initial_sequence, 0)
+        self.assertEqual(response.status_code, 200)
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertEqual(component['SEQUENCE'], int((event.updated_at - event.created_at).total_seconds()))
+        self.assertGreater(component['SEQUENCE'], initial_sequence)
+
+    def test_homework_feed_raises_sequence_when_its_date_moves(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        url = reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug})
+        initial_response = self.client.get(url)
+        initial_component = icalendar.Calendar.from_ical(initial_response.content.decode('utf-8')).subcomponents[0]
+
+        time.sleep(1.1)
+
+        homework.start += datetime.timedelta(days=3)
+        homework.end += datetime.timedelta(days=3)
+        homework.save()
+
+        # WHEN
+        response = self.client.get(url, HTTP_IF_NONE_MATCH=initial_response['ETag'])
+
+        # THEN
+        self.assertEqual(response.status_code, 200)
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertEqual(component['UID'], initial_component['UID'])
+        self.assertEqual(component['DTSTART'].dt, initial_component['DTSTART'].dt + datetime.timedelta(days=3))
+        self.assertGreater(component['SEQUENCE'], initial_component['SEQUENCE'],
+                           'Google Calendar keeps its copy of a subscribed event unless SEQUENCE rises')
+
+    def test_homework_feed_sequence_never_falls_when_its_note_is_unlinked(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        note = notehelper.given_note_linked_to_homework(user, homework)
+        url = reverse("feed_private_homework_ical", kwargs={"private_slug": user.settings.private_slug})
+
+        time.sleep(1.1)
+
+        note.title = 'Edited'
+        note.save()
+        sequence_with_edited_note = icalendar.Calendar.from_ical(
+            self.client.get(url).content.decode('utf-8')).subcomponents[0]['SEQUENCE']
+
+        time.sleep(1.1)
+
+        note.homework.remove(homework)
+
+        # WHEN
+        response = self.client.get(url)
+
+        # THEN
+        component = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents[0]
+        self.assertGreater(component['SEQUENCE'], sequence_with_edited_note)
+
     def test_homework_feed_last_modified_follows_its_class(self):
         # GIVEN
         user = userhelper.given_a_user_exists()
@@ -630,6 +712,31 @@ class TestCasePrivateViews(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(response['ETag'], etag)
         self.assertIn(f'notebook/{note.pk}'.encode(), response.content)
+
+    def test_courseschedules_feed_raises_sequence_for_every_meeting_when_a_schedule_changes(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_course_schedule_exists(course)
+        url = reverse("feed_private_courseschedules_ical", kwargs={"private_slug": user.settings.private_slug})
+        initial_components = icalendar.Calendar.from_ical(self.client.get(url).content.decode('utf-8')).subcomponents
+
+        time.sleep(1.1)
+
+        course_schedule.mon_start_time = datetime.time(2, 0, 0)
+        course_schedule.save()
+
+        # WHEN
+        response = self.client.get(url)
+
+        # THEN
+        components = icalendar.Calendar.from_ical(response.content.decode('utf-8')).subcomponents
+        initial_sequences = {component['SEQUENCE'] for component in initial_components}
+        sequences = {component['SEQUENCE'] for component in components}
+        self.assertEqual(len(sequences), 1)
+        self.assertGreater(sequences.pop(), max(initial_sequences))
 
     def test_courseschedules_feed_leaves_out_a_new_term_holiday(self):
         # GIVEN
