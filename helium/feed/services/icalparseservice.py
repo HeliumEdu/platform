@@ -119,7 +119,7 @@ def parse_events(calendar, default_time_zone):
     Each dict has: uid, identity, title, all_day, show_end_time, start, end, url, description,
     location, recurrence_rule, source_recurrence_rule, exception_dates, extra_starts. All datetimes are UTC.
     ``recurrence_rule`` is prepared for SfCalendar, or None if it cannot expand it; ``source_recurrence_rule`` is
-    the feed's own, for expanding server-side.
+    the calendar's own, for expanding server-side.
 
     :param calendar: A parsed ``icalendar.Calendar``.
     :param default_time_zone: Time zone assumed for naive/floating values (typically the
@@ -136,7 +136,7 @@ def parse_events(calendar, default_time_zone):
         if component.name != "VEVENT":
             continue
 
-        # Feeds mark deleted events CANCELLED rather than removing them. A CANCELLED
+        # Calendars mark deleted events CANCELLED rather than removing them. A CANCELLED
         # RECURRENCE-ID override is captured by the prepass and folded into its parent series,
         # so dropping the override itself here is also correct.
         if str(component.get("STATUS") or "").upper() == "CANCELLED":
@@ -175,7 +175,7 @@ def parse_events(calendar, default_time_zone):
         all_day = not isinstance(dt_start, datetime.datetime)
         show_end_time = isinstance(dt_start, datetime.datetime)
 
-        # A DATE value is a floating calendar date, so it anchors in the user's zone whatever the feed's VTIMEZONE.
+        # A DATE value is a floating calendar date, so it anchors in the user's zone whatever the calendar's VTIMEZONE.
         anchor_time_zone = default_time_zone if all_day else time_zone
 
         if all_day:
@@ -201,12 +201,12 @@ def parse_events(calendar, default_time_zone):
             dt_end = dt_end.astimezone(anchor_time_zone)
         dt_end = dt_end.astimezone(datetime.timezone.utc)
 
-        # An iCal VEVENT without a SUMMARY is malformed, so skip it.
+        # An iCalendar VEVENT without a SUMMARY is malformed, so skip it.
         summary = component.get("SUMMARY")
         if not summary:
             continue
 
-        # RFC 5545 requires UID, but real-world feeds aren't always compliant, so fall back
+        # RFC 5545 requires UID, but real-world calendars aren't always compliant, so fall back
         # to title-based identity for the (rare) VEVENT missing one.
         identity = str(uid) if uid else summary
 

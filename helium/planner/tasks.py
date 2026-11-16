@@ -11,11 +11,11 @@ from conf.celery import app
 from helium.common import enums
 from helium.common.periodic import register_periodic
 from helium.common.utils import commonutils, datetimeutils, gradeutils, metricutils, taskutils
-from helium.common.utils.course_exception_helpers import get_course_exceptions
+from helium.common.utils.course_exception_helpers import get_course_exceptions, get_course_group_exceptions
 from helium.planner.models import Course, Category, Event, Homework
 from helium.planner.models import Reminder
 from helium.planner.services import coursescheduleservice, gradingservice
-from helium.planner.utils import noteutils
+from helium.planner.utils import deeplinkutils, noteutils
 from helium.planner.services import reminderservice
 
 logger = logging.getLogger(__name__)
@@ -302,10 +302,11 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
             start_str = datetimeutils.format_date_time(local_start, user_settings)
 
             exceptions = get_course_exceptions(calendar_item)
+            group_exceptions = get_course_group_exceptions(calendar_item)
             end_time = next(
                 (slot_end for course_schedule in calendar_item.schedules.all()
                  for slot_start, slot_end in coursescheduleservice.schedule_meeting_times_for_day(
-                     course_schedule, local_start.date(), exceptions)
+                     course_schedule, local_start.date(), exceptions, group_exceptions)
                  if slot_start == local_start.time()),
                 None,
             )
@@ -317,7 +318,8 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
             else:
                 normalized_datetime = start_str
 
-            note_url = ''
+            open_url = deeplinkutils.class_url(calendar_item)
+            attachments_url = ''
         else:
             format_when = datetimeutils.format_date if calendar_item.all_day else datetimeutils.format_date_time
             occurrence_start, occurrence_end = reminder.occurrence_bounds()
@@ -327,7 +329,12 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
                 local_end -= datetime.timedelta(days=1)
             end = format_when(local_end, user_settings)
             normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
-            note_url = noteutils.note_url(calendar_item.notes_set)
+            if calendar_item_type == enums.HOMEWORK:
+                open_url = deeplinkutils.assignment_url(calendar_item)
+                attachments_url = deeplinkutils.assignment_url(calendar_item, step='attachments')
+            else:
+                open_url = deeplinkutils.event_url(calendar_item)
+                attachments_url = deeplinkutils.event_url(calendar_item, step='attachments')
 
         commonutils.send_multipart_email('email/reminder',
                                          {
@@ -335,8 +342,9 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
                                              'reminder': reminder,
                                              'calendar_item': calendar_item,
                                              'normalized_datetime': normalized_datetime,
-                                             'note_url': note_url,
-                                             'notifications_url': f"{settings.PROJECT_APP_HOST}/notifications",
+                                             'note_url': noteutils.note_url(calendar_item.notes_set),
+                                             'open_url': open_url,
+                                             'attachments_url': attachments_url,
                                          },
                                          subject, [email],
                                          email_type='reminder')

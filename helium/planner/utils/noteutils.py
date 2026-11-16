@@ -1,4 +1,4 @@
-from django.conf import settings
+from helium.planner.utils import deeplinkutils
 
 
 def note_url(notes_set) -> str:
@@ -11,5 +11,5 @@ def note_url(notes_set) -> str:
     """
     notes = list(notes_set.all())
     if notes and notes[0].content:
-        return f'{settings.PROJECT_APP_HOST}/notebook/{notes[0].pk}'
+        return deeplinkutils.note_url(notes[0])
     return ''

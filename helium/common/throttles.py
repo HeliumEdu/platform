@@ -1,7 +1,7 @@
 """
 Rate limits, grouped by intent. Each scope is a rate in ``DEFAULT_THROTTLE_RATES``:
 
-- ``user``: per verified identity (a signed-in user, a valid refresh token's user, a private feed).
+- ``user``: per verified identity (a signed-in user, a valid refresh token's user, a Feed).
 - ``anon``: per network address, for requests without a verified identity.
 - ``account`` / ``account_total``: sign-in and verification attempts, per account and network address / per account.
 - ``email``: anything that sends an email, per endpoint and destination address.

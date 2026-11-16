@@ -235,7 +235,7 @@ def deterministic_id(*parts) -> int:
 
     Used to give a stable synthetic ``id`` to model instances that are constructed
     in-memory and never persisted to the database (e.g. events derived from an
-    iCal feed), so the same logical item gets the same id across requests and
+    external calendar), so the same logical item gets the same id across requests and
     worker processes. Python's built-in ``hash()`` is salted per-process and is
     not safe for this purpose.
 

@@ -177,12 +177,12 @@ class TestCaseImportExportViews(APITestCase):
         eventhelper.verify_event_matches_data(self, events[2],
                                               {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
-                                               'priority': 75, 'url': None,
+                                               'priority': 75,
                                                'owner_id': None, 'user': user.pk})
         eventhelper.verify_event_matches_data(self, events[3],
                                               {'title': '🏀 Test Event', 'all_day': False, 'show_end_time': True,
                                                'start': '2017-05-08T12:00:00Z', 'end': '2017-05-08T14:00:00Z',
-                                               'priority': 75, 'url': None,
+                                               'priority': 75,
                                                'owner_id': None, 'user': user.pk})
         self.assertTrue(events[2].notes_set.exists())
         event_note = events[2].notes_set.first()
@@ -193,7 +193,7 @@ class TestCaseImportExportViews(APITestCase):
                                                     {'title': '💻 Test Homework', 'all_day': False,
                                                      'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
-                                                     'priority': 65, 'url': None,
+                                                     'priority': 65,
                                                      'current_grade': '20/30',
                                                      'completed': True, 'category': categories[1].pk,
                                                      'course': courses[2].pk, 'resources': [resources[1].pk]})
@@ -201,7 +201,7 @@ class TestCaseImportExportViews(APITestCase):
                                                     {'title': '💻 Test Homework', 'all_day': False,
                                                      'show_end_time': True,
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
-                                                     'priority': 65, 'url': None,
+                                                     'priority': 65,
                                                      'current_grade': '-1/100',
                                                      'completed': False, 'category': categories[3].pk,
                                                      'course': courses[3].pk, 'resources': []})
@@ -1118,7 +1118,6 @@ class TestCaseImportExportViews(APITestCase):
         self.assertFalse(study_midterm.all_day)
         self.assertTrue(study_midterm.show_end_time)
         self.assertEqual(study_midterm.priority, 60)
-        self.assertIsNone(study_midterm.url)
         self.assertIsNone(study_midterm.owner_id)
         self.assertEqual(study_midterm.user, user)
 
@@ -1156,7 +1155,6 @@ class TestCaseImportExportViews(APITestCase):
         self.assertFalse(essay1.all_day)
         self.assertFalse(essay1.show_end_time)
         self.assertEqual(essay1.priority, 46)
-        self.assertIsNone(essay1.url)
         self.assertEqual(essay1.current_grade, '95/100')
         self.assertTrue(essay1.completed)
         self.assertIsNotNone(essay1.completed_at)
@@ -1462,7 +1460,6 @@ class TestCaseImportExportViews(APITestCase):
                 'start': '2024-02-01T10:00:00Z',
                 'end': '2024-02-01T11:00:00Z',
                 'priority': 50,
-                'url': None,
                 'user': 1
             }],
             'homework': [{

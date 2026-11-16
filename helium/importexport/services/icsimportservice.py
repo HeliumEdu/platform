@@ -158,7 +158,6 @@ def _build_assignment(request, parsed, start, end, course, category, *, recurren
         'start': start,
         'end': end,
         'priority': _DEFAULT_PRIORITY,
-        'url': parsed['url'],
         'current_grade': enums.UNGRADED,
         'completed': False,
         'recurrence_rule': recurrence_rule,
@@ -213,7 +212,6 @@ def _build_event(request, parsed, start, end, *, recurrence_rule=None, exception
         'start': start,
         'end': end,
         'priority': _DEFAULT_PRIORITY,
-        'url': parsed['url'],
         'recurrence_rule': recurrence_rule,
         'exception_dates': exception_dates,
     }

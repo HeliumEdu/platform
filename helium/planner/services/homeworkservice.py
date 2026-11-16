@@ -25,7 +25,6 @@ def clone_homework(source, occurrence_start=None):
         start=start,
         end=end,
         priority=source.priority,
-        url=source.url,
         current_grade=enums.UNGRADED,
         completed=False,
         category=source.category,

@@ -18,7 +18,7 @@ class ExternalCalendarQuerySet(BaseQuerySet):
         return self.filter(user_id=user_id)
 
     def needs_recached(self):
-        start = timezone.now() - datetime.timedelta(seconds=settings.FEED_CACHE_REFRESH_TTL_SECONDS)
+        start = timezone.now() - datetime.timedelta(seconds=settings.EXTERNAL_CALENDAR_CACHE_REFRESH_TTL_SECONDS)
         return self.filter(Q(last_index__lte=start) |
                            Q(last_index__isnull=True)).filter(shown_on_calendar=True)
 

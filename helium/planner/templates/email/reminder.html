@@ -10,20 +10,23 @@
 </tr>
 <tr>
     <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; border-top: 1px solid #cccccc;">
-        <p><em>When</em>: {{ normalized_datetime }}</p>
-
-        {% if reminder.homework %}<p><em>Info</em>:
-        {% if calendar_item.category.title %}{{ calendar_item.category.title }} in {% endif %}{% if calendar_item.course.website %}<a target="_blank" href="{{ calendar_item.course.website }}">{% endif %}
-            {{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}</p><p><em>Location:</em> {{ calendar_item.course.room }}{% endif %}
-        </p>{% endif %}
-        {% if reminder.course %}<p><em>Info</em>:
-        {% if calendar_item.website %}<a target="_blank" href="{{ calendar_item.website }}">{% endif %}
-            {{ calendar_item.title }}{% if calendar_item.website %}</a>{% endif %}{% if calendar_item.room and not calendar_item.is_online %}</p><p><em>Location:</em> {{ calendar_item.room }}{% endif %}
+        <p><strong>When:</strong> {{ normalized_datetime }}</p>
+        {% if reminder.homework %}
+        <p><strong>Info:</strong>
+            {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{{ calendar_item.category.title }} for {% endif %}{% if calendar_item.course.website %}<a target="_blank" href="{{ calendar_item.course.website }}">{% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}
         </p>
-        {% if calendar_item.teacher_name %}<p><em>Teacher:</em>
-        {% if calendar_item.teacher_email %}<a href="mailto:{{ calendar_item.teacher_email }}">{% endif %}
-            {{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %}</a>{% endif %}
-        </p>{% endif %}{% endif %}
+        {% if calendar_item.course.room and not calendar_item.course.is_online %}<p><strong>Location:</strong> {{ calendar_item.course.room }}</p>{% endif %}
+        {% endif %}
+        {% if reminder.course %}
+        <p><strong>Info:</strong>
+            {% if calendar_item.website %}<a target="_blank" href="{{ calendar_item.website }}">{% endif %}{{ calendar_item.title }}{% if calendar_item.website %}</a>{% endif %}
+        </p>
+        {% if calendar_item.room and not calendar_item.is_online %}<p><strong>Location:</strong> {{ calendar_item.room }}</p>{% endif %}
+        {% if calendar_item.teacher_name %}<p><strong>Teacher:</strong>
+            {% if calendar_item.teacher_email %}<a href="mailto:{{ calendar_item.teacher_email }}">{% endif %}{{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %}</a>{% endif %}
+        </p>{% endif %}
+        {% endif %}
+        {% if note_url %}<p><strong>Note:</strong> <a target="_blank" href="{{ note_url }}">📝 Open</a></p>{% endif %}
         {% if reminder.homework or reminder.event %}
         {% if calendar_item.resources and calendar_item.resources.count > 0 %}
         <h4>Resources</h4>
@@ -38,24 +41,21 @@
         </ul>
         {% endif %}
         {% if calendar_item.attachments.count > 0 %}
-        <h4>Attachments</h4>
+        <h4>Attachments <a target="_blank" href="{{ attachments_url }}" style="font-weight: normal;">📎 Open</a></h4>
         <ul>
             {% for attachment in calendar_item.attachments.all %}
-            <li><a target="_blank"
-                   href="{{ attachment.attachment.url }}">{{ attachment.title }}</a></li>
+            <li>{{ attachment.title }}</li>
             {% endfor %}
         </ul>
         {% endif %}
         {% endif %}
-        {% if note_url %}<br/>
-        <p><a target="_blank" href="{{ note_url }}">🔗 Note</a></p>{% endif %}
     </td>
 </tr>
 <tr>
     <td style="padding: 0 0 20px 0; text-align: center;">
-        <a href="{{ notifications_url }}" target="_blank"
+        <a href="{{ open_url }}" target="_blank"
            style="display: inline-block; padding: 12px 24px; background-color: #438eb9; color: #ffffff; text-decoration: none; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; border-radius: 4px;">
-            View in Helium
+            Open in Helium
         </a>
     </td>
 </tr>

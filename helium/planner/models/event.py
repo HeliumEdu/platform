@@ -23,6 +23,9 @@ class Event(BaseCalendar):
     def __init__(self, *args, **kwargs):
         self.__calendar_item_type = enums.EVENT if 'calendar_item_type' not in kwargs else kwargs['calendar_item_type']
         self.__comments = kwargs.pop('comments', '')
+        self.__url = kwargs.pop('url', None)
+        self.__location = kwargs.pop('location', None)
+        self.__color = kwargs.pop('color', None)
 
         kwargs.pop('calendar_item_type', None)
         super().__init__(*args, **kwargs)
@@ -38,6 +41,21 @@ class Event(BaseCalendar):
     def comments(self) -> str:
         """Display text carried by synthesised events (course schedule, external calendar); never persisted."""
         return self.__comments
+
+    @property
+    def url(self) -> str | None:
+        """The link carried by synthesised events (course schedule, external calendar); never persisted."""
+        return self.__url
+
+    @property
+    def location(self) -> str | None:
+        """The location carried by synthesised external calendar events; never persisted."""
+        return self.__location
+
+    @property
+    def color(self) -> str | None:
+        """The color carried by synthesised events (course schedule, external calendar); never persisted."""
+        return self.__color
 
     @property
     def num_reminders(self) -> int:

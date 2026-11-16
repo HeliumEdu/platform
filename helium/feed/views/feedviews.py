@@ -13,14 +13,14 @@ from rest_framework.exceptions import NotFound
 from helium.auth.utils.userutils import is_staff_user
 from helium.common.utils import redisutils
 from helium.common.views.base import HeliumAPIView
-from helium.feed.services import icalprivateservice
+from helium.feed.services import feedservice
 
 logger = logging.getLogger(__name__)
 
 
-class PrivateFeedView(HeliumAPIView):
+class FeedView(HeliumAPIView):
     """
-    An iCal feed served at a user's private slug. Subclasses provide the feed's content and last-modified time, and
+    A Feed served at a user's private slug. Subclasses provide the Feed's content and last-modified time, and
     its file name, which never names the user.
     """
     filename = None
@@ -55,9 +55,9 @@ class PrivateFeedView(HeliumAPIView):
         self._record_fetch(user)
 
         last_modified = self.get_last_modified(user)
-        etag = icalprivateservice.generate_etag(user.pk, last_modified)
+        etag = feedservice.generate_etag(user.pk, last_modified)
 
-        not_modified = icalprivateservice.check_conditional_request(request, etag, last_modified)
+        not_modified = feedservice.check_conditional_request(request, etag, last_modified)
         if not_modified:
             return not_modified
 
@@ -86,38 +86,38 @@ class PrivateFeedView(HeliumAPIView):
 @extend_schema(
     tags=['feed.private']
 )
-class PrivateEventsICALResourceView(PrivateFeedView):
+class EventsFeedView(FeedView):
     filename = 'Helium_events.ics'
 
     def get_last_modified(self, user):
-        return icalprivateservice.get_events_last_modified(user)
+        return feedservice.get_events_last_modified(user)
 
     def build_feed(self, user):
-        return icalprivateservice.events_to_private_ical_feed(user)
+        return feedservice.events_feed(user)
 
     @extend_schema(
         operation_id='feed_private_events_ical',
-        summary='Download the private Events iCal feed',
+        summary='Download the Events Feed',
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
-                description='iCal (.ics) feed of the user\'s events.'
+                description='The user\'s Events Feed, in iCalendar format.'
             )
         }
     )
     def get(self, request, private_slug):
         """
-        Return an iCal (`text/calendar`) feed of all event instances for the given private slug.
+        Return the Events Feed (`text/calendar`) for the given private slug: every event instance.
         Intended for subscription in calendar applications (Google Calendar, Apple Calendar, etc.) —
-        the response is plain iCal text, not JSON.
+        the response is plain iCalendar text, not JSON.
 
-        Private feeds are opt-in. A user's `private_slug` (on their settings) is `null` while feeds
-        are disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the three
-        feed URLs (events, homework, course schedules). `PUT /feed/private/disable/` clears the slug
-        and immediately invalidates all existing feed URLs.
+        Feeds are opt-in. A user's `private_slug` (on their settings) is `null` while Feeds are
+        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the three Feeds
+        (Assignments, Class Schedules and Events). `PUT /feed/private/disable/` clears the slug and immediately
+        invalidates all existing Feed URLs.
 
         A `Content-Disposition: attachment; filename=Helium_events.ics` header is set so that
-        browser-initiated requests download the feed as a file.
+        browser-initiated requests download the Feed as a file.
         """
         return self.serve_feed(request)
 
@@ -125,38 +125,39 @@ class PrivateEventsICALResourceView(PrivateFeedView):
 @extend_schema(
     tags=['feed.private']
 )
-class PrivateHomeworkICALResourceView(PrivateFeedView):
+class HomeworkFeedView(FeedView):
     filename = 'Helium_homework.ics'
 
     def get_last_modified(self, user):
-        return icalprivateservice.get_homework_last_modified(user)
+        return feedservice.get_homework_last_modified(user)
 
     def build_feed(self, user):
-        return icalprivateservice.homework_to_private_ical_feed(user)
+        return feedservice.homework_feed(user)
 
     @extend_schema(
         operation_id='feed_private_homework_ical',
-        summary='Download the private Homework iCal feed',
+        summary='Download the Assignments Feed',
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
-                description='iCal (.ics) feed of the user\'s homework.'
+                description='The user\'s Assignments Feed, in iCalendar format.'
             )
         }
     )
     def get(self, request, private_slug):
         """
-        Return an iCal (`text/calendar`) feed of all homework instances for the given private slug.
+        Return the Assignments Feed (`text/calendar`) for the given private slug: every assignment in a class group
+        with `shown_on_calendar` set.
         Intended for subscription in calendar applications (Google Calendar, Apple Calendar, etc.) —
-        the response is plain iCal text, not JSON.
+        the response is plain iCalendar text, not JSON.
 
-        Private feeds are opt-in. A user's `private_slug` (on their settings) is `null` while feeds
-        are disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the three
-        feed URLs (events, homework, course schedules). `PUT /feed/private/disable/` clears the slug
-        and immediately invalidates all existing feed URLs.
+        Feeds are opt-in. A user's `private_slug` (on their settings) is `null` while Feeds are
+        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the three Feeds
+        (Assignments, Class Schedules and Events). `PUT /feed/private/disable/` clears the slug and immediately
+        invalidates all existing Feed URLs.
 
         A `Content-Disposition: attachment; filename=Helium_homework.ics` header is set so that
-        browser-initiated requests download the feed as a file.
+        browser-initiated requests download the Feed as a file.
         """
         return self.serve_feed(request)
 
@@ -164,37 +165,37 @@ class PrivateHomeworkICALResourceView(PrivateFeedView):
 @extend_schema(
     tags=['feed.private']
 )
-class PrivateCourseSchedulesICALResourceView(PrivateFeedView):
+class CourseSchedulesFeedView(FeedView):
     filename = 'Helium_coursescheduleevents.ics'
 
     def get_last_modified(self, user):
-        return icalprivateservice.get_courseschedules_last_modified(user)
+        return feedservice.get_courseschedules_last_modified(user)
 
     def build_feed(self, user):
-        return icalprivateservice.courseschedules_to_private_ical_feed(user)
+        return feedservice.courseschedules_feed(user)
 
     @extend_schema(
         operation_id='feed_private_courseschedules_ical',
-        summary='Download the private CourseSchedule iCal feed',
+        summary='Download the Class Schedules Feed',
         responses={
             (200, 'text/calendar'): OpenApiResponse(
                 response=OpenApiTypes.STR,
-                description='iCal (.ics) feed of the user\'s course schedules.'
+                description='The user\'s Class Schedules Feed, in iCalendar format.'
             )
         }
     )
     def get(self, request, private_slug):
         """
-        Return an iCal (`text/calendar`) feed of all course schedule instances for the given
-        private slug. Intended for subscription in calendar applications (Google Calendar, Apple
-        Calendar, etc.) — the response is plain iCal text, not JSON.
+        Return the Class Schedules Feed (`text/calendar`) for the given private slug: every class meeting in a class
+        group with `shown_on_calendar` set. Intended for subscription in calendar applications (Google Calendar, Apple
+        Calendar, etc.) — the response is plain iCalendar text, not JSON.
 
-        Private feeds are opt-in. A user's `private_slug` (on their settings) is `null` while feeds
-        are disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the three
-        feed URLs (events, homework, course schedules). `PUT /feed/private/disable/` clears the slug
-        and immediately invalidates all existing feed URLs.
+        Feeds are opt-in. A user's `private_slug` (on their settings) is `null` while Feeds are
+        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the three Feeds
+        (Assignments, Class Schedules and Events). `PUT /feed/private/disable/` clears the slug and immediately
+        invalidates all existing Feed URLs.
 
         A `Content-Disposition: attachment; filename=Helium_coursescheduleevents.ics` header is
-        set so that browser-initiated requests download the feed as a file.
+        set so that browser-initiated requests download the Feed as a file.
         """
         return self.serve_feed(request)

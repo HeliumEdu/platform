@@ -3,6 +3,7 @@ from unittest import mock
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.core import mail
 from django.db import OperationalError
 from django.test import TestCase
 from django.utils import timezone
@@ -17,8 +18,8 @@ from helium.planner.tasks import (
     recalculate_category_grades_for_course, adjust_reminder_times, send_email_reminder
 )
 from helium.planner.tests.helpers import (
-    coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, eventhelper, homeworkhelper,
-    reminderhelper
+    attachmenthelper, coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, eventhelper,
+    homeworkhelper, notehelper, reminderhelper, resourcegrouphelper, resourcehelper
 )
 
 
@@ -289,6 +290,139 @@ class TestCasePlannerTasks(TestCase):
 
         # THEN
         mock_send_multipart_email.assert_called_once()
+
+    def test_send_email_reminder_for_homework_opens_the_assignment_and_links_its_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, website='')
+        category = categoryhelper.given_category_exists(course, title='Essay')
+        homework = homeworkhelper.given_homework_exists(course, category=category)
+        note = notehelper.given_note_linked_to_homework(user, homework)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, homework=homework)
+
+        # WHEN
+        send_email_reminder(user.email, 'Test Subject', reminder.pk, homework.pk, enums.HOMEWORK)
+
+        # THEN
+        text = mail.outbox[0].body
+        html = mail.outbox[0].alternatives[0][0]
+        open_url = f'{settings.PROJECT_APP_HOST}/planner/assignment/{homework.pk}/details'
+        note_url = f'{settings.PROJECT_APP_HOST}/notebook/{note.pk}'
+        self.assertIn(f'Info: Essay for {course.title}', text)
+        self.assertIn(f'Note: {note_url}', text)
+        self.assertIn(f'Open in Helium: {open_url}', text)
+        self.assertIn(f'href="{open_url}"', html)
+        self.assertIn('Open in Helium', html)
+        self.assertIn(f'<strong>Note:</strong> <a target="_blank" href="{note_url}">\U0001F4DD Open</a>', html)
+        self.assertIn('<strong>Info:</strong>', html)
+        self.assertNotIn('/notifications', text + html)
+
+    def test_send_email_reminder_plain_text_groups_details_resources_and_attachments(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, title='Creative Writing', room='ARTS 302',
+                                                  website='https://example.edu/cw')
+        category = categoryhelper.given_category_exists(course, title='Essay')
+        homework = homeworkhelper.given_homework_exists(course, category=category, show_end_time=False)
+        resource_group = resourcegrouphelper.given_resource_group_exists(user)
+        resource = resourcehelper.given_resource_exists(resource_group, title='Textbook', website='https://x/book',
+                                                        courses=[course])
+        homework.resources.add(resource)
+        note = notehelper.given_note_linked_to_homework(user, homework)
+        reminder = reminderhelper.given_reminder_exists(user, message='Finish your draft', type=enums.EMAIL,
+                                                        homework=homework)
+
+        # WHEN
+        send_email_reminder(user.email, 'Essay due', reminder.pk, homework.pk, enums.HOMEWORK)
+
+        # THEN
+        self.assertEqual(mail.outbox[0].body,
+                         'Essay due\n\n'
+                         'Finish your draft\n\n'
+                         'When: Mon, May 8 at 9:00 AM\n'
+                         'Info: Essay for Creative Writing (https://example.edu/cw)\n'
+                         'Location: ARTS 302\n'
+                         f'Note: {settings.PROJECT_APP_HOST}/notebook/{note.pk}\n\n'
+                         'Resources:\n'
+                         ' - Textbook (https://x/book)\n\n'
+                         f'Open in Helium: {settings.PROJECT_APP_HOST}/planner/assignment/{homework.pk}/details\n\n'
+                         'Regards,\n'
+                         'The Helium Team\n')
+
+    def test_send_email_reminder_lists_attachments_and_links_their_page_in_helium(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        attachment = attachmenthelper.given_attachment_exists(user, event=event)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
+
+        # WHEN
+        send_email_reminder(user.email, 'Test Subject', reminder.pk, event.pk, enums.EVENT)
+
+        # THEN
+        text = mail.outbox[0].body
+        html = mail.outbox[0].alternatives[0][0]
+        attachments_url = f'{settings.PROJECT_APP_HOST}/planner/event/{event.pk}/attachments'
+        self.assertIn(f'Attachments: {attachments_url}\n - {attachment.title}\n\nOpen in Helium:', text)
+        self.assertIn(f'<li>{attachment.title}</li>', html)
+        self.assertIn(f'<h4>Attachments <a target="_blank" href="{attachments_url}" style="font-weight: normal;">'
+                      f'\U0001F4CE Open</a></h4>', html)
+        self.assertNotIn(attachment.attachment.url, text + html)
+
+    def test_send_email_reminder_for_homework_leaves_out_the_uncategorized_category(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, website='')
+        category = categoryhelper.given_category_exists(course, title='Uncategorized')
+        homework = homeworkhelper.given_homework_exists(course, category=category)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, homework=homework)
+
+        # WHEN
+        send_email_reminder(user.email, 'Test Subject', reminder.pk, homework.pk, enums.HOMEWORK)
+
+        # THEN
+        self.assertIn(f'Info: {course.title}\n', mail.outbox[0].body)
+
+    def test_send_email_reminder_for_event_opens_the_event_and_links_its_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        event = eventhelper.given_event_exists(user)
+        note = notehelper.given_note_linked_to_event(user, event)
+        reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
+
+        # WHEN
+        send_email_reminder(user.email, 'Test Subject', reminder.pk, event.pk, enums.EVENT)
+
+        # THEN
+        text = mail.outbox[0].body
+        self.assertIn(f'Note: {settings.PROJECT_APP_HOST}/notebook/{note.pk}', text)
+        self.assertIn(f'Open in Helium: {settings.PROJECT_APP_HOST}/planner/event/{event.pk}/details', text)
+
+    def test_send_email_reminder_for_course_opens_the_class_and_links_its_note(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists(time_zone='America/Chicago')
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, start_date=datetime.date(2017, 5, 1),
+                                                  end_date=datetime.date(2017, 5, 31))
+        courseschedulehelper.given_uniform_course_schedule_exists(
+            course, datetime.time(9, 0), datetime.time(9, 50), days_of_week='0100000')
+        note = notehelper.given_note_linked_to_course(user, course)
+        class_start = datetime.datetime(2017, 5, 8, 9, 0, tzinfo=ZoneInfo('America/Chicago'))
+        reminder = Reminder(message='Class', start_of_range=class_start - datetime.timedelta(minutes=15),
+                            offset=15, offset_type=enums.MINUTES, type=enums.EMAIL, course=course, user=user)
+        Reminder.objects.bulk_create([reminder])
+        reminder = Reminder.objects.get(course=course)
+
+        # WHEN
+        send_email_reminder(user.email, 'Test Subject', reminder.pk, course.pk, enums.COURSE)
+
+        # THEN
+        text = mail.outbox[0].body
+        self.assertIn(f'Note: {settings.PROJECT_APP_HOST}/notebook/{note.pk}', text)
+        self.assertIn(f'Open in Helium: {settings.PROJECT_APP_HOST}/classes/{course.pk}/details', text)
 
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
     def test_send_email_reminder_nonexistent_reminder(self, mock_send_multipart_email):

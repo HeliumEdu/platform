@@ -218,7 +218,7 @@ class TestCaseSharedIpThrottling(APITestCase):
             slugs.append(user.settings.private_slug)
 
         # WHEN
-        responses = [self.client.get(reverse('feed_private_homework_ical', kwargs={'private_slug': slug}))
+        responses = [self.client.get(reverse('feed_homework', kwargs={'private_slug': slug}))
                      for slug in slugs]
 
         # THEN
@@ -228,7 +228,7 @@ class TestCaseSharedIpThrottling(APITestCase):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         user.settings.enable_private_slug()
-        feed = reverse('feed_private_homework_ical', kwargs={'private_slug': user.settings.private_slug})
+        feed = reverse('feed_homework', kwargs={'private_slug': user.settings.private_slug})
         calendar_provider = APIClient()
         for _ in range(130):
             calendar_provider.get(feed)
@@ -244,10 +244,10 @@ class TestCaseSharedIpThrottling(APITestCase):
     def test_unknown_feed_slugs_are_throttled_per_ip(self):
         # GIVEN
         for i in range(100):
-            self.client.get(reverse('feed_private_homework_ical', kwargs={'private_slug': f'guess{i}'}))
+            self.client.get(reverse('feed_homework', kwargs={'private_slug': f'guess{i}'}))
 
         # WHEN
-        response = self.client.get(reverse('feed_private_homework_ical', kwargs={'private_slug': 'guess-final'}))
+        response = self.client.get(reverse('feed_homework', kwargs={'private_slug': 'guess-final'}))
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)

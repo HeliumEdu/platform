@@ -2,21 +2,21 @@
 
 {{ reminder.message|safe }}
 
-When: {{ normalized_datetime }}
-{% if reminder.homework %}Info: {% if calendar_item.category.title %}{{ calendar_item.category.title }} in {% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %} ({{ calendar_item.course.website }}){% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}
-Location: {{ calendar_item.course.room }}{% endif %}{% endif %}
-{% if reminder.course %}Info: {{ calendar_item.title }}{% if calendar_item.website %} ({{ calendar_item.website }}){% endif %}{% if calendar_item.room and not calendar_item.is_online %}
+When: {{ normalized_datetime }}{% if reminder.homework %}
+Info: {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{{ calendar_item.category.title }} for {% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %} ({{ calendar_item.course.website }}){% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}
+Location: {{ calendar_item.course.room }}{% endif %}{% endif %}{% if reminder.course %}
+Info: {{ calendar_item.title }}{% if calendar_item.website %} ({{ calendar_item.website }}){% endif %}{% if calendar_item.room and not calendar_item.is_online %}
 Location: {{ calendar_item.room }}{% endif %}{% if calendar_item.teacher_name %}
-Teacher: {{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %} ({{ calendar_item.teacher_email }}){% endif %}{% endif %}{% endif %}
-{% if reminder.homework or reminder.event %}{% if calendar_item.resources and calendar_item.resources.count > 0 %}Resources:{% for resource in calendar_item.resources.all %}
- - {{ resource.title }}{% if resource.website %} ({{ resource.website }}){% endif %}{% endfor %}{% endif %}
-{% if calendar_item.attachments.count > 0 %}Attachments:{% for attachment in calendar_item.attachments.all %}
- - {{ attachment.title }}: {{ attachment.attachment.url }}{% endfor %}{% endif %}{% endif %}
+Teacher: {{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %} ({{ calendar_item.teacher_email }}){% endif %}{% endif %}{% endif %}{% if note_url %}
+Note: {{ note_url }}{% endif %}{% if reminder.homework or reminder.event %}{% if calendar_item.resources and calendar_item.resources.count > 0 %}
 
-{% if note_url %}
-🔗 Note: {{ note_url }}{% endif %}
+Resources:{% for resource in calendar_item.resources.all %}
+ - {{ resource.title }}{% if resource.website %} ({{ resource.website }}){% endif %}{% endfor %}{% endif %}{% if calendar_item.attachments.count > 0 %}
 
-View in Helium: {{ notifications_url }}
+Attachments: {{ attachments_url }}{% for attachment in calendar_item.attachments.all %}
+ - {{ attachment.title }}{% endfor %}{% endif %}{% endif %}
+
+Open in Helium: {{ open_url }}
 
 Regards,
 The Helium Team

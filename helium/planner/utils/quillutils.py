@@ -44,7 +44,7 @@ def quill_delta_to_plain_text(content) -> str:
     """
     Flatten a Quill Delta to the text a reader sees: string `insert` ops joined in order,
     stripped. Attributes, embeds, and the Delta structure itself are never included, so
-    the result is safe for plain-text contexts (ICS feeds, search).
+    the result is safe for plain-text contexts (Feeds, search).
 
     :param content: The Delta as stored on the model; anything but a dict with an `ops` list yields ``''``.
     :return: The plain text.

@@ -29,14 +29,15 @@ class CourseScheduleRecurrenceGroupSerializer(serializers.Serializer):
     """
     One recurring occurrence definition derived from a `CourseSchedule` — a
     unique (days, start_time, end_time) combination among its active days,
-    already resolved into an iCal `recurrence_rule` and `exception_dates`. A
+    already resolved into an iCalendar `recurrence_rule` and `exception_dates`. A
     schedule with Mon/Wed/Fri at 9am and Thu at 2pm produces two of these.
     """
     start = TzAwareDateTimeField()
     end = TzAwareDateTimeField()
     recurrence_rule = serializers.CharField(
-        help_text='iCal RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats the class from `start`.')
-    exception_dates = ExceptionDatesField(help_text='List of ISO-8601 datetimes of occurrences to skip (iCal EXDATE).')
+        help_text='iCalendar RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats the class from `start`.')
+    exception_dates = ExceptionDatesField(
+        help_text='List of ISO-8601 datetimes of occurrences to skip (iCalendar EXDATE).')
 
 
 class CourseScheduleSerializer(serializers.ModelSerializer):

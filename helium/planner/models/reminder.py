@@ -11,7 +11,7 @@ from django.utils import timezone
 from helium.common import enums
 from helium.common.models import BaseModel
 from helium.common.utils import datetimeutils
-from helium.common.utils.course_exception_helpers import get_course_exceptions
+from helium.common.utils.course_exception_helpers import get_course_exceptions, get_course_group_exceptions
 from helium.planner.managers.remindermanager import ReminderManager
 
 
@@ -182,6 +182,7 @@ class Reminder(BaseModel):
             day = max(today, course.start_date)
 
         exceptions = get_course_exceptions(course)
+        group_exceptions = get_course_group_exceptions(course)
         # Local import avoids a model↔service import cycle; this shared resolver is the single
         # source of truth for "when does this schedule meet on this day" (weekly or cycle).
         from helium.planner.services.coursescheduleservice import schedule_meeting_times_for_day
@@ -195,7 +196,8 @@ class Reminder(BaseModel):
             # the soonest qualifying start.
             candidates = []
             for course_schedule in course_schedules:
-                for start_time, _end_time in schedule_meeting_times_for_day(course_schedule, day, exceptions):
+                for start_time, _end_time in schedule_meeting_times_for_day(course_schedule, day, exceptions,
+                                                                             group_exceptions):
                     local_start = datetime.datetime.combine(day, start_time).replace(tzinfo=user_tz)
 
                     if use_window_check:

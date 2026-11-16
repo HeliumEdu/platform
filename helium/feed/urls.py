@@ -3,29 +3,29 @@ from django.urls import path
 from helium.feed.views.apis.externalcalendaraseventsviews import ExternalCalendarAsEventsListView, \
     UserExternalCalendarAsEventsListView
 from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView
-from helium.feed.views.apis.privateresourceviews import PrivateEnableResourceView, PrivateDisableResourceView
-from helium.feed.views.privateviews import PrivateEventsICALResourceView, PrivateHomeworkICALResourceView, \
-    PrivateCourseSchedulesICALResourceView
+from helium.feed.views.apis.feedresourceviews import FeedsEnableView, FeedsDisableView
+from helium.feed.views.feedviews import EventsFeedView, HomeworkFeedView, \
+    CourseSchedulesFeedView
 
 urlpatterns = [
     ##############################
     # Unauthenticated URLs
     ##############################
-    path('feed/private/<str:private_slug>/events.ics', PrivateEventsICALResourceView.as_view(),
-         name='feed_private_events_ical'),
-    path('feed/private/<str:private_slug>/homework.ics', PrivateHomeworkICALResourceView.as_view(),
-         name='feed_private_homework_ical'),
-    path('feed/private/<str:private_slug>/courseschedules.ics', PrivateCourseSchedulesICALResourceView.as_view(),
-         name='feed_private_courseschedules_ical'),
+    path('feed/private/<str:private_slug>/events.ics', EventsFeedView.as_view(),
+         name='feed_events'),
+    path('feed/private/<str:private_slug>/homework.ics', HomeworkFeedView.as_view(),
+         name='feed_homework'),
+    path('feed/private/<str:private_slug>/courseschedules.ics', CourseSchedulesFeedView.as_view(),
+         name='feed_courseschedules'),
 
     ##############################
     # Authenticated URLs
     ##############################
     # Resource shortcuts
-    path('feed/private/enable/', PrivateEnableResourceView.as_view({'put': 'enable'}),
-         name='feed_private_resource_enable'),
-    path('feed/private/disable/', PrivateDisableResourceView.as_view({'put': 'disable'}),
-         name='feed_private_resource_disable'),
+    path('feed/private/enable/', FeedsEnableView.as_view({'put': 'enable'}),
+         name='feed_enable'),
+    path('feed/private/disable/', FeedsDisableView.as_view({'put': 'disable'}),
+         name='feed_disable'),
     path('feed/externalcalendars/<int:pk>/events/',
          ExternalCalendarAsEventsListView.as_view(),
          name='feed_resource_externalcalendars_events'),

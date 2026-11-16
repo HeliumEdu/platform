@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 url_validator = validators.URLValidator()
 
 
-class HeliumICalError(HeliumError):
-    """Raised when an iCal feed cannot be fetched or parsed."""
+class HeliumICalendarError(HeliumError):
+    """Raised when an external calendar's iCalendar URL cannot be fetched or parsed."""
 
     def __init__(self, message, reason):
         super().__init__(message)
@@ -43,7 +43,7 @@ def _get_cache_prefix(external_calendar):
     return f"users:{external_calendar.user_id}:externalcalendars:{external_calendar.pk}:events"
 
 
-def record_feed_failure(external_calendar, error):
+def record_fetch_failure(external_calendar, error):
     """
     Record a failed fetch against the calendar, disabling it only once it has failed enough
     times in a row to reach the configured threshold, so a transient upstream outage cannot
@@ -59,12 +59,13 @@ def record_feed_failure(external_calendar, error):
 
     external_calendar.refresh_from_db(fields=['consecutive_failures', 'last_sync_error'])
 
-    metricutils.increment('feed.ical.failed', extra_tags=[f'reason:{error.reason}'])
+    metricutils.increment('external_calendar.fetch.failed', extra_tags=[f'reason:{error.reason}'])
 
-    if (external_calendar.consecutive_failures < settings.FEED_CONSECUTIVE_FAILURE_THRESHOLD
+    if (external_calendar.consecutive_failures < settings.EXTERNAL_CALENDAR_CONSECUTIVE_FAILURE_THRESHOLD
             or not external_calendar.shown_on_calendar):
         logger.info(f"External Calendar {external_calendar.pk} failure "
-                    f"{external_calendar.consecutive_failures}/{settings.FEED_CONSECUTIVE_FAILURE_THRESHOLD}: {error}")
+                    f"{external_calendar.consecutive_failures}/"
+                    f"{settings.EXTERNAL_CALENDAR_CONSECUTIVE_FAILURE_THRESHOLD}: {error}")
 
         return False
 
@@ -74,12 +75,12 @@ def record_feed_failure(external_calendar, error):
     logger.info(f"Disabling External Calendar {external_calendar.pk} after "
                 f"{external_calendar.consecutive_failures} consecutive failures")
 
-    metricutils.increment('feed.ical.disabled')
+    metricutils.increment('external_calendar.disabled')
 
     return True
 
 
-def record_feed_success(external_calendar):
+def record_fetch_success(external_calendar):
     """
     Clear any failure state recorded against the calendar by a previous failed fetch.
 
@@ -112,11 +113,11 @@ def _get_events_from_cache(external_calendar, cached_value, _from=None, to=None)
                           user_id=event_data['user'],
                           calendar_item_type=event_data['calendar_item_type'],
                           url=event_data['url'],
+                          color=external_calendar.color,
+                          location=event_data.get('location'),
                           comments=event_data['comments'],
                           recurrence_rule=event_data.get('recurrence_rule'),
                           exception_dates=event_data.get('exception_dates'))
-            event.color = external_calendar.color
-            event.location = event_data.get('location')
 
             if datetimeutils.event_in_range(event, _from, to):
                 events.append(event)
@@ -147,14 +148,14 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                       start=parsed['start'],
                       end=parsed['end'],
                       url=parsed['url'],
+                      color=external_calendar.color,
+                      location=parsed['location'],
                       owner_id=external_calendar.id,
                       comments=comments,
                       user=user,
                       calendar_item_type=enums.EXTERNAL,
                       recurrence_rule=parsed['recurrence_rule'],
                       exception_dates=parsed['exception_dates'])
-        event.color = external_calendar.color
-        event.location = parsed['location']
 
         events.append(event)
 
@@ -174,20 +175,20 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
                                 start=extra_start,
                                 end=extra_start + duration,
                                 url=parsed['url'],
+                                color=external_calendar.color,
+                                location=parsed['location'],
                                 owner_id=external_calendar.id,
                                 comments=comments,
                                 user=user,
                                 calendar_item_type=enums.EXTERNAL)
-            extra_event.color = external_calendar.color
-            extra_event.location = parsed['location']
             events.append(extra_event)
             if datetimeutils.event_in_range(extra_event, _from, to):
                 events_filtered.append(extra_event)
 
     serializer = GeneratedEventSerializer(events, many=True)
     events_json = json.dumps(serializer.data)
-    if len(events_json.encode('utf-8')) <= settings.FEED_MAX_CACHEABLE_SIZE:
-        cache.set(_get_cache_prefix(external_calendar), events_json, settings.FEED_CACHE_TTL_SECONDS)
+    if len(events_json.encode('utf-8')) <= settings.GENERATED_EVENTS_MAX_CACHEABLE_SIZE:
+        cache.set(_get_cache_prefix(external_calendar), events_json, settings.GENERATED_EVENTS_CACHE_TTL_SECONDS)
 
         ExternalCalendar.objects.filter(pk=external_calendar.pk).update(last_index=timezone.now())
     else:
@@ -197,7 +198,7 @@ def _create_events_from_calendar(external_calendar, calendar, _from=None, to=Non
 
         metricutils.increment('task.cache.max-size-exceeded')
 
-    record_feed_success(external_calendar)
+    record_fetch_success(external_calendar)
 
     return events_filtered
 
@@ -218,12 +219,12 @@ def invalidate_calendar_cache(external_calendar):
 
 def validate_url(url):
     """
-    Validates that a given URL maps to a valid ICAL feed. Validation includes both simple HTTP validation as well as
+    Validates that a given URL returns valid iCalendar data. Validation includes both simple HTTP validation as well as
     downloading and parsing the calendar itself to ensure it is valid. As such, since we parse the full calendar to
     ensure its validity, a Calendar object is also returned if validation is successful.
 
-    :param url: The ICAL URL to validate
-    :return: The validated ICAL feed in a Calendar object
+    :param url: The iCalendar URL to validate
+    :return: The validated calendar, as a Calendar object
     """
     try:
         url_validator(url)
@@ -231,36 +232,36 @@ def validate_url(url):
         response = urlopen_secure(url)
 
         if response.getcode() != status.HTTP_200_OK:
-            raise HeliumICalError("The URL did not return a valid response.", 'bad_response')
+            raise HeliumICalendarError("The URL did not return a valid response.", 'bad_response')
 
         return icalendar.Calendar.from_ical(response.read())
     except ValidationError as ex:
         logger.info(f"The URL is invalid: {ex}")
 
-        raise HeliumICalError(ex.message, 'invalid_url')
+        raise HeliumICalendarError(ex.message, 'invalid_url')
     except (OSError, http.client.HTTPException) as ex:
         logger.info(f"The URL is not reachable: {ex}")
 
-        raise HeliumICalError("The URL is not reachable.", 'unreachable')
+        raise HeliumICalendarError("The URL is not reachable.", 'unreachable')
     except ValueError as ex:
-        logger.info(f"The URL did not return a valid ICAL feed: {ex}")
+        logger.info(f"The URL did not return a valid calendar: {ex}")
 
-        raise HeliumICalError("The URL did not return a valid iCal feed.", 'invalid_feed')
+        raise HeliumICalendarError("The URL did not return a valid calendar.", 'invalid_calendar')
 
 
-def fetch_ical_conditional(external_calendar):
+def fetch_icalendar_conditional(external_calendar):
     """
-    Fetches an iCal feed using conditional HTTP requests (ETag/If-Modified-Since).
+    Fetches an external calendar's iCalendar URL using conditional HTTP requests (ETag/If-Modified-Since).
 
-    If the feed has not been modified since the last fetch (304 Not Modified),
+    If the calendar has not been modified since the last fetch (304 Not Modified),
     returns None to indicate the existing cache should be used.
 
-    If the feed has been modified or this is the first fetch, returns the parsed
+    If the calendar has been modified or this is the first fetch, returns the parsed
     Calendar object and updates the external_calendar's etag and last_modified_header.
 
     :param external_calendar: The ExternalCalendar model instance
     :return: Parsed icalendar.Calendar object, or None if not modified (304)
-    :raises HeliumICalError: If the URL is unreachable or returns invalid data
+    :raises HeliumICalendarError: If the URL is unreachable or returns invalid data
     """
     try:
         request = Request(external_calendar.url)
@@ -281,7 +282,7 @@ def fetch_ical_conditional(external_calendar):
         response_code = response.getcode()
 
         if response_code != status.HTTP_200_OK:
-            raise HeliumICalError("The URL did not return a valid response.", 'bad_response')
+            raise HeliumICalendarError("The URL did not return a valid response.", 'bad_response')
 
         # Store caching headers from the response for next time
         new_etag = response.getheader('ETag')
@@ -298,20 +299,20 @@ def fetch_ical_conditional(external_calendar):
             if update_fields:
                 external_calendar.save(update_fields=update_fields)
 
-        metricutils.increment('feed.ical.fetched')
+        metricutils.increment('external_calendar.fetched')
         return icalendar.Calendar.from_ical(response.read())
 
     except (OSError, http.client.HTTPException) as ex:
         logger.info(f"The URL is not reachable: {ex}")
-        raise HeliumICalError("The URL is not reachable.", 'unreachable')
+        raise HeliumICalendarError("The URL is not reachable.", 'unreachable')
     except ValueError as ex:
-        logger.info(f"The URL did not return a valid ICAL feed: {ex}")
-        raise HeliumICalError("The URL did not return a valid iCal feed.", 'invalid_feed')
+        logger.info(f"The URL did not return a valid calendar: {ex}")
+        raise HeliumICalendarError("The URL did not return a valid calendar.", 'invalid_calendar')
 
 
 def calendar_to_events(external_calendar, _from=None, to=None):
     """
-    For the given external calendar model and parsed ICAL calendar, convert each item in the calendar to an event
+    For the given external calendar model and parsed iCalendar data, convert each item in the calendar to an event
     resources.
 
     :param external_calendar: The external calendar source that is referenced by the calendar object.
@@ -334,7 +335,7 @@ def calendar_to_events(external_calendar, _from=None, to=None):
     return events
 
 
-def reindex_stale_feed_caches(calendar_ids=None):
+def reindex_stale_caches(calendar_ids=None):
     """
     :param calendar_ids: Optional list of ExternalCalendar PKs to reindex. When provided, bypasses
         the stale-cache check and targets only those specific calendars. When None (default),
@@ -351,24 +352,24 @@ def reindex_stale_feed_caches(calendar_ids=None):
         queryset = ExternalCalendar.objects.needs_recached().select_related('user', 'user__settings')
 
     for external_calendar in queryset.iterator():
-        logger.info(f"Reindexing External Calendar {external_calendar.pk} feed")
+        logger.info(f"Reindexing External Calendar {external_calendar.pk}")
 
         try:
-            calendar = fetch_ical_conditional(external_calendar)
+            calendar = fetch_icalendar_conditional(external_calendar)
 
             if calendar is None:
                 # A 304 leaves the cache standing, so only its freshness window needs extending
                 external_calendar.last_index = timezone.now()
                 external_calendar.save(update_fields=['last_index'])
-                record_feed_success(external_calendar)
+                record_fetch_success(external_calendar)
                 not_modified.append(external_calendar)
             else:
                 cache.delete(_get_cache_prefix(external_calendar))
                 _create_events_from_calendar(external_calendar, calendar)
                 reindexed.append(external_calendar)
 
-        except HeliumICalError as e:
-            record_feed_failure(external_calendar, e)
+        except HeliumICalendarError as e:
+            record_fetch_failure(external_calendar, e)
         except SoftTimeLimitExceeded:
             # The task is out of budget; swallowing this would let the sweep run unbounded,
             # since no hard time limit backs it up.
@@ -377,6 +378,6 @@ def reindex_stale_feed_caches(calendar_ids=None):
             logger.error(f"Unexpected error reindexing External Calendar {external_calendar.pk}, "
                          f"skipping it so the sweep can continue", exc_info=True)
 
-            metricutils.increment('feed.ical.failed', extra_tags=['reason:unexpected'])
+            metricutils.increment('external_calendar.fetch.failed', extra_tags=['reason:unexpected'])
 
     logger.info(f"Done reindexing: {len(reindexed)} updated, {len(not_modified)} not modified")

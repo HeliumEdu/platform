@@ -2,11 +2,12 @@ import datetime
 import logging
 from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.test import TestCase, RequestFactory
 from django.utils import timezone
 
 from helium.auth.tests.helpers import userhelper
-from helium.feed.services import icalprivateservice
+from helium.feed.services import feedservice
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper, eventhelper
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class TestCaseGetEventsLastModified(TestCase):
         event2.save()
 
         # WHEN
-        result = icalprivateservice.get_events_last_modified(user)
+        result = feedservice.get_events_last_modified(user)
 
         # THEN
         self.assertIsNotNone(result)
@@ -34,7 +35,7 @@ class TestCaseGetEventsLastModified(TestCase):
         user = userhelper.given_a_user_exists()
 
         # WHEN
-        result = icalprivateservice.get_events_last_modified(user)
+        result = feedservice.get_events_last_modified(user)
 
         # THEN
         self.assertIsNone(result)
@@ -52,7 +53,7 @@ class TestCaseGetHomeworkLastModified(TestCase):
         homework.save()
 
         # WHEN
-        result = icalprivateservice.get_homework_last_modified(user)
+        result = feedservice.get_homework_last_modified(user)
 
         # THEN
         self.assertIsNotNone(result)
@@ -70,7 +71,7 @@ class TestCaseGetHomeworkLastModified(TestCase):
         course.save()
 
         # WHEN
-        result = icalprivateservice.get_homework_last_modified(user)
+        result = feedservice.get_homework_last_modified(user)
 
         # THEN
         self.assertIsNotNone(result)
@@ -81,7 +82,7 @@ class TestCaseGetHomeworkLastModified(TestCase):
         user = userhelper.given_a_user_exists()
 
         # WHEN
-        result = icalprivateservice.get_homework_last_modified(user)
+        result = feedservice.get_homework_last_modified(user)
 
         # THEN
         self.assertIsNone(result)
@@ -99,7 +100,7 @@ class TestCaseGetCourseschedulesLastModified(TestCase):
         schedule.save()
 
         # WHEN
-        result = icalprivateservice.get_courseschedules_last_modified(user)
+        result = feedservice.get_courseschedules_last_modified(user)
 
         # THEN
         self.assertIsNotNone(result)
@@ -110,7 +111,7 @@ class TestCaseGetCourseschedulesLastModified(TestCase):
         user = userhelper.given_a_user_exists()
 
         # WHEN
-        result = icalprivateservice.get_courseschedules_last_modified(user)
+        result = feedservice.get_courseschedules_last_modified(user)
 
         # THEN
         self.assertIsNone(result)
@@ -123,23 +124,32 @@ class TestCaseGenerateEtag(TestCase):
         last_modified = timezone.now()
 
         # WHEN
-        result = icalprivateservice.generate_etag(user_id, last_modified)
+        result = feedservice.generate_etag(user_id, last_modified)
 
         # THEN
-        self.assertTrue(result.startswith('"'))
-        self.assertTrue(result.endswith('"'))
-        self.assertIn('123:', result)
-        self.assertNotIn(':0"', result)
+        self.assertEqual(result, f'"123:{int(last_modified.timestamp())}:{settings.FEEDS_VERSION}"')
 
     def test_format_without_timestamp(self):
         # GIVEN
         user_id = 456
 
         # WHEN
-        result = icalprivateservice.generate_etag(user_id, None)
+        result = feedservice.generate_etag(user_id, None)
 
         # THEN
-        self.assertEqual(result, '"456:0"')
+        self.assertEqual(result, f'"456:0:{settings.FEEDS_VERSION}"')
+
+    def test_changes_with_feeds_version(self):
+        # GIVEN
+        last_modified = timezone.now()
+        etag = feedservice.generate_etag(123, last_modified)
+
+        # WHEN
+        with self.settings(FEEDS_VERSION=settings.FEEDS_VERSION + 1):
+            result = feedservice.generate_etag(123, last_modified)
+
+        # THEN
+        self.assertNotEqual(result, etag)
 
 
 class TestCaseCheckConditionalRequest(TestCase):
@@ -153,7 +163,7 @@ class TestCaseCheckConditionalRequest(TestCase):
         last_modified = timezone.now()
 
         # WHEN
-        result = icalprivateservice.check_conditional_request(request, etag, last_modified)
+        result = feedservice.check_conditional_request(request, etag, last_modified)
 
         # THEN
         self.assertIsNotNone(result)
@@ -167,7 +177,7 @@ class TestCaseCheckConditionalRequest(TestCase):
         last_modified = timezone.now()
 
         # WHEN
-        result = icalprivateservice.check_conditional_request(request, etag, last_modified)
+        result = feedservice.check_conditional_request(request, etag, last_modified)
 
         # THEN
         self.assertIsNotNone(result)
@@ -180,7 +190,20 @@ class TestCaseCheckConditionalRequest(TestCase):
         last_modified = timezone.now()
 
         # WHEN
-        result = icalprivateservice.check_conditional_request(request, etag, last_modified)
+        result = feedservice.check_conditional_request(request, etag, last_modified)
+
+        # THEN
+        self.assertIsNone(result)
+
+    def test_ignores_if_modified_since_when_if_none_match_mismatches(self):
+        # GIVEN
+        request = self.factory.get('/', HTTP_IF_NONE_MATCH='"123:1234567890:1"',
+                                   HTTP_IF_MODIFIED_SINCE='Wed, 01 Jan 2099 00:00:00 GMT')
+        etag = '"123:1234567890:2"'
+        last_modified = timezone.now()
+
+        # WHEN
+        result = feedservice.check_conditional_request(request, etag, last_modified)
 
         # THEN
         self.assertIsNone(result)
@@ -194,7 +217,7 @@ class TestCaseCheckConditionalRequest(TestCase):
         etag = '"123:1234567890"'
 
         # WHEN
-        result = icalprivateservice.check_conditional_request(request, etag, last_modified)
+        result = feedservice.check_conditional_request(request, etag, last_modified)
 
         # THEN
         self.assertIsNotNone(result)
@@ -209,7 +232,7 @@ class TestCaseCheckConditionalRequest(TestCase):
         etag = '"123:1234567890"'
 
         # WHEN
-        result = icalprivateservice.check_conditional_request(request, etag, last_modified)
+        result = feedservice.check_conditional_request(request, etag, last_modified)
 
         # THEN
         self.assertIsNone(result)
@@ -221,7 +244,7 @@ class TestCaseCheckConditionalRequest(TestCase):
         last_modified = timezone.now()
 
         # WHEN
-        result = icalprivateservice.check_conditional_request(request, etag, last_modified)
+        result = feedservice.check_conditional_request(request, etag, last_modified)
 
         # THEN
         self.assertIsNone(result)
@@ -233,14 +256,14 @@ class TestCaseCheckConditionalRequest(TestCase):
         last_modified = None
 
         # WHEN
-        result = icalprivateservice.check_conditional_request(request, etag, last_modified)
+        result = feedservice.check_conditional_request(request, etag, last_modified)
 
         # THEN
         # Should return None since there's no last_modified to compare
         self.assertIsNone(result)
 
 
-class TestCaseEventsToPrivateIcalFeed(TestCase):
+class TestCaseEventsFeed(TestCase):
     def test_recurring_all_day_event_exports_rrule_and_local_exdate(self):
         for zone_name in ('Asia/Tokyo', 'America/Chicago'):
             with self.subTest(zone=zone_name):
@@ -255,14 +278,14 @@ class TestCaseEventsToPrivateIcalFeed(TestCase):
                                                exception_dates=[skipped.isoformat()])
 
                 # WHEN
-                feed = icalprivateservice.events_to_private_ical_feed(user)
+                feed = feedservice.events_feed(user)
 
                 # THEN
                 self.assertIn(b'RRULE:FREQ=WEEKLY;COUNT=3;BYDAY=MO', feed)
                 self.assertIn(b'EXDATE;VALUE=DATE:20170515', feed)
 
 
-class TestCaseHomeworkToPrivateIcalFeed(TestCase):
+class TestCaseHomeworkFeed(TestCase):
     def test_repeating_all_day_homework_exports_rrule_and_local_exdate(self):
         for zone_name in ('Asia/Tokyo', 'America/Chicago'):
             with self.subTest(zone=zone_name):
@@ -278,7 +301,7 @@ class TestCaseHomeworkToPrivateIcalFeed(TestCase):
                                                      exception_dates=[skipped.isoformat()])
 
                 # WHEN
-                feed = icalprivateservice.homework_to_private_ical_feed(user)
+                feed = feedservice.homework_feed(user)
 
                 # THEN
                 self.assertIn(b'RRULE:FREQ=WEEKLY;COUNT=3;BYDAY=MO', feed)

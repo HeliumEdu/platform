@@ -15,7 +15,7 @@ from helium.common.utils import commonutils
 # series anchor at runtime is the repeating item's own `start`, not this constant.
 _RRULE_VALIDATION_DTSTART = datetime.datetime(2000, 1, 1)
 
-_ICAL_TO_WEEKDAY = {code: weekday for weekday, code in enums.WEEKDAY_TO_ICAL.items()}
+_ICALENDAR_TO_WEEKDAY = {code: weekday for weekday, code in enums.WEEKDAY_TO_ICALENDAR.items()}
 _UNSUPPORTED_RRULE_FREQS = frozenset({'HOURLY', 'MINUTELY', 'SECONDLY'})
 _UNSUPPORTED_RRULE_PARTS = frozenset({'BYHOUR', 'BYMINUTE', 'BYSECOND', 'BYWEEKNO', 'BYYEARDAY', 'WKST'})
 _ORDINAL_WEEKDAY = re.compile(r'^([+-]?\d{1,2})(MO|TU|WE|TH|FR|SA|SU)$')
@@ -136,7 +136,7 @@ def infer_byday_for_weekly_rrule(value, dtstart):
     if parts.get('FREQ') != 'WEEKLY' or 'BYDAY' in parts:
         return value
 
-    day_code = enums.WEEKDAY_TO_ICAL[dtstart.weekday()]
+    day_code = enums.WEEKDAY_TO_ICALENDAR[dtstart.weekday()]
     return f'{prefix}{rule_body};BYDAY={day_code}'
 
 
@@ -223,7 +223,8 @@ def shift_recurrence_rule(value, old_local_start, new_local_start):
     weekday_shift = new_local_start.weekday() - old_local_start.weekday()
     if weekday_shift and parts.get('BYDAY'):
         parts['BYDAY'] = ','.join(
-            enums.WEEKDAY_TO_ICAL[(_ICAL_TO_WEEKDAY[code] + weekday_shift) % 7] if code in _ICAL_TO_WEEKDAY else code
+            enums.WEEKDAY_TO_ICALENDAR[(_ICALENDAR_TO_WEEKDAY[code] + weekday_shift) % 7]
+            if code in _ICALENDAR_TO_WEEKDAY else code
             for code in parts['BYDAY'].split(','))
 
     if parts.get('BYMONTHDAY') == str(old_local_start.day):
