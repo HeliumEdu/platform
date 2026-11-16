@@ -4,6 +4,24 @@ from rest_framework import serializers
 from helium.common.utils.validators import validate_and_normalize_date_csv
 
 
+def normalize_exceptions(exceptions, start_date=None, end_date=None, range_label='date range'):
+    """
+    Validate and normalize a CSV of YYYYMMDD exception dates, each within [`start_date`, `end_date`] when both are
+    given.
+
+    :param exceptions: The raw comma-separated dates.
+    :param start_date: The inclusive lower bound, or None for no range check.
+    :param end_date: The inclusive upper bound, or None for no range check.
+    :param range_label: How the range is described in the out-of-range error (e.g. "class date range").
+    :return: The deduplicated, sorted CSV.
+    :raises serializers.ValidationError: On `exceptions`, for a malformed or out-of-range date.
+    """
+    try:
+        return validate_and_normalize_date_csv(exceptions, start_date, end_date, range_label=range_label)
+    except DjangoValidationError as e:
+        raise serializers.ValidationError({'exceptions': e.message})
+
+
 def validate_start_before_end(attrs, instance):
     """
     Raise if the effective `start` is after the effective `end`, where a value missing from `attrs` falls back to
@@ -51,8 +69,4 @@ def validate_date_range_and_exceptions(attrs, instance, range_label):
         if exceptions is None and instance:
             exceptions = instance.exceptions
         if exceptions:
-            try:
-                attrs['exceptions'] = validate_and_normalize_date_csv(
-                    exceptions, start_date, end_date, range_label=range_label)
-            except DjangoValidationError as e:
-                raise serializers.ValidationError({'exceptions': e.message})
+            attrs['exceptions'] = normalize_exceptions(exceptions, start_date, end_date, range_label)

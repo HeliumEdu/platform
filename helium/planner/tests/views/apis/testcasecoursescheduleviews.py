@@ -208,6 +208,107 @@ class TestCaseCourseViews(APITestCase):
         course_schedule.refresh_from_db()
         courseschedulehelper.verify_course_schedule_matches(self, course_schedule, response.data)
 
+    def test_patch_course_schedule_exceptions_normalizes_them(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_course_schedule_exists(course)
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_coursegroups_courses_courseschedules_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': course_schedule.pk}),
+            json.dumps({'exceptions': '20170301,20170215,20170301'}),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['exceptions'], '20170215,20170301')
+        course_schedule.refresh_from_db()
+        self.assertEqual(course_schedule.exceptions, '20170215,20170301')
+
+    def test_patch_course_schedule_exceptions_outside_schedule_window_returns_400(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_course_schedule_exists(course)
+        course_schedule.end_date = datetime.date(2017, 2, 28)
+        course_schedule.save()
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_coursegroups_courses_courseschedules_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': course_schedule.pk}),
+            json.dumps({'exceptions': '20170301'}),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('exceptions', response.data)
+
+    def test_put_narrowing_schedule_dates_keeps_cancellations_outside_the_new_window(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_course_schedule_exists(course)
+        course_schedule.exceptions = '20170301'
+        course_schedule.save()
+
+        # WHEN
+        data = {
+            'days_of_week': '0101010',
+            'sun_start_time': '12:00:00',
+            'sun_end_time': '12:00:00',
+            'mon_start_time': '02:30:00',
+            'mon_end_time': '03:00:00',
+            'tue_start_time': '12:00:00',
+            'tue_end_time': '12:00:00',
+            'wed_start_time': '02:30:00',
+            'wed_end_time': '03:00:00',
+            'thu_start_time': '12:00:00',
+            'thu_end_time': '12:00:00',
+            'fri_start_time': '02:30:00',
+            'fri_end_time': '03:00:00',
+            'sat_start_time': '12:00:00',
+            'sat_end_time': '12:00:00',
+            'end_date': '2017-02-28',
+        }
+        response = self.client.put(
+            reverse('planner_coursegroups_courses_courseschedules_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': course_schedule.pk}),
+            json.dumps(data),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course_schedule.refresh_from_db()
+        self.assertEqual(course_schedule.exceptions, '20170301')
+
+    def test_patch_course_schedule_exceptions_keeps_a_cancellation_left_outside_the_window(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        course_schedule = courseschedulehelper.given_course_schedule_exists(course)
+        course_schedule.exceptions = '20170301'
+        course_schedule.end_date = datetime.date(2017, 2, 28)
+        course_schedule.save()
+
+        # WHEN
+        response = self.client.patch(
+            reverse('planner_coursegroups_courses_courseschedules_detail',
+                    kwargs={'course_group': course_group.pk, 'course': course.pk, 'pk': course_schedule.pk}),
+            json.dumps({'exceptions': '20170215,20170301'}),
+            content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course_schedule.refresh_from_db()
+        self.assertEqual(course_schedule.exceptions, '20170215,20170301')
+
     def test_delete_course_schedule_by_id(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

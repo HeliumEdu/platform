@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from helium.common import enums
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
+from helium.common.serializers.validation import normalize_exceptions
 from helium.planner.models import CourseSchedule
 from helium.planner.services import coursescheduleservice
 
@@ -52,10 +53,10 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
       fields but only meets every other week, on the week matching `week_offset`.
 
     `recurrence_groups` is the derived, read-only rendering of whichever shape
-    applies: exceptions from `Course.exceptions` / `CourseGroup.exceptions` already
-    merged in, ready to hand to a recurrence-aware calendar widget without
-    recomputing anything client-side — so the client renders weekly and cycle
-    schedules identically.
+    applies: exceptions from the schedule's own `exceptions`, `Course.exceptions`
+    and `CourseGroup.exceptions` already merged in, ready to hand to a
+    recurrence-aware calendar widget without recomputing anything client-side — so
+    the client renders weekly and cycle schedules identically.
     """
 
     recurrence_groups = serializers.SerializerMethodField()
@@ -68,8 +69,8 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             'id', 'days_of_week', 'sun_start_time', 'sun_end_time', 'mon_start_time', 'mon_end_time', 'tue_start_time',
             'tue_end_time', 'wed_start_time', 'wed_end_time', 'thu_start_time', 'thu_end_time', 'fri_start_time',
             'fri_end_time', 'sat_start_time', 'sat_end_time', 'course', 'course_group', 'cycle_length', 'anchor_date', 'cycle_slots',
-            'is_week_based', 'week_offset', 'start_date', 'end_date', 'template', 'recurrence_groups', 'created_at',
-            'updated_at',)
+            'is_week_based', 'week_offset', 'start_date', 'end_date', 'template', 'exceptions', 'recurrence_groups',
+            'created_at', 'updated_at',)
         read_only_fields = ('course', 'created_at', 'updated_at',)
         extra_kwargs = {
             'days_of_week': {'required': True},
@@ -136,7 +137,19 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         if start_date and end_date and start_date > end_date:
             raise ValidationError("The 'start_date' must be before the 'end_date'")
 
+        if attrs.get('exceptions'):
+            attrs['exceptions'] = self._normalize_exceptions(attrs['exceptions'], start_date, end_date)
+
         return attrs
+
+    def _normalize_exceptions(self, exceptions, start_date, end_date):
+        exceptions = normalize_exceptions(exceptions)
+        if self.instance:
+            course = self.instance.course
+            added = set(exceptions.split(',')) - set(self.instance.exceptions.split(','))
+            normalize_exceptions(','.join(added), max(start_date or course.start_date, course.start_date),
+                                 min(end_date or course.end_date, course.end_date), 'schedule date range')
+        return exceptions
 
     def _apply_template_defaults(self, attrs, template):
         # Fill the fields a template implies, but only where the client didn't set them

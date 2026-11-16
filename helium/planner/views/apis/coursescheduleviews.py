@@ -193,6 +193,17 @@ class CourseGroupCourseCourseSchedulesApiDetailView(PreconditionMixin, HeliumAPI
 
         return response
 
+    @extend_schema(summary='Partially update a CourseSchedule', parameters=[IF_MATCH_PARAMETER])
+    def patch(self, request, *args, **kwargs):
+        """
+        Partially update the given course schedule instance.
+        """
+        response = self.partial_update(request, *args, **kwargs)
+
+        logger.info(f"CourseSchedule {kwargs['pk']} partially updated for user {request.user.pk}")
+
+        return response
+
     @extend_schema(summary='Delete a CourseSchedule', parameters=[IF_MATCH_PARAMETER])
     def delete(self, request, *args, **kwargs):
         """

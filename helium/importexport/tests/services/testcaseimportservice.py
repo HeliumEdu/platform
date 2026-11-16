@@ -60,6 +60,21 @@ class TestCaseImportService(TestCase):
         self.assertTrue(all(h.category.course_id == h.course_id
                             for h in Homework.objects.for_user(user.pk).select_related('category')))
 
+    def test_bulk_import_example_schedule_keeps_schedule_exceptions(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        with open(os.path.join(os.path.dirname(importservice.__file__), '..', 'resources',
+                               'example_schedule.json'), 'rb') as f:
+            data = json.loads(f.read().decode('utf-8'))
+        data['course_schedules'][0]['exceptions'] = '20260304'
+
+        # WHEN
+        importservice._bulk_import_example_schedule(data, user)
+
+        # THEN
+        self.assertEqual(list(CourseSchedule.objects.for_user(user.pk).exclude(exceptions='')
+                              .values_list('exceptions', flat=True)), ['20260304'])
+
     @patch('django.utils.timezone.now')
     def test_adjust_schedule_uses_user_timezone_when_behind_utc_at_month_boundary(self, mock_now):
         # GIVEN

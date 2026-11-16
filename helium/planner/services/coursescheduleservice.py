@@ -11,7 +11,8 @@ from django.core.cache import cache
 from helium.common import enums
 from helium.common.utils import datetimeutils, metricutils
 from helium.common.utils.commonutils import HeliumError, deterministic_id
-from helium.common.utils.course_exception_helpers import get_course_exceptions, get_course_group_exceptions
+from helium.common.utils.course_exception_helpers import get_course_exceptions, get_course_group_exceptions, \
+    get_course_schedule_exceptions
 from helium.planner.models import Event
 from helium.planner.serializers.eventserializer import GeneratedEventSerializer
 from helium.planner.utils import deeplinkutils
@@ -149,6 +150,8 @@ def schedule_meeting_times_for_day(course_schedule, day, exceptions, group_excep
     truth every consumer routes through (recurrence groups, Feeds, and reminders), so each
     schedule type resolves consistently everywhere.
 
+    A date in ``course_schedule.exceptions`` (the schedule's own cancellations) also means no meeting that day.
+
     :param exceptions: The dates the course doesn't meet.
     :param group_exceptions: The course group's Holidays & Breaks — a cycle needs them to count school days.
     """
@@ -156,6 +159,9 @@ def schedule_meeting_times_for_day(course_schedule, day, exceptions, group_excep
     # the course dates, so its own overrides are the only extra constraint here.
     if (course_schedule.start_date and day < course_schedule.start_date) or \
             (course_schedule.end_date and day > course_schedule.end_date):
+        return []
+
+    if day in get_course_schedule_exceptions(course_schedule):
         return []
 
     if course_schedule.is_cycle:
@@ -390,7 +396,7 @@ def course_schedule_to_recurrence_groups(course, course_schedule):
     :param course_schedule: The course schedule to generate recurrence groups for.
     :return: A list of `CourseScheduleRecurrenceGroup`, one per unique time-slot.
     """
-    exceptions = get_course_exceptions(course)
+    exceptions = get_course_exceptions(course) | get_course_schedule_exceptions(course_schedule)
     user_tz = ZoneInfo(course.get_user().settings.time_zone)
     window = schedule_window(course, course_schedule)
 
