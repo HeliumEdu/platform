@@ -5,8 +5,8 @@ from rest_framework.test import APITestCase
 
 from helium.common import enums
 from helium.auth.tests.helpers import userhelper
-from helium.importexport.services.importservice import _adjust_schedule_relative_to, \
-    _ImportedExampleSchedule
+from helium.importexport.services.importservice import ImportedSchedule
+from helium.importexport.services.scheduleshiftservice import shift_schedule_to_month
 from helium.importexport.tasks import import_example_schedule
 from helium.planner.models import Course, CourseGroup, Event, Homework
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
@@ -17,7 +17,7 @@ class TestCaseImportExportTasks(APITestCase):
         def identity_remap(queryset):
             return {pk: pk for pk in queryset.values_list('pk', flat=True)}
 
-        return _ImportedExampleSchedule(
+        return ImportedSchedule(
             course_group_remap=identity_remap(CourseGroup.objects.for_user(user.pk)
                                               .filter(example_schedule=True)),
             course_remap=identity_remap(Course.objects.for_user(user.pk)
@@ -84,7 +84,7 @@ class TestCaseImportExportTasks(APITestCase):
             end=datetime.datetime(2026, 2, 9, 17, 30, 0, tzinfo=datetime.timezone.utc),
         )
 
-        # A single example-schedule Event is required by _adjust_schedule_relative_to
+        # A single example-schedule Event is required by shift_schedule_to_month
         # to compute the events_delta; give it a start time of 17:00 UTC as well.
         Event.objects.create(
             title='Test Event',
@@ -104,7 +104,7 @@ class TestCaseImportExportTasks(APITestCase):
 
         # WHEN
         with patch('django.utils.timezone.now', return_value=mock_now):
-            _adjust_schedule_relative_to(user, -1, self.given_example_schedule_rows(user))
+            shift_schedule_to_month(user, -1, self.given_example_schedule_rows(user))
 
         # THEN
         hw_pre_dst.refresh_from_db()
@@ -150,7 +150,7 @@ class TestCaseImportExportTasks(APITestCase):
 
         # WHEN
         with patch('django.utils.timezone.now', return_value=mock_now):
-            _adjust_schedule_relative_to(user, -1, self.given_example_schedule_rows(user))
+            shift_schedule_to_month(user, -1, self.given_example_schedule_rows(user))
 
         # THEN
         event.refresh_from_db()
@@ -183,7 +183,7 @@ class TestCaseImportExportTasks(APITestCase):
 
         # WHEN
         with patch('django.utils.timezone.now', return_value=mock_now):
-            _adjust_schedule_relative_to(user, -1, self.given_example_schedule_rows(user))
+            shift_schedule_to_month(user, -1, self.given_example_schedule_rows(user))
 
         # THEN
         homework.refresh_from_db()
@@ -242,7 +242,7 @@ class TestCaseImportExportTasks(APITestCase):
             end=datetime.datetime(2026, 3, 9, 16, 30, 0, tzinfo=datetime.timezone.utc),
         )
 
-        # Required event for _adjust_schedule_relative_to
+        # Required event for shift_schedule_to_month
         Event.objects.create(
             title='Test Event',
             all_day=False,
@@ -260,7 +260,7 @@ class TestCaseImportExportTasks(APITestCase):
 
         # WHEN
         with patch('django.utils.timezone.now', return_value=mock_now):
-            _adjust_schedule_relative_to(user, -1, self.given_example_schedule_rows(user))
+            shift_schedule_to_month(user, -1, self.given_example_schedule_rows(user))
 
         # THEN
         hw_week1.refresh_from_db()

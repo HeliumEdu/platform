@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='notelink',
             constraint=models.CheckConstraint(
-                check=(
+                condition=(
                     Q(homework__isnull=False, event__isnull=True, resource__isnull=True) |
                     Q(homework__isnull=True, event__isnull=False, resource__isnull=True) |
                     Q(homework__isnull=True, event__isnull=True, resource__isnull=False)

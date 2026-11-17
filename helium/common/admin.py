@@ -8,7 +8,6 @@ from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model, logout
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
@@ -32,16 +31,12 @@ def logged_action(func):
     def _wrapper(modeladmin, request, queryset):
         objects = list(queryset)
         result = func(modeladmin, request, queryset)
-        ct = ContentType.objects.get_for_model(queryset.model)
-        for obj in objects:
-            LogEntry.objects.log_action(
-                user_id=request.user.pk,
-                content_type_id=ct.pk,
-                object_id=obj.pk,
-                object_repr=str(obj),
-                action_flag=CHANGE,
-                change_message=getattr(func, 'short_description', func.__name__),
-            )
+        LogEntry.objects.log_actions(
+            user_id=request.user.pk,
+            queryset=objects,
+            action_flag=CHANGE,
+            change_message=getattr(func, 'short_description', func.__name__),
+        )
         return result
 
     return _wrapper

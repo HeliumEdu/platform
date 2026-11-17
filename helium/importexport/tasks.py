@@ -9,7 +9,7 @@ from conf.celery import app
 from helium.common import enums
 from helium.common.periodic import register_periodic
 from helium.common.utils import metricutils
-from helium.importexport.services import examplescheduleguardservice, importservice
+from helium.importexport.services import examplescheduleguardservice, examplescheduleimportservice
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ def import_example_schedule(self, user_id, example_schedule=True):
 
         if example_schedule:
             # Lives here, not in the service: a task owns its process, a request does not
-            with importservice.suppress_post_save_signals():
-                importservice.import_example_schedule(user)
+            with examplescheduleimportservice.suppress_post_save_signals():
+                examplescheduleimportservice.import_example_schedule(user)
 
         user.settings.setup_state = enums.SETUP_COMPLETE
         user.settings.save(update_fields=['setup_state', 'updated_at'])

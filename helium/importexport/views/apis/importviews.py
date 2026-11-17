@@ -19,6 +19,7 @@ from helium.common.services import uploadfileservice
 from helium.common.views.base import HeliumAPIView, is_dry_run
 from helium.importexport.serializers.importerializer import ImportCreateSerializer, \
     ICSImportCreateSerializer, ImportSerializer
+from helium.importexport.services import examplescheduleimportservice
 from helium.importexport.services import importservice
 from helium.importexport.services import icsimportservice
 from helium.planner.services import reminderservice
@@ -247,8 +248,9 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                 ((external_calendar_count_file, course_groups_count_file, courses_count_file,
                   course_schedules_count_file, categories_count_file, resource_groups_count_file, resources_count_file,
                   events_count_file, homework_count_file, reminders_count_file,
-                  notes_count_file), ids) = importservice.import_user(request, data, dry_run=dry_run,
-                                                                      course_group_id=course_group_id)
+                  notes_count_file), imported) = importservice.import_user(request, data, dry_run=dry_run,
+                                                                           course_group_id=course_group_id)
+                ids = imported.ids()
 
                 if not dry_run:
                     reminderservice.process_push_reminders(True)
@@ -373,6 +375,6 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                 raise ValidationError('The example schedule has already been imported. Please clear it before '
                                       'importing it again.')
 
-            importservice.import_example_schedule(request.user)
+            examplescheduleimportservice.import_example_schedule(request.user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)

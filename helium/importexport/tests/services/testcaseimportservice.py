@@ -8,8 +8,8 @@ from django.test import TestCase
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
-from helium.importexport.services import importservice
-from helium.importexport.services.importservice import import_example_schedule
+from helium.importexport.services import examplescheduleimportservice, importservice, scheduleshiftservice
+from helium.importexport.services.examplescheduleimportservice import import_example_schedule
 from helium.planner.models import CourseGroup, CourseSchedule, Homework
 from helium.planner.tests.helpers import categoryhelper, coursegrouphelper, coursehelper, courseschedulehelper, \
     reminderhelper
@@ -28,7 +28,7 @@ class TestCaseImportService(TestCase):
                      'current_grade': '-1/100', 'completed': False, 'course': 10, 'category': 20}]
 
         # WHEN
-        importservice._import_homework(homework, {10: course.pk}, {20: other_category.pk}, {}, user, False)
+        importservice._import_homework(homework, {10: course.pk}, {20: other_category.pk}, {}, user)
 
         # THEN
         imported = Homework.objects.get(course=course)
@@ -69,7 +69,7 @@ class TestCaseImportService(TestCase):
         data['course_schedules'][0]['exceptions'] = '20260304'
 
         # WHEN
-        importservice._bulk_import_example_schedule(data, user)
+        examplescheduleimportservice._bulk_import_example_schedule(data, user)
 
         # THEN
         self.assertEqual(list(CourseSchedule.objects.for_user(user.pk).exclude(exceptions='')
@@ -148,7 +148,7 @@ class TestCaseImportService(TestCase):
 
         # WHEN
         with patch.object(type(course.schedules), 'all', return_value=[earlier_schedule, later_schedule]):
-            result = importservice._get_most_recent_course_occurrence_start(reminder)
+            result = scheduleshiftservice._get_most_recent_course_occurrence_start(reminder)
 
         # THEN
         expected = datetime.datetime.combine(target_day, datetime.time(14, 0, 0), tzinfo=datetime.timezone.utc)

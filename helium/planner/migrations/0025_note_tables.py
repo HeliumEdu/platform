@@ -41,6 +41,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='notelink',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('event__isnull', True), ('homework__isnull', False), ('material__isnull', True)), models.Q(('event__isnull', False), ('homework__isnull', True), ('material__isnull', True)), models.Q(('event__isnull', True), ('homework__isnull', True), ('material__isnull', False)), _connector='OR'), name='notelink_exactly_one_entity'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('event__isnull', True), ('homework__isnull', False), ('material__isnull', True)), models.Q(('event__isnull', False), ('homework__isnull', True), ('material__isnull', True)), models.Q(('event__isnull', True), ('homework__isnull', True), ('material__isnull', False)), _connector='OR'), name='notelink_exactly_one_entity'),
         ),
     ]

@@ -3,11 +3,11 @@ import json
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-from django.db import transaction
 from django.http import HttpRequest
 from rest_framework.request import Request
 
-from helium.importexport.services.importservice import _import_user, _adjust_schedule_relative_to
+from helium.importexport.services.importservice import import_user
+from helium.importexport.services.scheduleshiftservice import shift_schedule_to_month
 from helium.planner.models import Category
 from helium.common.utils import taskutils
 from helium.planner.services import reminderservice
@@ -37,11 +37,10 @@ class Command(BaseCommand):
             json_str = file.read().decode('utf-8')
             data = json.loads(json_str)
 
-            with transaction.atomic():
-                _counts, imported = _import_user(request, data)
+            _counts, imported = import_user(request, data)
 
             if adjust_month is not None:
-                _adjust_schedule_relative_to(user, adjust_month, imported)
+                shift_schedule_to_month(user, adjust_month, imported)
 
             reminderservice.process_push_reminders(True)
 
