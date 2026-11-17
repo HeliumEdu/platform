@@ -276,3 +276,28 @@ def format_short_time(dt, user_settings):
     :return: e.g. "Tue, 11 AM", "Tue, 11:30 AM" or "Tue, 13:00".
     """
     return f'{dt:%a}, {format_time(dt, user_settings, omit_zero_minutes=True)}'
+
+
+def format_date_time_range(start, end, user_settings, all_day=False):
+    """
+    Format a range with nothing repeated: one day's all-day range is its date, a range within one day names the day
+    once, and a range that ends where it starts is just its start.
+
+    :param start: An aware `datetime` already resolved to the user's timezone.
+    :param end: An aware `datetime` already resolved to the user's timezone; for an all-day range, the exclusive next
+        midnight.
+    :param user_settings: The `UserSettings` deciding date order and clock.
+    :param all_day: Whether the range is whole days.
+    :return: e.g. "Fri, Sep 4", "Fri, Sep 4 to Sun, Sep 6", "Fri, Sep 4 at 3:05 PM to 4:00 PM" or
+        "Fri, Sep 4 at 10:00 PM to Sat, Sep 5 at 1:00 AM".
+    """
+    if all_day:
+        last_day = end - datetime.timedelta(days=1)
+        if last_day.date() <= start.date():
+            return format_date(start, user_settings)
+        return f'{format_date(start, user_settings)} to {format_date(last_day, user_settings)}'
+    if end <= start:
+        return format_date_time(start, user_settings)
+    if end.date() == start.date():
+        return f'{format_date_time(start, user_settings)} to {format_time(end, user_settings)}'
+    return f'{format_date_time(start, user_settings)} to {format_date_time(end, user_settings)}'

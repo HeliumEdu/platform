@@ -1,4 +1,3 @@
-import datetime
 import logging
 from zoneinfo import ZoneInfo
 
@@ -299,7 +298,6 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
         if calendar_item_type == enums.COURSE:
             class_start = reminder.start_of_range + datetimeutils.offset_to_timedelta(reminder.offset, reminder.offset_type)
             local_start = timezone.localtime(class_start)
-            start_str = datetimeutils.format_date_time(local_start, user_settings)
 
             exceptions = get_course_exceptions(calendar_item)
             group_exceptions = get_course_group_exceptions(calendar_item)
@@ -311,24 +309,25 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
                 None,
             )
             if end_time is not None:
-                end_str = datetimeutils.format_time(
+                normalized_datetime = datetimeutils.format_date_time_range(
+                    local_start,
                     local_start.replace(hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0),
                     user_settings)
-                normalized_datetime = f'{start_str} to {end_str}'
             else:
-                normalized_datetime = start_str
+                normalized_datetime = datetimeutils.format_date_time(local_start, user_settings)
 
             open_url = deeplinkutils.class_url(calendar_item)
             attachments_url = ''
         else:
-            format_when = datetimeutils.format_date if calendar_item.all_day else datetimeutils.format_date_time
             occurrence_start, occurrence_end = reminder.occurrence_bounds()
-            start = format_when(timezone.localtime(occurrence_start), user_settings)
-            local_end = timezone.localtime(occurrence_end)
-            if calendar_item.all_day:
-                local_end -= datetime.timedelta(days=1)
-            end = format_when(local_end, user_settings)
-            normalized_datetime = f'{start} to {end}' if calendar_item.show_end_time else start
+            local_start = timezone.localtime(occurrence_start)
+            if calendar_item.show_end_time:
+                normalized_datetime = datetimeutils.format_date_time_range(
+                    local_start, timezone.localtime(occurrence_end), user_settings, all_day=calendar_item.all_day)
+            elif calendar_item.all_day:
+                normalized_datetime = datetimeutils.format_date(local_start, user_settings)
+            else:
+                normalized_datetime = datetimeutils.format_date_time(local_start, user_settings)
             if calendar_item_type == enums.HOMEWORK:
                 open_url = deeplinkutils.assignment_url(calendar_item)
                 attachments_url = deeplinkutils.assignment_url(calendar_item, step='attachments')

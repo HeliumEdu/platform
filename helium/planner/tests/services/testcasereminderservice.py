@@ -1091,7 +1091,7 @@ class TestCaseRecurringEventReminderService(TestCase):
         # THEN
         mock_send_multipart_email.assert_called_once()
         self.assertEqual(mock_send_multipart_email.call_args[0][1]['normalized_datetime'],
-                         'Mon, May 13 at 9:00 AM to Mon, May 13 at 10:00 AM')
+                         'Mon, May 13 at 9:00 AM to 10:00 AM')
 
     @mock.patch('django.utils.timezone.now')
     def test_heal_rearms_a_series_whose_successor_is_missing(self, mock_now):
