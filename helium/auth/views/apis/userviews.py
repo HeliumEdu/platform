@@ -12,7 +12,7 @@ from rest_framework.response import Response
 
 from helium.auth.backends import JWTAuthentication
 from helium.auth.serializers.userserializer import UserSerializer
-from helium.auth.services.tokenservice import issue_session_tokens, revoke_auth_tokens
+from helium.auth.services.tokenservice import issue_session_tokens, revoke_auth_tokens, revoke_oauth_tokens
 from helium.auth.tasks import delete_user
 from helium.common.permissions import IsOwner
 from helium.common.utils import taskutils
@@ -27,6 +27,7 @@ def _reserve_pending_delete(user):
     user.save(update_fields=['deletion_requested_at'])
 
     revoke_auth_tokens(user)
+    revoke_oauth_tokens(user)
 
 
 class UserApiDetailView(HeliumAPIView, RetrieveModelMixin):

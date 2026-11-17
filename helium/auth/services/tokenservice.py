@@ -94,8 +94,8 @@ def revoke_oauth_tokens(user, application=None) -> None:
 
 def revoke_auth_tokens(user) -> None:
     """
-    Revoke the user's long-lived credentials: blacklist every outstanding refresh token, delete the API token, and
-    revoke every OAuth grant.
+    Revoke the user's long-lived credentials: blacklist every outstanding refresh token and delete the API token.
+    Connected apps keep their OAuth grants.
 
     Call this from anything that changes a password or reserves an account for deletion. Short-lived access tokens
     aren't stored, so authentication rejects those instead (password-hash claim, pending-delete check).
@@ -113,5 +113,3 @@ def revoke_auth_tokens(user) -> None:
 
     if deleted:
         logger.info(f'API token revoked for user {user.pk} alongside session revocation')
-
-    revoke_oauth_tokens(user)

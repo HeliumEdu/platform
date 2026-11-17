@@ -696,7 +696,7 @@ class TestCaseOAuthTokenAccess(APITestCase):
                 setattr(self.user, field, original)
                 self.user.save()
 
-    def test_password_change_revokes_grants(self):
+    def test_password_change_keeps_grants(self):
         # GIVEN
         self.given_token()
         get_refresh_token_model().objects.create(user=self.user, application=self.application, token='refresh-1',
@@ -704,14 +704,14 @@ class TestCaseOAuthTokenAccess(APITestCase):
         userhelper.reauthenticate(self.client, self.user)
 
         # WHEN
-        self.client.put(reverse('auth_user_detail'), {'old_password': 'test_pass_1!', 'password': 'new_pass_1!'},
-                        format='json')
+        response = self.client.put(reverse('auth_user_detail'),
+                                   {'old_password': 'test_pass_1!', 'password': 'new_pass_1!'}, format='json')
 
         # THEN
-        self.assertFalse(get_access_token_model().objects.filter(user=self.user).exists())
-        self.assertFalse(get_refresh_token_model().objects.filter(user=self.user).exists())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(get_refresh_token_model().objects.filter(user=self.user).exists())
         self.client.credentials(HTTP_AUTHORIZATION='Bearer opaque-oauth-token')
-        self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(self.client.get(reverse('auth_user_detail')).status_code, status.HTTP_200_OK)
 
     def test_malformed_jwt_keeps_its_error_code(self):
         # GIVEN
