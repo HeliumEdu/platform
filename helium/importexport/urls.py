@@ -11,6 +11,8 @@ urlpatterns = [
          name='importexport_import_ics'),
     path('importexport/export/', ExportResourceView.as_view({'get': 'export_data'}),
          name='importexport_export'),
+    path('importexport/export/ics/', ExportResourceView.as_view({'get': 'export_ics_data'}),
+         name='importexport_export_ics'),
 
     path('importexport/import/exampleschedule/', ImportResourceView.as_view({'post': 'import_exampleschedule'}),
          name='importexport_import_exampleschedule'),

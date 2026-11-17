@@ -8,7 +8,7 @@ from helium.common import enums
 from helium.common.utils import gradeutils
 from helium.planner.models import Course, CourseGroup
 from helium.planner.services import gradingservice
-from helium.planner.tests.helpers import coursegrouphelper, coursehelper
+from helium.planner.tests.helpers import categoryhelper, coursegrouphelper, coursehelper, homeworkhelper
 
 _FOUR_POINT = gradeutils.preset_grade_scale(enums.GRADE_SCALE_4_0)
 _ONE_TO_FIVE_PASS_75 = gradeutils.preset_grade_scale(enums.GRADE_SCALE_1_5_PASS_75)
@@ -329,3 +329,130 @@ class TestCaseGradingServiceGpa(TestCase):
 
         # THEN
         self.assertEqual(grade_scale, [])
+
+    def test_cumulative_gpa_includes_prior_credits(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.prior_credits = Decimal('60')
+        user.settings.prior_gpa = Decimal('3.4')
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        coursehelper.given_graded_course_exists(course_group, 95, credits=3)
+
+        # WHEN
+        grade_data = gradingservice.get_grade_data(user.pk)
+
+        # THEN
+        self.assertEqual(grade_data['cumulative_gpa'], 3.4286)
+
+    def test_cumulative_gpa_is_prior_gpa_when_nothing_is_graded(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.prior_credits = Decimal('60')
+        user.settings.prior_gpa = Decimal('3.4')
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        coursehelper.given_course_exists(course_group, credits=3)
+
+        # WHEN
+        grade_data = gradingservice.get_grade_data(user.pk)
+
+        # THEN
+        self.assertEqual(grade_data['cumulative_gpa'], 3.4)
+
+    def test_no_cumulative_gpa_from_prior_credits_without_a_scaled_group(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.prior_credits = Decimal('60')
+        user.settings.prior_gpa = Decimal('3.4')
+        user.settings.save()
+        course_group = coursegrouphelper.given_course_group_exists(user, grade_scale=[])
+        coursehelper.given_graded_course_exists(course_group, 95, credits=3)
+
+        # WHEN
+        grade_data = gradingservice.get_grade_data(user.pk)
+
+        # THEN
+        self.assertEqual(grade_data['cumulative_gpa'], enums.NO_GRADE)
+
+    def _group_series_gpas(self, user):
+        series = gradingservice.get_grade_data(user.pk)['course_groups'][0]['homework_series']
+        return [item.gpa for item in series if item.graded]
+
+    def test_group_series_gpa_steps_with_each_graded_assignment(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group, credits=3)
+        course2 = coursehelper.given_course_exists(course_group, credits=1)
+        category1 = categoryhelper.given_category_exists(course1)
+        category2 = categoryhelper.given_category_exists(course2)
+        homeworkhelper.given_graded_homework_exists(course1, category1, 95,
+                                                    datetime.datetime(2017, 2, 1, 16, tzinfo=datetime.timezone.utc))
+        homeworkhelper.given_graded_homework_exists(course2, category2, 72,
+                                                    datetime.datetime(2017, 2, 2, 16, tzinfo=datetime.timezone.utc))
+        homeworkhelper.given_graded_homework_exists(course1, category1, 75,
+                                                    datetime.datetime(2017, 2, 3, 16, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        gpas = self._group_series_gpas(user)
+
+        # THEN
+        self.assertEqual(gpas, [4.0, 3.5, 2.75])
+        course_group.refresh_from_db()
+        self.assertEqual(gpas[-1], float(course_group.gpa))
+
+    def test_group_series_gpa_leaves_out_classes_without_credits(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course1 = coursehelper.given_course_exists(course_group, credits=3)
+        course2 = coursehelper.given_course_exists(course_group, credits=0)
+        category1 = categoryhelper.given_category_exists(course1)
+        category2 = categoryhelper.given_category_exists(course2)
+        homeworkhelper.given_graded_homework_exists(course1, category1, 95,
+                                                    datetime.datetime(2017, 2, 1, 16, tzinfo=datetime.timezone.utc))
+        homeworkhelper.given_graded_homework_exists(course2, category2, 72,
+                                                    datetime.datetime(2017, 2, 2, 16, tzinfo=datetime.timezone.utc))
+        homeworkhelper.given_graded_homework_exists(course1, category1, 75,
+                                                    datetime.datetime(2017, 2, 3, 16, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        gpas = self._group_series_gpas(user)
+
+        # THEN
+        self.assertEqual(gpas, [4.0, 4.0, 3.0])
+
+    def test_group_series_has_no_gpa_without_a_grade_scale(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user, grade_scale=[])
+        course = coursehelper.given_course_exists(course_group, credits=3)
+        category = categoryhelper.given_category_exists(course)
+        homeworkhelper.given_graded_homework_exists(course, category, 95,
+                                                    datetime.datetime(2017, 2, 1, 16, tzinfo=datetime.timezone.utc))
+        homeworkhelper.given_graded_homework_exists(course, category, 75,
+                                                    datetime.datetime(2017, 2, 2, 16, tzinfo=datetime.timezone.utc))
+
+        # WHEN
+        gpas = self._group_series_gpas(user)
+
+        # THEN
+        self.assertEqual(gpas, [enums.NO_GRADE, enums.NO_GRADE])
+
+    def test_group_series_gpa_is_null_on_ungraded_assignments_and_class_series(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group, credits=3)
+        category = categoryhelper.given_category_exists(course)
+        homeworkhelper.given_graded_homework_exists(course, category, 95,
+                                                    datetime.datetime(2017, 2, 1, 16, tzinfo=datetime.timezone.utc))
+        homeworkhelper.given_homework_exists(course, category=category)
+
+        # WHEN
+        course_group_data = gradingservice.get_grade_data(user.pk)['course_groups'][0]
+
+        # THEN
+        self.assertEqual([item.gpa for item in course_group_data['homework_series'] if not item.graded], [None])
+        self.assertEqual({item.gpa for item in course_group_data['courses'][0]['homework_series']}, {None})

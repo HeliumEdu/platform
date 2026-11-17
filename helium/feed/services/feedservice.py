@@ -72,6 +72,12 @@ def get_courseschedules_last_modified(user) -> datetime.datetime | None:
     return max(timestamps) if timestamps else None
 
 
+def get_all_last_modified(user) -> datetime.datetime | None:
+    timestamps = [timestamp for timestamp in (get_events_last_modified(user), get_homework_last_modified(user),
+                                              get_courseschedules_last_modified(user)) if timestamp is not None]
+    return max(timestamps) if timestamps else None
+
+
 def generate_etag(user_id: int, last_modified: datetime.datetime | None) -> str:
     """
     Generate an ETag from user ID, timestamp and Feeds version. A change can alter what a Feed contains without
@@ -224,6 +230,10 @@ def events_feed(user):
     :param user: The user whose Feed it is.
     :return: The Feed, as iCalendar text.
     """
+    return _events_calendar(user).to_ical()
+
+
+def _events_calendar(user):
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
@@ -242,7 +252,7 @@ def events_feed(user):
 
             calendar.add_component(calendar_event)
 
-        return calendar.to_ical()
+        return calendar
     finally:
         timezone.deactivate()
 
@@ -254,6 +264,10 @@ def homework_feed(user):
     :param user: The user whose Feed it is.
     :return: The Feed, as iCalendar text.
     """
+    return _homework_calendar(user).to_ical()
+
+
+def _homework_calendar(user):
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
@@ -275,7 +289,7 @@ def homework_feed(user):
 
             calendar.add_component(calendar_event)
 
-        return calendar.to_ical()
+        return calendar
     finally:
         timezone.deactivate()
 
@@ -290,6 +304,10 @@ def courseschedules_feed(user):
     :param user: The user whose Feed it is.
     :return: The Feed, as iCalendar text.
     """
+    return _courseschedules_calendar(user).to_ical()
+
+
+def _courseschedules_calendar(user):
     calendar = _create_calendar(f"{settings.PROJECT_NAME} Class Schedules")
 
     courses_shown = Course.objects.for_user(user.pk).filter(course_group__shown_on_calendar=True)
@@ -319,6 +337,25 @@ def courseschedules_feed(user):
 
                 calendar.add_component(calendar_event)
 
-        return calendar.to_ical()
+        return calendar
     finally:
         timezone.deactivate()
+
+
+def all_feed(user):
+    """
+    Generate the Helium Feed for the given user: the entries of the Assignments, Class Schedules and Events
+    Feeds in one calendar. Each entry's ``UID`` gains its Feed's name, since an event and an assignment can share
+    a pk.
+
+    :param user: The user whose Feed it is.
+    :return: The Feed, as iCalendar text.
+    """
+    calendar = _create_calendar(settings.PROJECT_NAME)
+    for feed_name, feed_calendar in (('events', _events_calendar(user)), ('homework', _homework_calendar(user)),
+                                     ('courseschedules', _courseschedules_calendar(user))):
+        for component in feed_calendar.subcomponents:
+            component['UID'] = f"{component['UID']}-{feed_name}"
+            calendar.add_component(component)
+
+    return calendar.to_ical()

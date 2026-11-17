@@ -112,9 +112,9 @@ class EventsFeedView(FeedView):
         the response is plain iCalendar text, not JSON.
 
         Feeds are opt-in. A user's `private_slug` (on their settings) is `null` while Feeds are
-        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the three Feeds
-        (Assignments, Class Schedules and Events). `PUT /feed/private/disable/` clears the slug and immediately
-        invalidates all existing Feed URLs.
+        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the Feeds
+        (Assignments, Class Schedules and Events, plus the Helium Feed with all three in one calendar).
+        `PUT /feed/private/disable/` clears the slug and immediately invalidates all existing Feed URLs.
 
         A `Content-Disposition: attachment; filename=Helium_events.ics` header is set so that
         browser-initiated requests download the Feed as a file.
@@ -152,9 +152,9 @@ class HomeworkFeedView(FeedView):
         the response is plain iCalendar text, not JSON.
 
         Feeds are opt-in. A user's `private_slug` (on their settings) is `null` while Feeds are
-        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the three Feeds
-        (Assignments, Class Schedules and Events). `PUT /feed/private/disable/` clears the slug and immediately
-        invalidates all existing Feed URLs.
+        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the Feeds
+        (Assignments, Class Schedules and Events, plus the Helium Feed with all three in one calendar).
+        `PUT /feed/private/disable/` clears the slug and immediately invalidates all existing Feed URLs.
 
         A `Content-Disposition: attachment; filename=Helium_homework.ics` header is set so that
         browser-initiated requests download the Feed as a file.
@@ -191,11 +191,51 @@ class CourseSchedulesFeedView(FeedView):
         Calendar, etc.) — the response is plain iCalendar text, not JSON.
 
         Feeds are opt-in. A user's `private_slug` (on their settings) is `null` while Feeds are
-        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the three Feeds
-        (Assignments, Class Schedules and Events). `PUT /feed/private/disable/` clears the slug and immediately
-        invalidates all existing Feed URLs.
+        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the Feeds
+        (Assignments, Class Schedules and Events, plus the Helium Feed with all three in one calendar).
+        `PUT /feed/private/disable/` clears the slug and immediately invalidates all existing Feed URLs.
 
         A `Content-Disposition: attachment; filename=Helium_coursescheduleevents.ics` header is
         set so that browser-initiated requests download the Feed as a file.
+        """
+        return self.serve_feed(request)
+
+
+@extend_schema(
+    tags=['feed.private']
+)
+class AllFeedView(FeedView):
+    filename = 'Helium_all.ics'
+
+    def get_last_modified(self, user):
+        return feedservice.get_all_last_modified(user)
+
+    def build_feed(self, user):
+        return feedservice.all_feed(user)
+
+    @extend_schema(
+        operation_id='feed_private_all_ical',
+        summary='Download the Helium Feed',
+        responses={
+            (200, 'text/calendar'): OpenApiResponse(
+                response=OpenApiTypes.STR,
+                description='The user\'s Helium Feed, in iCalendar format.'
+            )
+        }
+    )
+    def get(self, request, private_slug):
+        """
+        Return the Helium Feed (`text/calendar`) for the given private slug: the entries of the Assignments,
+        Class Schedules and Events Feeds in one calendar.
+        Intended for subscription in calendar applications (Google Calendar, Apple Calendar, etc.) —
+        the response is plain iCalendar text, not JSON.
+
+        Feeds are opt-in. A user's `private_slug` (on their settings) is `null` while Feeds are
+        disabled; calling `PUT /feed/private/enable/` generates a new slug and returns the URLs of the Feeds
+        (Assignments, Class Schedules and Events, plus the Helium Feed with all three in one calendar).
+        `PUT /feed/private/disable/` clears the slug and immediately invalidates all existing Feed URLs.
+
+        A `Content-Disposition: attachment; filename=Helium_all.ics` header is set so that
+        browser-initiated requests download the Feed as a file.
         """
         return self.serve_feed(request)

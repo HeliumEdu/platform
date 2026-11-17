@@ -4,6 +4,7 @@ import json
 import zipfile
 from unittest import mock
 
+import icalendar
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
@@ -31,7 +32,8 @@ class TestCaseImportExportViews(APITestCase):
         # WHEN
         responses = [
             self.client.get(reverse('importexport_import')),
-            self.client.post(reverse('importexport_export'))
+            self.client.post(reverse('importexport_export')),
+            self.client.get(reverse('importexport_export_ics')),
         ]
 
         # THEN
@@ -440,6 +442,61 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(data['categories'][1]['num_homework'], 1)
         self.assertEqual(data['categories'][1]['num_homework_completed'], 0)
         self.assertEqual(data['categories'][1]['num_homework_graded'], 0)
+
+    def test_export_ics_holds_every_calendar(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        homeworkhelper.given_homework_exists(course, title='📝 Exported Homework')
+        eventhelper.given_event_exists(user, title='🎉 Exported Event')
+        eventhelper.given_event_exists(user2, title='🙈 Other User Event')
+
+        # WHEN
+        response = self.client.get(reverse('importexport_export_ics'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'text/calendar; charset=utf-8')
+        self.assertRegex(response['Content-Disposition'], r'^attachment; filename=Helium_user_all_\d{4}-\d{2}-\d{2}\.ics$')
+        calendar = icalendar.Calendar.from_ical(response.content)
+        self.assertEqual(str(calendar['X-WR-CALNAME']), 'Helium')
+        summaries = [str(component['SUMMARY']) for component in calendar.walk('VEVENT')]
+        self.assertIn('📝 Exported Homework', summaries)
+        self.assertIn('🎉 Exported Event', summaries)
+        self.assertIn(course.title, summaries)
+        self.assertNotIn('🙈 Other User Event', summaries)
+
+    def test_export_ics_of_one_calendar(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homeworkhelper.given_homework_exists(course, title='📝 Exported Homework')
+        eventhelper.given_event_exists(user, title='🎉 Exported Event')
+
+        # WHEN
+        response = self.client.get(reverse('importexport_export_ics') + '?calendar=homework')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('_homework_', response['Content-Disposition'])
+        calendar = icalendar.Calendar.from_ical(response.content)
+        self.assertEqual([str(component['SUMMARY']) for component in calendar.walk('VEVENT')],
+                         ['📝 Exported Homework'])
+
+    def test_export_ics_of_unknown_calendar_fails(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.get(reverse('importexport_export_ics') + '?calendar=grades')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('calendar', response.data)
 
     def test_export_import_preserves_event_recurrence(self):
         # GIVEN

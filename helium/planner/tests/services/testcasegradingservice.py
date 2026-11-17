@@ -532,42 +532,42 @@ class TestCaseGradingService(TestCase):
                          {'id': homework1_1_1.pk, 'title': homework1_1_1.title, 'start': homework1_1_1.start,
                           'category_id': category1_1.pk, 'course_id': course1.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 41.6667, 'cumulative_grade': 41.6667,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': -1})
         self.assertEqual(asdict(graded[1]),
                          {'id': homework6_2_1.pk, 'title': homework6_2_1.title, 'start': homework6_2_1.start,
                           'category_id': category2_1.pk, 'course_id': course2.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 41.6667, 'cumulative_grade': 41.6667,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': -1})
         self.assertEqual(asdict(graded[2]),
                          {'id': homework7_2_2.pk, 'title': homework7_2_2.title, 'start': homework7_2_2.start,
                           'category_id': category2_2.pk, 'course_id': course2.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 93.75, 'cumulative_grade': 59.8958,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': -1})
         self.assertEqual(asdict(graded[3]),
                          {'id': homework2_1_2.pk, 'title': homework2_1_2.title, 'start': homework2_1_2.start,
                           'category_id': category1_2.pk, 'course_id': course1.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 93.75, 'cumulative_grade': 76.1719,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': -1})
         self.assertEqual(asdict(graded[4]),
                          {'id': homework8_2_1.pk, 'title': homework8_2_1.title, 'start': homework8_2_1.start,
                           'category_id': category2_1.pk, 'course_id': course2.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 41.6667, 'cumulative_grade': 76.1719,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': -1})
         self.assertEqual(asdict(graded[5]),
                          {'id': homework3_1_3.pk, 'title': homework3_1_3.title, 'start': homework3_1_3.start,
                           'category_id': category1_3.pk, 'course_id': course1.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 41.6667, 'cumulative_grade': 72.9167,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': -1})
         self.assertEqual(asdict(graded[6]),
                          {'id': homework4_1_1.pk, 'title': homework4_1_1.title, 'start': homework4_1_1.start,
                           'category_id': category1_1.pk, 'course_id': course1.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 75, 'cumulative_grade': 75.7738,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': -1})
         self.assertEqual(asdict(graded[7]),
                          {'id': homework5_1_3.pk, 'title': homework5_1_3.title, 'start': homework5_1_3.start,
                           'category_id': category1_3.pk, 'course_id': course1.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 84.6154, 'cumulative_grade': 78.0071,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': -1})
 
         # Final graded item should also equal the overall calculated grade
         self.assertEqual(graded[7].cumulative_grade, float(course_group.overall_grade))
@@ -617,31 +617,31 @@ class TestCaseGradingService(TestCase):
                          {'id': homework1.pk, 'title': homework1.title, 'start': homework1.start,
                           'category_id': category1.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 25, 'cumulative_grade': 25,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # (25 + 75) / 2
         self.assertEqual(asdict(graded[1]),
                          {'id': homework2.pk, 'title': homework2.title, 'start': homework2.start,
                           'category_id': category2.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 75, 'cumulative_grade': 50,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # (25 + 75 + 50) / 3
         self.assertEqual(asdict(graded[2]),
                          {'id': homework3.pk, 'title': homework3.title, 'start': homework3.start,
                           'category_id': category3.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 50, 'cumulative_grade': 50,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # (25 + 75 + 50 + (60/80)) / 4
         self.assertEqual(asdict(graded[3]),
                          {'id': homework4.pk, 'title': homework4.title, 'start': homework4.start,
                           'category_id': category1.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 75, 'cumulative_grade': 55.2632,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # (25 + 75 + 50 + (60/80) + (4/5)) / 5
         self.assertEqual(asdict(graded[4]),
                          {'id': homework5.pk, 'title': homework5.title, 'start': homework5.start,
                           'category_id': category3.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 80, 'cumulative_grade': 55.5844,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
 
         # Final graded item should also equal the overall calculated grade
         self.assertEqual(graded[4].cumulative_grade, float(course.current_grade))
@@ -683,19 +683,19 @@ class TestCaseGradingService(TestCase):
                          {'id': homework1.pk, 'title': homework1.title, 'start': homework1.start,
                           'category_id': category1.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 80, 'cumulative_grade': 80,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # ((80 * 30) + (90 * 50)) / 80
         self.assertEqual(asdict(graded[1]),
                          {'id': homework2.pk, 'title': homework2.title, 'start': homework2.start,
                           'category_id': category2.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 90, 'cumulative_grade': 86.25,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # ((80 * 30) + (90 * 50) + (72 * 20)) / 100
         self.assertEqual(asdict(graded[2]),
                          {'id': homework3.pk, 'title': homework3.title, 'start': homework3.start,
                           'category_id': category3.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 72, 'cumulative_grade': 83.4,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
 
         # Final graded item should also equal the overall calculated grade
         self.assertEqual(graded[2].cumulative_grade, float(course.current_grade))
@@ -746,31 +746,31 @@ class TestCaseGradingService(TestCase):
                          {'id': homework1.pk, 'title': homework1.title, 'start': homework1.start,
                           'category_id': category1.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 25, 'cumulative_grade': 25,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # ((25 * 30) + (75 * 50)) / 80
         self.assertEqual(asdict(graded[1]),
                          {'id': homework2.pk, 'title': homework2.title, 'start': homework2.start,
                           'category_id': category2.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 75, 'cumulative_grade': 56.25,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # ((25 * 30) + (75 * 50) + (50 * 20)) / 100
         self.assertEqual(asdict(graded[2]),
                          {'id': homework3.pk, 'title': homework3.title, 'start': homework3.start,
                           'category_id': category3.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 50, 'cumulative_grade': 55,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # ((85/180 * 30) + (75/100 * 50) + (50/100 * 20)) / 100
         self.assertEqual(asdict(graded[3]),
                          {'id': homework4.pk, 'title': homework4.title, 'start': homework4.start,
                           'category_id': category1.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 75, 'cumulative_grade': 61.6667,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # ((85/180 * 30) + (75/100 * 50) + (54/105 * 20)) / 100
         self.assertEqual(asdict(graded[4]),
                          {'id': homework5.pk, 'title': homework5.title, 'start': homework5.start,
                           'category_id': category3.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 80, 'cumulative_grade': 61.9524,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
 
         # Final graded item should also equal the overall calculated grade
         self.assertEqual(graded[4].cumulative_grade, float(course.current_grade))
@@ -807,13 +807,13 @@ class TestCaseGradingService(TestCase):
                          {'id': homework1.pk, 'title': homework1.title, 'start': homework1.start,
                           'category_id': category1.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 80, 'cumulative_grade': 80,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
         # ((80 * 30) + (90 * 50)) / 80
         self.assertEqual(asdict(graded[1]),
                          {'id': homework2.pk, 'title': homework2.title, 'start': homework2.start,
                           'category_id': category2.pk, 'course_id': course.pk, 'points_possible': None,
                           'graded': True, 'homework_grade': 90, 'cumulative_grade': 86.25,
-                          'impact_score': None})
+                          'impact_score': None, 'gpa': None})
 
         # Final graded item should also equal the overall calculated grade
         self.assertEqual(graded[1].cumulative_grade, float(course.current_grade))

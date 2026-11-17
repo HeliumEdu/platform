@@ -19,6 +19,11 @@ class HomeworkSeriesItemSerializer(serializers.Serializer):
     homework_grade = serializers.FloatField(allow_null=True)
     cumulative_grade = serializers.FloatField(allow_null=True)
     impact_score = serializers.FloatField(allow_null=True)
+    gpa = serializers.FloatField(
+        allow_null=True,
+        help_text='In a group\'s series, the group\'s `gpa` as of this graded assignment, or `-1` when no class with '
+                  'credits is graded yet or the group has no grade scale. Null on ungraded assignments, and in class '
+                  'and category series.')
 
 
 class GradeHolderSerializer(serializers.Serializer):
@@ -84,7 +89,9 @@ class GradeSerializer(serializers.Serializer):
     cumulative_gpa = serializers.DecimalField(
         7, 4, coerce_to_string=False,
         help_text='The credit-weighted GPA across every group outside the example schedule on the same grade scale '
-                  'as the most recent group with one, or `-1` when no such group has a graded class with credits.')
+                  'as the most recent group with one, plus the user\'s `prior_credits` at `prior_gpa` from their '
+                  'settings, or `-1` when no such group exists, or none has a graded class with credits and there are '
+                  'no prior credits.')
 
 
 class NeededGradeTargetSerializer(serializers.Serializer):

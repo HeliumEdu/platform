@@ -1,7 +1,7 @@
 import uuid
 
 from django.conf import settings
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from helium.common import enums
@@ -97,6 +97,16 @@ class UserSettings(BaseModel):
     on_track_tolerance = models.PositiveIntegerField(
         help_text='The percentage tolerance within which a course grade is considered on track.',
         default=10, validators=[MaxValueValidator(100)])
+
+    prior_credits = models.DecimalField(
+        help_text='Credits earned before the user\'s terms in Helium. They count toward `cumulative_gpa` in the '
+                  'grades API, at `prior_gpa`, once a term outside the example schedule has a grade scale.',
+        max_digits=5, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+
+    prior_gpa = models.DecimalField(
+        help_text='The GPA earned over `prior_credits`, on the same grade scale as `cumulative_gpa`. Required when '
+                  '`prior_credits` is above 0.',
+        max_digits=7, decimal_places=4, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     show_week_numbers = models.BooleanField(
         help_text='Whether week numbers should be shown on the calendar.',
