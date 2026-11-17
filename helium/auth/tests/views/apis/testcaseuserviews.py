@@ -4,11 +4,12 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
+from oauth2_provider.models import get_access_token_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from helium.auth.models import UserSettings
-from helium.auth.tests.helpers import userhelper
+from helium.auth.tests.helpers import oauthhelper, userhelper
 from helium.common.tests.helpers import commonhelper
 from helium.importexport.tests.helpers import exampleschedulehelper
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, homeworkhelper
@@ -141,7 +142,6 @@ class TestCaseUserViews(APITestCase):
         user.refresh_from_db()
         self.assertEqual(user.email, 'new@email.com')
         self.assertIsNone(user.email_changing)
-        # Verify auth tokens are returned
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
 
@@ -334,6 +334,21 @@ class TestCaseUserViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(get_user_model().objects.filter(pk=user.pk).exists())
         self.assertFalse(UserSettings.objects.filter(user_id=user.pk).exists())
+
+    @mock.patch('helium.auth.views.apis.userviews.taskutils.safe_apply_async')
+    def test_delete_user_revokes_connected_apps(self, mock_safe_apply_async):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        oauthhelper.given_oauth_token_exists(user, oauthhelper.given_oauth_application_exists())
+
+        # WHEN
+        response = self.client.delete(reverse('auth_user_resource_delete'), json.dumps({'password': 'test_pass_1!'}),
+                                      content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertTrue(get_user_model().objects.filter(pk=user.pk).exists())
+        self.assertFalse(get_access_token_model().objects.filter(user=user).exists())
 
     def test_delete_fails_bad_request(self):
         # GIVEN

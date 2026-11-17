@@ -139,7 +139,7 @@ def verify_email(request):
     Process the code for the given user, verifying their email address and marking them as active (if not already).
 
     :param request: the request being processed
-    :return: a 202 Response upon success, with user data and auth tokens
+    :return: a 202 Response upon success, with user data and session tokens
     """
     UserModel = get_user_model()
 
@@ -179,7 +179,7 @@ def verify_email(request):
 
             metricutils.increment('action.user.email-changed', request=request, user=user)
 
-        # Verification hands back auth tokens, so it is the user's first login
+        # Verification hands back session tokens, so it is the user's first login
         update_last_login(None, user)
 
         return Response(issue_session_tokens(user), status=status.HTTP_202_ACCEPTED)
