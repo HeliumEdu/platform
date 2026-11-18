@@ -26,9 +26,9 @@ class OAuthLoginView(ViewSet, HeliumAPIView):
         """
         Authenticate or create a user via OAuth Sign-In using a Firebase ID token.
 
-        Supports Google and Apple Sign-In. If the user's email already exists in the system,
-        they will be logged in. If not, a new account will be created with is_active=True
-        (no email verification needed).
+        If the user's email already exists in the system, they will be logged in, unless the provider hasn't
+        verified the email and that account isn't already linked to this Firebase user. If the email doesn't
+        exist, a new account will be created with is_active=True (no email verification needed).
         """
         response = authservice.oauth_login(request)
 

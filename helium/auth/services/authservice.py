@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from firebase_admin import auth as firebase_auth
+from firebase_admin.exceptions import FirebaseError
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, NotFound, AuthenticationFailed
 from rest_framework.response import Response
@@ -32,6 +33,9 @@ from helium.importexport.tasks import import_example_schedule
 from helium.planner.models import Course
 
 logger = logging.getLogger(__name__)
+
+_FIREBASE_SIGN_IN_PROVIDERS = {f'{provider}.com': provider for provider, _ in UserOAuthProvider.PROVIDER_CHOICES}
+
 
 def forgot_password(request):
     """
@@ -299,11 +303,16 @@ def oauth_login(request):
         email = decoded_token.get('email')
         email_verified = decoded_token.get('email_verified', False)
 
+        sign_in_provider = decoded_token.get('firebase', {}).get('sign_in_provider')
+        if _FIREBASE_SIGN_IN_PROVIDERS.get(sign_in_provider) != provider:
+            logger.warning(f'{provider_name} Sign-In token was issued for sign-in provider {sign_in_provider}')
+            raise AuthenticationFailed(f'Invalid {provider_name} Sign-In token')
+
         if not email:
             raise AuthenticationFailed(f"Email not provided by {provider_name} account")
 
         # Microsoft does not set email_verified for external (non-Microsoft) email
-        # addresses in personal accounts; OAuth authentication is sufficient.
+        # addresses in personal accounts, so such an email only signs in to an existing account already linked to it.
         if not email_verified and provider != 'microsoft':
             raise AuthenticationFailed(f"Email not verified by {provider_name}")
 
@@ -338,6 +347,13 @@ def oauth_login(request):
                 f'{provider_name} Sign-In failed due to an account conflict. '
                 f'Please contact support for assistance.'
             )
+
+        if (not email_verified and user and not existing_oauth
+                and not user.oauth_providers.filter(provider_user_id=provider_uid).exists()):
+            logger.info(f'{provider_name} Sign-In refused: unverified email matches user {user.id}, '
+                        f'which has no link to this Firebase user')
+            raise ValidationError('That email is already registered with a different sign-in method. '
+                                  'Sign in that way instead.')
 
         is_new_user = False
         if existing_oauth:
@@ -417,6 +433,8 @@ def oauth_login(request):
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
 
+        _sync_oauth_providers(user, provider_uid)
+
         update_last_login(None, user)
         if not is_new_user:
             mark_user_active(user)
@@ -441,6 +459,32 @@ def oauth_login(request):
     except Exception as e:
         logger.error(f'{provider_name} Sign-In error: {str(e)}', exc_info=True)
         raise AuthenticationFailed(f'{provider_name} Sign-In authentication failed')
+
+
+def _sync_oauth_providers(user, firebase_uid):
+    try:
+        firebase_user = firebase_auth.get_user(firebase_uid)
+    except FirebaseError as e:
+        logger.warning(f'OAuth providers for user {user.id} not synced, Firebase lookup failed: {type(e).__name__}')
+        return
+
+    firebase_providers = {_FIREBASE_SIGN_IN_PROVIDERS[info.provider_id] for info in firebase_user.provider_data
+                          if info.provider_id in _FIREBASE_SIGN_IN_PROVIDERS}
+    linked_providers = set(user.oauth_providers.values_list('provider', flat=True))
+
+    removed_providers = linked_providers - firebase_providers
+    if removed_providers:
+        user.oauth_providers.filter(provider__in=removed_providers).delete()
+        logger.info(f'Unlinked {", ".join(provider.capitalize() for provider in sorted(removed_providers))} OAuth '
+                    f'providers from user {user.id}, no longer in Firebase')
+
+    for provider in firebase_providers - linked_providers:
+        if UserOAuthProvider.objects.filter(provider=provider, provider_user_id=firebase_uid).exists():
+            logger.warning(f'{provider.capitalize()} OAuth provider not linked to user {user.id} from Firebase, '
+                           f'already linked to another user')
+            continue
+        UserOAuthProvider.objects.create(user=user, provider=provider, provider_user_id=firebase_uid)
+        logger.info(f'Linked {provider.capitalize()} OAuth provider to user {user.id} from Firebase')
 
 
 def delete_example_schedule(user_id):
