@@ -84,8 +84,8 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             if not api_settings.USER_AUTHENTICATION_RULE(user):
                 raise PermissionDenied(
                     detail={
-                        'detail': 'Sorry, your account is not active. Check your inbox to see if you received a '
-                                  'verification email after registering with us.',
+                        'detail': "Your account isn't active yet. Check your inbox for the verification email we "
+                                  'sent when you registered.',
                         'code': 'account_inactive',
                         'email': identifier,
                     }
@@ -94,7 +94,7 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             try:
                 token = self.get_token(user)
             except IntegrityError:
-                raise PermissionDenied('Sorry, the given token is no longer valid. Request a new one.')
+                raise PermissionDenied('That token is no longer valid. Request a new one.')
 
             attrs["access"] = str(token.access_token)
             attrs["refresh"] = str(token)
@@ -135,10 +135,9 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
                     )
             ):
                 if not api_settings.USER_AUTHENTICATION_RULE(user):
-                    raise PermissionDenied('Sorry, your account is no longer active.')
+                    raise PermissionDenied('Your account is no longer active.')
         except UserModel.DoesNotExist:
-            raise PermissionDenied(
-                'Sorry, the given token does have permissions for the given account, or the account is inactive.')
+            raise PermissionDenied("That token doesn't have access to this account, or the account is inactive.")
 
         if user:
             if api_settings.CHECK_REVOKE_TOKEN and user.has_usable_password():

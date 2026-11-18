@@ -21,7 +21,7 @@ from helium.common.utils import taskutils
 
 logger = logging.getLogger(__name__)
 
-EMAIL_IN_USE_MESSAGE = "Sorry, that email is already in use. Try signing in instead."
+EMAIL_IN_USE_MESSAGE = "That email is already in use. Try signing in instead."
 
 REGISTRATION_RETRY_MESSAGE = "Please wait a moment and try again."
 

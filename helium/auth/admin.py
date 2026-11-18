@@ -62,7 +62,7 @@ class AdminUserChangeForm(UserChangeForm):
         if self.instance and email != self.instance.email:
             # Check uniqueness against both email and email_changing fields
             if UserModel.objects.email_used(self.instance.pk, email):
-                raise forms.ValidationError("Sorry, that email is already in use.")
+                raise forms.ValidationError("That email is already in use.")
             if self.instance.is_superuser:
                 if not is_admin_allowed_email(email):
                     raise forms.ValidationError(admin_allowed_email_error())
