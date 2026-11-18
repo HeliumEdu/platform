@@ -145,7 +145,7 @@ class TestCaseAuthenticationViews(TestCase):
         response2 = self.client.post(reverse('auth_token_obtain'),
                                      json.dumps({'email': 'test@test.com', 'password': 'test_pass_1!'}),
                                      content_type='application/json')
-        self.assertContains(response2, 'account is not active', status_code=status.HTTP_403_FORBIDDEN)
+        self.assertContains(response2, "account isn't active yet", status_code=status.HTTP_403_FORBIDDEN)
         user = get_user_model().objects.get(email='test@test.com')
         self.assertFalse(user.is_active)
         self.assertEqual(user.username, 'test')

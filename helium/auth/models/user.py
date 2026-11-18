@@ -22,10 +22,10 @@ class User(AbstractBaseUser, BaseModel):
                                                                       '30 characters consisting of letters, numbers, '
                                                                       'or these symbols: +-_.',
                                                                       'invalid'), ],
-                                error_messages={'unique': "Sorry, that username is already in use."})
+                                error_messages={'unique': "That username is already in use."})
 
     email = models.EmailField(help_text='A unique and valid email address.',
-                              unique=True, error_messages={'unique': "Sorry, that email is already in use."})
+                              unique=True, error_messages={'unique': "That email is already in use."})
 
     email_changing = models.EmailField(blank=True, null=True)
 
