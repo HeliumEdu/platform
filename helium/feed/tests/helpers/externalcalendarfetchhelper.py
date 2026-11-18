@@ -7,7 +7,8 @@ from rest_framework import status
 
 def given_urlopen_mock_from_file(filename, mock_urlopen, status_code=status.HTTP_200_OK,
                                   etag=None, last_modified=None):
-    data = open(os.path.join(os.path.dirname(__file__), '..', filename), 'r').read()
+    with open(os.path.join(os.path.dirname(__file__), '..', filename), 'r') as f:
+        data = f.read()
 
     magic_mock = mock.MagicMock()
     magic_mock.getcode.return_value = status_code

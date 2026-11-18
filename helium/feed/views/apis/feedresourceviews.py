@@ -37,7 +37,8 @@ class FeedsEnableView(GenericViewSet, HeliumAPIView):
             'events_private_url': reverse('feed_events', kwargs={'private_slug': user.settings.private_slug}),
             'homework_private_url': reverse('feed_homework', kwargs={'private_slug': user.settings.private_slug}),
             'courseschedules_private_url': reverse('feed_courseschedules',
-                                                   kwargs={'private_slug': user.settings.private_slug})
+                                                   kwargs={'private_slug': user.settings.private_slug}),
+            'all_private_url': reverse('feed_all', kwargs={'private_slug': user.settings.private_slug}),
         })
 
         return Response(serializer.data)

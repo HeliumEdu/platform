@@ -5,7 +5,7 @@ from helium.feed.views.apis.externalcalendaraseventsviews import ExternalCalenda
 from helium.feed.views.apis.externalcalendarviews import ExternalCalendarsApiListView, ExternalCalendarsApiDetailView
 from helium.feed.views.apis.feedresourceviews import FeedsEnableView, FeedsDisableView
 from helium.feed.views.feedviews import EventsFeedView, HomeworkFeedView, \
-    CourseSchedulesFeedView
+    CourseSchedulesFeedView, AllFeedView
 
 urlpatterns = [
     ##############################
@@ -17,6 +17,8 @@ urlpatterns = [
          name='feed_homework'),
     path('feed/private/<str:private_slug>/courseschedules.ics', CourseSchedulesFeedView.as_view(),
          name='feed_courseschedules'),
+    path('feed/private/<str:private_slug>/all.ics', AllFeedView.as_view(),
+         name='feed_all'),
 
     ##############################
     # Authenticated URLs

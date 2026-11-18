@@ -34,6 +34,11 @@ def given_homework_exists(course, title='💻 Test Homework', all_day=False, sho
     return homework
 
 
+def given_graded_homework_exists(course, category, grade, start):
+    return given_homework_exists(course, category=category, completed=True, current_grade=f'{grade}/100',
+                                 start=start, end=start + datetime.timedelta(hours=1))
+
+
 def given_weekly_homework_exists(course, start=None, duration=datetime.timedelta(hours=1),
                                  recurrence_rule='FREQ=WEEKLY;BYDAY=MO', **kwargs):
     start = start or datetime.datetime(2030, 4, 1, 9, 0,

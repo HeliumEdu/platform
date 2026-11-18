@@ -32,7 +32,7 @@ class GradesApiResourceView(HeliumAPIView):
 
         `homework_series` is a chronologically sorted list of homework items. Each item is a dict with fields:
         `id`, `title`, `start`, `category_id`, `course_id`, `points_possible`, `graded`, `homework_grade`,
-        `cumulative_grade`, and `impact_score`. Items with `graded: true` represent completed graded homework;
+        `cumulative_grade`, `impact_score`, and `gpa`. Items with `graded: true` represent completed graded homework;
         items with `graded: false` represent pending homework with a projected `impact_score`.
         """
         grade_data = gradingservice.get_grade_data(request.user.pk)

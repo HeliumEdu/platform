@@ -73,7 +73,7 @@ class Reminder(BaseModel):
         ]
         constraints = [
             models.CheckConstraint(
-                check=(
+                condition=(
                     Q(homework__isnull=False, event__isnull=True, course__isnull=True) |
                     Q(homework__isnull=True, event__isnull=False, course__isnull=True) |
                     Q(homework__isnull=True, event__isnull=True, course__isnull=False)
@@ -85,11 +85,11 @@ class Reminder(BaseModel):
                 name='reminder_one_active_per_course_series',
             ),
             models.CheckConstraint(
-                check=Q(dismissed=False) | Q(sent=True),
+                condition=Q(dismissed=False) | Q(sent=True),
                 name='reminder_dismissed_requires_sent',
             ),
             models.CheckConstraint(
-                check=Q(course__isnull=False) | Q(start_of_range__isnull=False),
+                condition=Q(course__isnull=False) | Q(start_of_range__isnull=False),
                 name='reminder_start_of_range_required_for_non_course',
             ),
         ]

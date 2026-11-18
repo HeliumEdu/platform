@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
+from helium.planner.models import Event
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, categoryhelper, \
     homeworkhelper, eventhelper, notehelper, resourcegrouphelper, resourcehelper
 
@@ -41,6 +42,103 @@ class TestCaseFeedViews(TestCase):
         self.assertEqual(calendar.subcomponents[1]['DTEND'].dt, event2.end)
         self.assertEqual(calendar.subcomponents[1]['DESCRIPTION'],
                          f'\U0001F517 Open in Helium: {settings.PROJECT_APP_HOST}/planner/event/{event2.pk}/details')
+
+    def test_all_feed_is_the_union_of_the_other_feeds(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
+        user2.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        courseschedulehelper.given_course_schedule_exists(course)
+        homeworkhelper.given_homework_exists(course)
+        eventhelper.given_event_exists(user)
+        eventhelper.given_event_exists(user2)
+
+        # WHEN
+        response = self.client.get(reverse("feed_all", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
+        self.assertEqual(str(calendar['X-WR-CALNAME']), 'Helium')
+        expected = []
+        for feed_name in ("events", "homework", "courseschedules"):
+            feed = icalendar.Calendar.from_ical(self.client.get(
+                reverse(f"feed_{feed_name}", kwargs={"private_slug": user.settings.private_slug})).content.decode(
+                'utf-8'))
+            expected.extend((f"{component['UID']}-{feed_name}", str(component['DESCRIPTION']),
+                             int(component['SEQUENCE'])) for component in feed.walk('VEVENT'))
+        entries = [(str(component['UID']), str(component['DESCRIPTION']), int(component['SEQUENCE']))
+                   for component in calendar.walk('VEVENT')]
+        self.assertEqual(entries, expected)
+        self.assertEqual(len({uid for uid, _, _ in entries}), len(entries),
+                         'an event and an assignment sharing a pk should keep distinct UIDs')
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename=Helium_all.ics')
+
+    def test_all_feed_keeps_an_event_and_an_assignment_with_the_same_pk(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+        event = eventhelper.given_event_exists(user)
+        Event.objects.filter(pk=event.pk).update(id=homework.pk)
+
+        # WHEN
+        response = self.client.get(reverse("feed_all", kwargs={"private_slug": user.settings.private_slug}))
+
+        # THEN
+        calendar = icalendar.Calendar.from_ical(response.content.decode('utf-8'))
+        uids = {str(component['SUMMARY']): str(component['UID']) for component in calendar.walk('VEVENT')}
+        self.assertEqual(uids, {event.title: f'he-{user.pk}-{homework.pk}-events',
+                                homework.title: f'he-{user.pk}-{homework.pk}-homework'})
+
+    def test_all_feed_returns_304_when_no_feed_changed(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        eventhelper.given_event_exists(user)
+
+        initial_response = self.client.get(
+            reverse("feed_all", kwargs={"private_slug": user.settings.private_slug}))
+        etag = initial_response['ETag']
+
+        # WHEN
+        response = self.client.get(
+            reverse("feed_all", kwargs={"private_slug": user.settings.private_slug}),
+            HTTP_IF_NONE_MATCH=etag)
+
+        # THEN
+        self.assertEqual(response.status_code, 304)
+
+    def test_all_feed_returns_200_after_any_feed_changes(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.enable_private_slug()
+        eventhelper.given_event_exists(user)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_course_exists(course_group)
+        homework = homeworkhelper.given_homework_exists(course)
+
+        initial_response = self.client.get(
+            reverse("feed_all", kwargs={"private_slug": user.settings.private_slug}))
+        etag = initial_response['ETag']
+
+        time.sleep(1.1)
+
+        homework.title = 'Updated Title'
+        homework.save()
+
+        # WHEN
+        response = self.client.get(
+            reverse("feed_all", kwargs={"private_slug": user.settings.private_slug}),
+            HTTP_IF_NONE_MATCH=etag)
+
+        # THEN
+        self.assertEqual(response.status_code, 200)
+        self.assertNotEqual(response['ETag'], etag)
 
     def _all_day_feed_components(self, user, url_name):
         response = self.client.get(

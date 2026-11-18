@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='reminder',
             constraint=models.CheckConstraint(
-                check=(
+                condition=(
                     Q(homework__isnull=False, event__isnull=True, course__isnull=True) |
                     Q(homework__isnull=True, event__isnull=False, course__isnull=True) |
                     Q(homework__isnull=True, event__isnull=True, course__isnull=False)
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='attachment',
             constraint=models.CheckConstraint(
-                check=(
+                condition=(
                     Q(homework__isnull=False, event__isnull=True, course__isnull=True) |
                     Q(homework__isnull=True, event__isnull=False, course__isnull=True) |
                     Q(homework__isnull=True, event__isnull=True, course__isnull=False)

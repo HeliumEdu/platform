@@ -34,9 +34,11 @@ class TestCaseFeedResourceViews(APITestCase):
         self.assertIn('events_private_url', response.data)
         self.assertIn('homework_private_url', response.data)
         self.assertIn('courseschedules_private_url', response.data)
+        self.assertIn('all_private_url', response.data)
         self.assertEqual(self.client.get(response.data['events_private_url']).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.get(response.data['homework_private_url']).status_code, status.HTTP_200_OK)
         self.assertEqual(self.client.get(response.data['courseschedules_private_url']).status_code, status.HTTP_200_OK)
+        self.assertEqual(self.client.get(response.data['all_private_url']).status_code, status.HTTP_200_OK)
 
     def test_disable_private_url(self):
         # GIVEN

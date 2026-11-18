@@ -439,6 +439,22 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(courses[ungraded.pk]['grade_point'], -1)
         self.assertEqual(response.data['cumulative_gpa'], 3.0)
 
+    def test_get_grades_includes_gpa_at_each_point_of_a_group_series(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        course_group = coursegrouphelper.given_course_group_exists(user)
+        course = coursehelper.given_graded_course_exists(course_group, 85, credits=3)
+
+        # WHEN
+        response = self.client.get(reverse('planner_resource_grades'))
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        course_group_data = response.data['course_groups'][0]
+        self.assertEqual([item['gpa'] for item in _graded_series(course_group_data)], [3.0])
+        courses = {course_data['id']: course_data for course_data in course_group_data['courses']}
+        self.assertEqual([item['gpa'] for item in _graded_series(courses[course.pk])], [None])
+
     def test_get_grades_includes_each_class_grade_scale(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

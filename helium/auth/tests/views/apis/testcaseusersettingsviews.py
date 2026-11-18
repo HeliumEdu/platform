@@ -180,6 +180,55 @@ class TestCaseUserSettingsViews(APITestCase):
         self.assertIn('time_format', response.data)
         self.assertIn('number_format', response.data)
 
+    def test_put_prior_credits_and_gpa(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'prior_credits': '60.5',
+            'prior_gpa': '3.4',
+        }
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['prior_credits'], '60.50')
+        self.assertEqual(response.data['prior_gpa'], '3.4000')
+        user.settings.refresh_from_db()
+        self.assertEqual(str(user.settings.prior_credits), '60.50')
+        self.assertEqual(str(user.settings.prior_gpa), '3.4000')
+
+    def test_put_prior_credits_without_prior_gpa_fails(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps({'prior_credits': '60'}),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('prior_gpa', response.data)
+
+    def test_put_invalid_prior_credits_and_gpa_fails(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        data = {
+            'prior_credits': '1000',
+            'prior_gpa': '-1',
+        }
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('prior_credits', response.data)
+        self.assertIn('prior_gpa', response.data)
+
     def test_put_resource_color(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

@@ -98,7 +98,7 @@ class CourseSchedule(BaseModel):
         verbose_name = 'Class schedule'
         constraints = [
             models.CheckConstraint(
-                check=~(Q(cycle_length__isnull=False) & Q(is_week_based=True)),
+                condition=~(Q(cycle_length__isnull=False) & Q(is_week_based=True)),
                 name='courseschedule_single_rotation_type',
             ),
         ]

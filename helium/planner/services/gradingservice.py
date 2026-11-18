@@ -44,10 +44,12 @@ class HomeworkSeriesItem:
     homework_grade: Optional[float]
     cumulative_grade: Optional[float]
     impact_score: Optional[float]
+    gpa: Optional[float] = None
 
 
 def get_grade_data(user_id):
-    series_occurrences = _series_occurrences(user_id)
+    user_settings = get_user_model().objects.select_related('settings').get(pk=user_id).settings
+    series_occurrences = _series_occurrences(user_id, ZoneInfo(user_settings.time_zone))
     extra_by_course, extra_by_category = {}, {}
     for series, starts in series_occurrences:
         extra_by_course[series['course_id']] = extra_by_course.get(series['course_id'], 0) + len(starts) - 1
@@ -224,11 +226,15 @@ def get_grade_data(user_id):
     for course_group in course_groups:
         course_group['in_cumulative_gpa'] = course_group['id'] in cumulative_ids
 
+    cumulative_classes = [(course['credits'], course['grade_point'])
+                          for course_group in course_groups if course_group['in_cumulative_gpa']
+                          for course in course_group['courses']]
+    if cumulative_ids:
+        cumulative_classes.append((user_settings.prior_credits, user_settings.prior_gpa))
+
     return {
         'course_groups': course_groups,
-        'cumulative_gpa': gpa_for((course['credits'], course['grade_point'])
-                                  for course_group in course_groups if course_group['in_cumulative_gpa']
-                                  for course in course_group['courses']),
+        'cumulative_gpa': gpa_for(cumulative_classes),
     }
 
 
@@ -595,8 +601,7 @@ def _get_grade_points_for(query_set, has_weighted_grading):
     return grade_series
 
 
-def _series_occurrences(user_id):
-    tz = ZoneInfo(get_user_model().objects.select_related('settings').get(pk=user_id).settings.time_zone)
+def _series_occurrences(user_id, tz):
     series = (Homework.objects.for_user(user_id)
               .filter(recurrence_rule__isnull=False)
               .values('id', 'title', 'start', 'end', 'all_day', 'recurrence_rule', 'exception_dates', 'course_id',
@@ -684,10 +689,12 @@ def _build_course_group_homework_series(courses):
     """
     Build course_group-level homework_series by merging per-course series and averaging
     cumulative_grade across courses at each graded point. Parallels
-    _get_grade_points_for_course_group() logic.
+    _get_grade_points_for_course_group() logic. Each graded point also carries the group's
+    gpa as of that point, from each class's grade then.
 
-    Ungraded items pass through with cumulative_grade=None and no averaging.
+    Ungraded items pass through with cumulative_grade=None, gpa=None and no averaging.
     """
+    courses_by_id = {course['id']: course for course in courses}
     all_graded = []
     all_ungraded = []
     for course in courses:
@@ -700,6 +707,7 @@ def _build_course_group_homework_series(courses):
     all_graded = sorted(all_graded, key=lambda x: x.start)
 
     course_grades = {}
+    course_grade_points = {}
     series = []
     for item in all_graded:
         if item.course_id not in course_grades:
@@ -708,7 +716,10 @@ def _build_course_group_homework_series(courses):
 
         total = sum(grades[-1] for grades in course_grades.values())
         overall_grade = round(total / len(course_grades), 4)
-        series.append(replace(item, cumulative_grade=overall_grade))
+        course = courses_by_id[item.course_id]
+        course_grade_points[item.course_id] = (course['credits'],
+                                               grade_point_for(item.cumulative_grade, course['grade_scale']))
+        series.append(replace(item, cumulative_grade=overall_grade, gpa=gpa_for(course_grade_points.values())))
 
     all_ungraded = sorted(all_ungraded, key=lambda x: x.start)
     return sorted(series + all_ungraded, key=lambda item: item.start)

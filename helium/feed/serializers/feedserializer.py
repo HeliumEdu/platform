@@ -17,3 +17,8 @@ class FeedUrlsSerializer(serializers.Serializer):
     courseschedules_private_url = serializers.URLField(
         help_text='Path (not fully-qualified URL) to the Class Schedules Feed. Prepend the API host to subscribe.',
     )
+
+    all_private_url = serializers.URLField(
+        help_text='Path (not fully-qualified URL) to the Helium Feed: the Assignments, Class Schedules and Events '
+                  'Feeds in one calendar. Prepend the API host to subscribe.',
+    )

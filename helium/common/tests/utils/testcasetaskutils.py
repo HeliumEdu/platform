@@ -87,7 +87,8 @@ class TestCaseEveryTaskIsInstrumented(TestCase):
         # WHEN
         uninstrumented = []
         for path in sorted(glob.glob('helium/*/tasks.py')):
-            tree = ast.parse(open(path).read())
+            with open(path) as f:
+                tree = ast.parse(f.read())
             for node in tree.body:
                 if not isinstance(node, ast.FunctionDef):
                     continue
