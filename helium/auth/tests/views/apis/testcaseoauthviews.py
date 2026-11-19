@@ -751,6 +751,7 @@ class TestCaseOAuthViews(APITestCase):
         self.mock_get_user.assert_called_once_with('firebase-uid')
         self.assertEqual(list(UserOAuthProvider.objects.filter(user=existing_user).values_list('provider', flat=True)),
                          ['google'])
+        self.assertEqual(response.data['unlinked_providers'], ['microsoft'])
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_links_providers_firebase_added(self, mock_verify_token):
