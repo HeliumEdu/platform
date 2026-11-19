@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from firebase_admin import auth as firebase_auth
+from firebase_admin.exceptions import UnavailableError
 
 from helium.auth.models import UserOAuthProvider
 from helium.auth.tests.helpers import userhelper
@@ -15,11 +16,16 @@ from helium.common import enums
 
 
 class TestCaseOAuthViews(APITestCase):
+    def setUp(self):
+        self.mock_get_user = self.enterContext(patch('helium.auth.services.authservice.firebase_auth.get_user',
+                                                     side_effect=UnavailableError('Firebase unavailable')))
+
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_creates_new_user_google(self, mock_verify_token, mock_import_schedule):
         # GIVEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-user-123',
             'email': 'newuser@gmail.com',
             'email_verified': True
@@ -64,6 +70,7 @@ class TestCaseOAuthViews(APITestCase):
     def test_oauth_login_creates_new_user_apple(self, mock_verify_token, mock_import_schedule):
         # GIVEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'apple.com'},
             'uid': 'apple-user-123',
             'email': 'newuser@icloud.com',
             'email_verified': True
@@ -100,6 +107,7 @@ class TestCaseOAuthViews(APITestCase):
             email='existing@gmail.com'
         )
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-user-456',
             'email': 'existing@gmail.com',
             'email_verified': True
@@ -141,6 +149,7 @@ class TestCaseOAuthViews(APITestCase):
         existing_user.save(update_fields=['deletion_requested_at'])
 
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-user-789',
             'email': 'existing@gmail.com',
             'email_verified': True,
@@ -165,6 +174,7 @@ class TestCaseOAuthViews(APITestCase):
         userhelper.given_a_user_exists(username='testuser', email='other@example.com')
 
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-user-789',
             'email': 'testuser@gmail.com',
             'email_verified': True
@@ -267,6 +277,7 @@ class TestCaseOAuthViews(APITestCase):
     def test_oauth_login_email_not_verified(self, mock_verify_token):
         # GIVEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-user-999',
             'email': 'unverified@gmail.com',
             'email_verified': False
@@ -291,6 +302,7 @@ class TestCaseOAuthViews(APITestCase):
     def test_oauth_login_no_email_in_token(self, mock_verify_token):
         # GIVEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-user-000',
             'email_verified': True
         }
@@ -312,6 +324,7 @@ class TestCaseOAuthViews(APITestCase):
     def test_oauth_login_user_has_no_usable_password(self, mock_verify_token, mock_import_schedule):
         # GIVEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-user-pass-test',
             'email': 'nopass@gmail.com',
             'email_verified': True
@@ -343,6 +356,7 @@ class TestCaseOAuthViews(APITestCase):
     def test_oauth_login_multiple_times_same_user(self, mock_verify_token, mock_import_schedule):
         # GIVEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-user-repeat',
             'email': 'repeat@gmail.com',
             'email_verified': True
@@ -379,6 +393,7 @@ class TestCaseOAuthViews(APITestCase):
     def test_oauth_login_updates_provider_last_used(self, mock_verify_token):
         # GIVEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-uid-456',
             'email': 'existing@gmail.com',
             'email_verified': True
@@ -417,6 +432,7 @@ class TestCaseOAuthViews(APITestCase):
     def test_user_can_have_multiple_oauth_providers(self, mock_verify_token, mock_import_schedule):
         # GIVEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-uid-multi',
             'email': 'multiauth@gmail.com',
             'email_verified': True
@@ -434,6 +450,7 @@ class TestCaseOAuthViews(APITestCase):
 
         # WHEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'apple.com'},
             'uid': 'apple-uid-multi',
             'email': 'multiauth@gmail.com',
             'email_verified': True
@@ -484,6 +501,7 @@ class TestCaseOAuthViews(APITestCase):
         self.assertFalse(inactive_user.is_active)
 
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'google-user-inactive',
             'email': 'inactive@gmail.com',
             'email_verified': True
@@ -525,6 +543,7 @@ class TestCaseOAuthViews(APITestCase):
 
         # WHEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'shared-google-uid',
             'email': 'user_b@gmail.com',
             'email_verified': True
@@ -557,6 +576,7 @@ class TestCaseOAuthViews(APITestCase):
 
         # WHEN
         mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
             'uid': 'new-firebase-uid-456',
             'email': 'recreated@gmail.com',
             'email_verified': True
@@ -581,3 +601,241 @@ class TestCaseOAuthViews(APITestCase):
         updated_oauth = oauth_providers.first()
         self.assertEqual(updated_oauth.provider_user_id, 'new-firebase-uid-456')
         self.assertGreater(updated_oauth.last_used_at, old_last_used)
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_rejects_token_from_different_provider(self, mock_verify_token):
+        # GIVEN
+        mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'microsoft.com'},
+            'uid': 'microsoft-uid',
+            'email': 'someone@gmail.com',
+            'email_verified': False
+        }
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertFalse(get_user_model().objects.filter(email='someone@gmail.com').exists())
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_rejects_token_without_sign_in_provider(self, mock_verify_token):
+        # GIVEN
+        mock_verify_token.return_value = {
+            'uid': 'some-uid',
+            'email': 'someone@gmail.com',
+            'email_verified': False
+        }
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'microsoft'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertFalse(get_user_model().objects.filter(email='someone@gmail.com').exists())
+
+    @patch('helium.auth.services.authservice.import_example_schedule')
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_creates_new_user_microsoft_unverified_email(self, mock_verify_token, mock_import_schedule):
+        # GIVEN
+        mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'microsoft.com'},
+            'uid': 'microsoft-uid-new',
+            'email': 'newuser@gmail.com',
+            'email_verified': False
+        }
+        mock_import_schedule.apply_async = MagicMock()
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'microsoft'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user = get_user_model().objects.get(email='newuser@gmail.com')
+        self.assertEqual(UserOAuthProvider.objects.get(user=user).provider, 'microsoft')
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_microsoft_unverified_email_cannot_claim_existing_account(self, mock_verify_token):
+        # GIVEN
+        existing_user = userhelper.given_an_inactive_user_exists(username='existing', email='existing@gmail.com')
+        mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'microsoft.com'},
+            'uid': 'microsoft-uid-unlinked',
+            'email': 'existing@gmail.com',
+            'email_verified': False
+        }
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'microsoft'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('already registered with a different sign-in method', str(response.data))
+        self.assertNotIn('access', response.data)
+        self.assertFalse(UserOAuthProvider.objects.filter(user=existing_user).exists())
+        existing_user.refresh_from_db()
+        self.assertFalse(existing_user.is_active)
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_microsoft_unverified_email_links_when_firebase_user_already_linked(self, mock_verify_token):
+        # GIVEN
+        existing_user = userhelper.given_a_user_exists(username='existing', email='existing@gmail.com')
+        UserOAuthProvider.objects.create(user=existing_user, provider='google', provider_user_id='shared-firebase-uid')
+        mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'microsoft.com'},
+            'uid': 'shared-firebase-uid',
+            'email': 'existing@gmail.com',
+            'email_verified': False
+        }
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'microsoft'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            set(UserOAuthProvider.objects.filter(user=existing_user).values_list('provider', flat=True)),
+            {'google', 'microsoft'})
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_unlinks_providers_firebase_dropped(self, mock_verify_token):
+        # GIVEN
+        existing_user = userhelper.given_a_user_exists(username='existing', email='existing@gmail.com')
+        UserOAuthProvider.objects.create(user=existing_user, provider='microsoft', provider_user_id='firebase-uid')
+        UserOAuthProvider.objects.create(user=existing_user, provider='google', provider_user_id='firebase-uid')
+        self.mock_get_user.side_effect = None
+        self.mock_get_user.return_value = MagicMock(provider_data=[MagicMock(provider_id='google.com')])
+        mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
+            'uid': 'firebase-uid',
+            'email': 'existing@gmail.com',
+            'email_verified': True
+        }
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.mock_get_user.assert_called_once_with('firebase-uid')
+        self.assertEqual(list(UserOAuthProvider.objects.filter(user=existing_user).values_list('provider', flat=True)),
+                         ['google'])
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_links_providers_firebase_added(self, mock_verify_token):
+        # GIVEN
+        existing_user = userhelper.given_a_user_exists(username='existing', email='existing@gmail.com')
+        UserOAuthProvider.objects.create(user=existing_user, provider='google', provider_user_id='firebase-uid')
+        self.mock_get_user.side_effect = None
+        self.mock_get_user.return_value = MagicMock(provider_data=[MagicMock(provider_id='google.com'),
+                                                                   MagicMock(provider_id='microsoft.com'),
+                                                                   MagicMock(provider_id='password')])
+        mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
+            'uid': 'firebase-uid',
+            'email': 'existing@gmail.com',
+            'email_verified': True
+        }
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        microsoft_provider = UserOAuthProvider.objects.get(user=existing_user, provider='microsoft')
+        self.assertEqual(microsoft_provider.provider_user_id, 'firebase-uid')
+        self.assertEqual(UserOAuthProvider.objects.filter(user=existing_user).count(), 2,
+                         'non-OAuth Firebase providers are not linked')
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_keeps_providers_when_firebase_lookup_fails(self, mock_verify_token):
+        # GIVEN
+        existing_user = userhelper.given_a_user_exists(username='existing', email='existing@gmail.com')
+        UserOAuthProvider.objects.create(user=existing_user, provider='microsoft', provider_user_id='firebase-uid')
+        UserOAuthProvider.objects.create(user=existing_user, provider='google', provider_user_id='firebase-uid')
+        mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
+            'uid': 'firebase-uid',
+            'email': 'existing@gmail.com',
+            'email_verified': True
+        }
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertEqual(UserOAuthProvider.objects.filter(user=existing_user).count(), 2)
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_skips_firebase_provider_linked_to_another_user(self, mock_verify_token):
+        # GIVEN
+        existing_user = userhelper.given_a_user_exists(username='existing', email='existing@gmail.com')
+        UserOAuthProvider.objects.create(user=existing_user, provider='google', provider_user_id='firebase-uid')
+        other_user = userhelper.given_a_user_exists(username='other', email='other@gmail.com')
+        UserOAuthProvider.objects.create(user=other_user, provider='microsoft', provider_user_id='firebase-uid')
+        self.mock_get_user.side_effect = None
+        self.mock_get_user.return_value = MagicMock(provider_data=[MagicMock(provider_id='google.com'),
+                                                                   MagicMock(provider_id='microsoft.com')])
+        mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
+            'uid': 'firebase-uid',
+            'email': 'existing@gmail.com',
+            'email_verified': True
+        }
+
+        # WHEN
+        data = {'id_token': 'valid-firebase-id-token', 'provider': 'google'}
+        response = self.client.post(
+            reverse('auth_token_oauth'),
+            json.dumps(data),
+            content_type='application/json'
+        )
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(list(UserOAuthProvider.objects.filter(user=existing_user).values_list('provider', flat=True)),
+                         ['google'])
+        self.assertTrue(UserOAuthProvider.objects.filter(user=other_user, provider='microsoft').exists())
