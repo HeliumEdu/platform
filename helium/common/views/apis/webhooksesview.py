@@ -28,8 +28,9 @@ class WebhookSESView(APIView):
     - ``Notification`` — dispatches the SES event payload to a Celery task for
       async processing.
 
-    All requests are signature-verified against the SNS signing certificate before
-    any action is taken.
+    All requests are signature-verified against the SNS signing certificate and must
+    come from the topic in ``SES_SNS_TOPIC_ARN`` before any action is taken; with no
+    topic configured, every request is rejected.
     """
 
     authentication_classes = []
@@ -50,7 +51,7 @@ class WebhookSESView(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         expected_topic_arn = getattr(settings, 'SES_SNS_TOPIC_ARN', '')
-        if expected_topic_arn and body.get('TopicArn') != expected_topic_arn:
+        if not expected_topic_arn or body.get('TopicArn') != expected_topic_arn:
             logger.info(
                 f"SNS message TopicArn {body.get('TopicArn')!r} does not match expected {expected_topic_arn!r}"
             )

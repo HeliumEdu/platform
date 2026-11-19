@@ -1,11 +1,14 @@
 import base64
+import datetime
 import json
 import logging
 import re
 from functools import lru_cache
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.utils import timezone
 
 from helium.common.utils.httputils import urlopen_secure
 
@@ -54,8 +57,9 @@ def verify_sns_message(message: dict) -> None:
     """
     Verify an SNS message signature.
 
-    Raises :class:`ValueError` if the signature is invalid or the certificate URL
-    is not hosted on ``sns.*.amazonaws.com`` (cert-substitution protection).
+    Raises :class:`ValueError` if the signature is invalid, the certificate URL
+    is not hosted on ``sns.*.amazonaws.com`` (cert-substitution protection), or the
+    message was signed longer than ``SES_SNS_MESSAGE_MAX_AGE`` ago (replay protection).
 
     :param message: The parsed SNS notification dict.
     :raises ValueError: On any verification failure.
@@ -92,6 +96,10 @@ def verify_sns_message(message: dict) -> None:
         )
     except InvalidSignature as exc:
         raise ValueError("SNS message signature verification failed") from exc
+
+    signed_at = datetime.datetime.fromisoformat(message.get('Timestamp', ''))
+    if signed_at.tzinfo is None or timezone.now() - signed_at > settings.SES_SNS_MESSAGE_MAX_AGE:
+        raise ValueError(f"SNS message timestamp {message.get('Timestamp')!r} is missing a zone or too old")
 
 
 def process_ses_notification(message_json: str) -> None:

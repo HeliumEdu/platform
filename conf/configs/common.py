@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.9.11"
+__version__ = "2.9.12"
 
 import json
 import os
@@ -612,6 +612,7 @@ SES_CONFIGURATION_SET = f'helium-{ENVIRONMENT}'
 SES_COMPLAINT_SUPPRESS_THRESHOLD = int(config('PLATFORM_SES_COMPLAINT_SUPPRESS_THRESHOLD', '2'))
 
 SES_SNS_TOPIC_ARN = config('PLATFORM_SES_SNS_TOPIC_ARN', '')
+SES_SNS_MESSAGE_MAX_AGE = timedelta(hours=1)
 
 # JSM (Jira Service Management) support intake
 
