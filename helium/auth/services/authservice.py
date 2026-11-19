@@ -14,7 +14,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from firebase_admin import auth as firebase_auth
 from firebase_admin.exceptions import FirebaseError
 from rest_framework import status
-from rest_framework.exceptions import ValidationError, NotFound, AuthenticationFailed
+from rest_framework.exceptions import APIException, ValidationError, NotFound, AuthenticationFailed
 from rest_framework.response import Response
 
 from helium.auth.models import UserOAuthProvider, UserSettings
@@ -35,6 +35,15 @@ from helium.planner.models import Course
 logger = logging.getLogger(__name__)
 
 _FIREBASE_SIGN_IN_PROVIDERS = {f'{provider}.com': provider for provider, _ in UserOAuthProvider.PROVIDER_CHOICES}
+
+
+class OAuthProviderUnlinkFailedError(APIException):
+    """
+    Raised when Firebase can't unlink a provider, so it stays linked on both sides rather than only one.
+    """
+    status_code = status.HTTP_502_BAD_GATEWAY
+    default_detail = "That sign-in method couldn't be removed right now. Try again in a moment."
+    default_code = 'oauth_provider_unlink_failed'
 
 
 def forgot_password(request):
@@ -278,7 +287,8 @@ def oauth_login(request):
     Authenticate or create a user via OAuth Sign-In using a Firebase ID token.
 
     :param request: the request being processed (must contain 'id_token' and 'provider' in data)
-    :return: a 200 Response with access and refresh tokens
+    :return: a 200 Response with access and refresh tokens, and the providers removed because Firebase no longer
+             links them
     """
     UserModel = get_user_model()
 
@@ -433,7 +443,7 @@ def oauth_login(request):
                 priority=settings.CELERY_PRIORITY_HIGH,
             )
 
-        _sync_oauth_providers(user, provider_uid)
+        unlinked_providers = _sync_oauth_providers(user, provider_uid)
 
         update_last_login(None, user)
         if not is_new_user:
@@ -445,7 +455,8 @@ def oauth_login(request):
             )
             user.settings.save(update_fields=['next_review_prompt_date'])
 
-        return Response(issue_session_tokens(user), status=status.HTTP_200_OK)
+        return Response({**issue_session_tokens(user), 'unlinked_providers': unlinked_providers},
+                        status=status.HTTP_200_OK)
 
     except firebase_auth.ExpiredIdTokenError:
         logger.warning('Expired Firebase ID token')
@@ -461,12 +472,73 @@ def oauth_login(request):
         raise AuthenticationFailed(f'{provider_name} Sign-In authentication failed')
 
 
+def sync_oauth_providers(request):
+    """
+    Sync the authenticated user's OAuth providers with the providers linked to their Firebase user.
+
+    :param request: the request being processed (must contain 'id_token', for a Firebase user linked to this user)
+    :return: a 204 Response
+    """
+    if 'id_token' not in request.data:
+        raise ValidationError("'id_token' is required")
+
+    try:
+        firebase_uid = firebase_auth.verify_id_token(request.data['id_token'])['uid']
+    except (ValueError, firebase_auth.InvalidIdTokenError) as e:
+        logger.warning(f'Invalid Firebase ID token: {str(e)}')
+        raise ValidationError('Invalid Firebase ID token')
+
+    if not request.user.oauth_providers.filter(provider_user_id=firebase_uid).exists():
+        raise ValidationError('That sign-in is not linked to this account.')
+
+    _sync_oauth_providers(request.user, firebase_uid)
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def remove_oauth_provider(user, provider):
+    """
+    Remove an OAuth provider from the user's account, unlinking it from their Firebase user too so the next sign-in's
+    sync doesn't link it back. A Firebase user left with no providers is deleted, so it doesn't keep the email.
+
+    :param user: the user to remove the provider from.
+    :param provider: the provider to remove.
+    :raises OAuthProviderUnlinkFailedError: when Firebase can't unlink the provider.
+    """
+    oauth_provider = user.oauth_providers.filter(provider=provider).first()
+    if not oauth_provider:
+        raise NotFound('No OAuth provider matches the given query.')
+
+    if not user.has_usable_password() and not user.oauth_providers.exclude(pk=oauth_provider.pk).exists():
+        raise ValidationError({'non_field_errors': ["This is the only way to sign in to this account, so it can't be "
+                                                    "removed."]})
+
+    firebase_provider = f'{provider}.com'
+    try:
+        firebase_user = firebase_auth.get_user(oauth_provider.provider_user_id)
+        firebase_providers = {info.provider_id for info in firebase_user.provider_data}
+        if not firebase_providers - {firebase_provider}:
+            firebase_auth.delete_user(oauth_provider.provider_user_id)
+            logger.info(f'Deleted Firebase Auth user for user {user.id}, {provider.capitalize()} was its last provider')
+        elif firebase_provider in firebase_providers:
+            firebase_auth.update_user(oauth_provider.provider_user_id, providers_to_delete=[firebase_provider])
+    except firebase_auth.UserNotFoundError:
+        logger.info(f'No Firebase Auth user found for user {user.id} while removing {provider.capitalize()}')
+    except FirebaseError as e:
+        logger.warning(f'{provider.capitalize()} OAuth provider not removed from user {user.id}, Firebase unlink '
+                       f'failed: {type(e).__name__}')
+        raise OAuthProviderUnlinkFailedError()
+
+    oauth_provider.delete()
+    logger.info(f'Removed {provider.capitalize()} OAuth provider from user {user.id}')
+
+
 def _sync_oauth_providers(user, firebase_uid):
     try:
         firebase_user = firebase_auth.get_user(firebase_uid)
     except FirebaseError as e:
         logger.warning(f'OAuth providers for user {user.id} not synced, Firebase lookup failed: {type(e).__name__}')
-        return
+        return []
 
     firebase_providers = {_FIREBASE_SIGN_IN_PROVIDERS[info.provider_id] for info in firebase_user.provider_data
                           if info.provider_id in _FIREBASE_SIGN_IN_PROVIDERS}
@@ -485,6 +557,8 @@ def _sync_oauth_providers(user, firebase_uid):
             continue
         UserOAuthProvider.objects.create(user=user, provider=provider, provider_user_id=firebase_uid)
         logger.info(f'Linked {provider.capitalize()} OAuth provider to user {user.id} from Firebase')
+
+    return sorted(removed_providers)
 
 
 def delete_example_schedule(user_id):

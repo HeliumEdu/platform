@@ -10,6 +10,7 @@ from helium.auth.views.apis.tokenviews import TokenObtainPairView, TokenRefreshV
 from helium.auth.views.apis.userauthresourceviews import UserRegisterResourceView, UserVerifyResourceView, \
     UserForgotResourceView, UserForgotConfirmResourceView, UserResendVerificationResourceView
 from helium.auth.views.apis.userdeleteexamplescheduleviews import UserDeleteExampleScheduleView
+from helium.auth.views.apis.useroauthproviderviews import UserOAuthProviderApiDetailView, UserOAuthProviderSyncView
 from helium.auth.views.apis.usersetupviews import UserSetupView
 from helium.auth.views.apis.userpushtoken import UserPushTokenApiDetailView, UserPushTokenApiListView
 from helium.auth.views.apis.userreviewpromptviews import UserReviewPromptAckView
@@ -73,6 +74,10 @@ urlpatterns = [
     path('auth/user/connectedapps/', UserConnectedAppApiListView.as_view(), name='auth_user_connectedapps_list'),
     path('auth/user/connectedapps/<int:pk>/', UserConnectedAppApiDetailView.as_view(),
          name='auth_user_connectedapps_detail'),
+    path('auth/user/oauthproviders/sync/', UserOAuthProviderSyncView.as_view(),
+         name='auth_user_oauthproviders_sync'),
+    path('auth/user/oauthproviders/<str:provider>/', UserOAuthProviderApiDetailView.as_view(),
+         name='auth_user_oauthproviders_detail'),
 
     ##############################
     # Authenticated URLs for many-delete actions
