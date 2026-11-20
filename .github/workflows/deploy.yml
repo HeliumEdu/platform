@@ -73,8 +73,8 @@ jobs:
           version: ${{ inputs.version_type != 'latest' && inputs.specific_version || '' }}
           read-tag: false
 
-  deploy:
-    name: Deploy to ${{ inputs.environment }}
+  verify:
+    name: Verify Containers
     needs: [determine-version]
     runs-on: ubuntu-latest
 
@@ -82,11 +82,43 @@ jobs:
       FORCE_COLOR: 1
       PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
-      TERRAFORM_API_TOKEN: ${{ secrets.TERRAFORM_API_TOKEN }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      ENVIRONMENT: ${{ inputs.environment }}
       VERSION_NUMBER: ${{ needs.determine-version.outputs.version_number }}
+
+    steps:
+      - name: Checkout platform repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python "3.12"
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Verify containers exist
+        run: ./bin/verify-release.py "$VERSION_NUMBER"
+
+  deploy:
+    name: Deploy
+    needs: [determine-version, verify]
+    uses: HeliumEdu/.github/.github/workflows/terraform-deploy.yml@main
+    with:
+      component: platform
+      version: ${{ needs.determine-version.outputs.version_number }}
+      environment: ${{ inputs.environment }}
+      version_variable: helium_version
+      status_url: ${{ inputs.environment == 'prod' && 'https://api.heliumedu.com/info' || format('https://api.{0}.heliumedu.com/info', inputs.environment) }}
+      other_release_prefix: "[connector]"
+      tag_infra: true
+    secrets:
+      terraform_api_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+      helium_bot_app_id: ${{ secrets.HELIUM_BOT_APP_ID }}
+      helium_bot_private_key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
+
+  post-deploy:
+    name: Notify and Trigger Tests
+    needs: [determine-version, deploy]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Generate GitHub App token
@@ -101,56 +133,10 @@ jobs:
       - name: Checkout platform repository
         uses: actions/checkout@v6
 
-      - name: Checkout infra repository
-        uses: actions/checkout@v6
-        with:
-          repository: HeliumEdu/infra
-          token: ${{ steps.app-token.outputs.token }}
-          path: deploy
-          fetch-depth: 0
-
       - name: Set up Python "3.12"
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-
-      - name: Get GitHub App bot user ID
-        id: get-bot-user-id
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
-
-      - name: Setup git
-        run: |
-          git config --global user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
-          git config --global user.email "${{ steps.get-bot-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-          cd deploy
-          git config user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
-          git config user.email "${{ steps.get-bot-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-
-      - name: Install dependencies
-        run: pip install requests==2.34.2 GitPython==3.1.57 boto3==1.42.97
-
-      - name: Run deployment script
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          ./bin/deploy-release.py \
-            "$VERSION_NUMBER" \
-            "$ENVIRONMENT" \
-            --deploy-repo ./deploy
-
-      - name: Tag infra deploy
-        if: inputs.environment == 'prod'
-        env:
-          VERSION: ${{ needs.determine-version.outputs.version }}
-          BUILD_NUMBER: ${{ github.run_number }}
-        run: |
-          TAG="${VERSION}+${BUILD_NUMBER}"
-          cd deploy
-          git tag -a "$TAG" -m "Deploy $TAG"
-          git push origin "$TAG"
 
       - name: Notify Sentry of deploy
         env:
