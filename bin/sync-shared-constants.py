@@ -57,7 +57,6 @@ def _render_grade_scales(enums):
                         for band in template["scale"])
         scales.append(f"    {key}: [{bands}\n    ]," if bands else f"    {key}: [],")
     return f"""{_DART_BANNER}
-import 'package:heliumapp/data/models/drop_down_item.dart';
 import 'package:heliumapp/data/models/planner/grade_scale_band_model.dart';
 
 class GradeScaleTemplate {{
@@ -77,14 +76,6 @@ class GradeScaleTemplate {{
 
   static String summaryLabel(int template) =>
       template == custom ? 'Custom' : labels[template]!;
-
-  static List<DropDownItem<int>> get items => [
-    for (final entry in labels.entries)
-      DropDownItem(id: entry.key, value: entry.key, label: entry.value),
-  ];
-
-  static DropDownItem<int> get customItem =>
-      DropDownItem(id: custom, value: custom, label: 'Custom');
 }}
 """
 
