@@ -172,7 +172,7 @@ def commit_and_push_changes(deploy_repo_path, version, environment):
     return (True, True)  # Success with changes pushed
 
 
-def find_and_apply_terraform_run(environment, version, terraform_token, timeout_minutes=6):
+def find_and_apply_terraform_run(environment, version, terraform_token, timeout_minutes=10):
     """Find the Terraform run for this deployment and apply it."""
     print(f"\nFinding and applying Terraform run ...")
 

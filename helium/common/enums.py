@@ -217,7 +217,7 @@ GRADE_SCALE_10_0 = 7
 GRADE_SCALE_1_5_PASS_50 = 8
 GRADE_SCALE_1_5_PASS_75 = 9
 GRADE_SCALE_TEMPLATES = {
-    GRADE_SCALE_NONE: {'label': 'None', 'scale': []},
+    GRADE_SCALE_NONE: {'label': 'Percentages only', 'scale': []},
     GRADE_SCALE_4_0: {'label': '4.0', 'scale': _grade_scale(
         (0, 0, 'F'), (60, 1, 'D'), (70, 2, 'C'), (80, 3, 'B'), (90, 4, 'A'))},
     GRADE_SCALE_4_0_PLUS_MINUS: {'label': '4.0 with +/-', 'scale': _grade_scale(
