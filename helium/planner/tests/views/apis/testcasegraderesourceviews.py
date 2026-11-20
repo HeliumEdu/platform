@@ -191,7 +191,7 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(final.pk, response.data['assignment']['id'])
         self.assertAlmostEqual(76.25, response.data['assignment']['needed_points'], places=4)
         self.assertEqual(100, response.data['assignment']['points_possible'])
-        self.assertIsNone(response.data['total_weight_accounted_for'])
+        self.assertNotIn('total_weight_accounted_for', response.data)
 
     def test_needed_grade_weighted_solves_for_the_last_remaining_occurrence_of_a_repeating_homework(self):
         # GIVEN
@@ -238,7 +238,7 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertAlmostEqual(87, response.data['needed_grade'], places=4, msg='(0.7 × 210 − 60) / 100 = 87%')
         self.assertAlmostEqual(87, response.data['assignment']['needed_points'], places=4)
 
-    def test_needed_grade_reports_weights_that_dont_total_100(self):
+    def test_needed_grade_divides_by_weights_that_dont_total_100(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user))
@@ -253,9 +253,9 @@ class TestCaseGradeResourceViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual('invalid_total_weight', response.data['state'])
-        self.assertAlmostEqual(80, response.data['total_weight_accounted_for'])
-        self.assertIsNone(response.data['assignment'])
+        self.assertEqual('achievable', response.data['state'])
+        self.assertAlmostEqual(80, response.data['assignment']['needed_points'], places=4,
+                               msg='weights totaling 80 divide like the class grade: (85 × 80 − 40 × 90) / 40')
 
     def test_needed_grade_refuses_ineligible_targets(self):
         # GIVEN

@@ -1,7 +1,5 @@
-# "What Do I Need?": the score a class needs on its remaining work to reach a desired overall grade or term GPA. The
-# grade math is ported as-is from the frontend's grade calculator (formerly in
-# projects/frontend/lib/utils/grade_helpers.dart) so the app and the API give the same answer. It works on the
-# aggregates gradingservice.get_grade_data() builds for the grades page.
+# The score a class needs on its remaining work to reach a desired overall grade or term GPA, with work not yet graded
+# taken at the class's current pace. It works on the aggregates gradingservice.get_grade_data() builds.
 
 import logging
 from decimal import Decimal
@@ -16,23 +14,23 @@ ACHIEVABLE = 'achievable'
 ABOVE_TARGET = 'above_target'
 UNACHIEVABLE = 'unachievable'
 TARGET_CATEGORY_HAS_NO_WEIGHT = 'target_category_has_no_weight'
-INVALID_TOTAL_WEIGHT = 'invalid_total_weight'
 GPA_UNREACHABLE = 'gpa_unreachable'
 
-WEIGHT_ERRORS = (TARGET_CATEGORY_HAS_NO_WEIGHT, INVALID_TOTAL_WEIGHT)
 
-
-def calculate_needed_grade(categories, target_category_id, desired_overall_grade):
+def calculate_needed_grade(categories, target_category_id, desired_overall_grade, current_grade):
     """
     The average a weighted class needs in one category to reach a desired overall grade:
-    (desired * 100 - sum of the other categories' weight * average) / the target category's weight. Other categories
-    with nothing graded count as 0 (pessimistic), and the target's own current average is ignored.
+    (desired * total weight - sum of the other categories' weight * grade) / the target category's weight. Each other
+    category with assignments counts at its average, or at the class's current grade while it has nothing graded (left
+    out while the class has no grade either), so the rest of the class keeps its current pace. The target's own
+    current average is ignored.
 
-    :param categories: The class's categories, each with `id`, `weight`, and `overall_grade` (`-1` when nothing is
-        graded).
+    :param categories: The class's categories, each with `id`, `weight`, `num_homework`, and `overall_grade` (`-1`
+        when nothing is graded).
     :param target_category_id: The category to solve for.
     :param desired_overall_grade: The desired overall grade (0-100).
-    :return: A dict with `needed_grade`, `state`, and, when weights don't total 100, `total_weight_accounted_for`.
+    :param current_grade: The class's current grade (0-100), or `-1` when nothing is graded.
+    :return: A dict with `needed_grade` and `state`.
     """
     target_category = next((category for category in categories if category['id'] == target_category_id), None)
     if target_category is None:
@@ -43,43 +41,49 @@ def calculate_needed_grade(categories, target_category_id, desired_overall_grade
         return {'needed_grade': 0, 'state': TARGET_CATEGORY_HAS_NO_WEIGHT}
 
     sum_of_other_weighted_grades = 0
-    total_weight_accounted_for = target_weight
+    total_weight = target_weight
 
     for category in categories:
-        if category['id'] == target_category_id:
+        weight = float(category['weight'])
+        if category['id'] == target_category_id or weight <= 0 or category['num_homework'] == 0:
             continue
 
-        weight = float(category['weight'])
-        if weight > 0:
-            total_weight_accounted_for += weight
+        grade = float(category['overall_grade'])
+        if grade < 0:
+            grade = float(current_grade)
+        if grade < 0:
+            continue
 
-            overall_grade = float(category['overall_grade'])
-            if overall_grade >= 0:
-                sum_of_other_weighted_grades += weight * overall_grade
+        sum_of_other_weighted_grades += weight * grade
+        total_weight += weight
 
-    if abs(total_weight_accounted_for - 100) > 0.01:
-        return {'needed_grade': 0, 'state': INVALID_TOTAL_WEIGHT,
-                'total_weight_accounted_for': total_weight_accounted_for}
-
-    needed_grade = (desired_overall_grade * 100 - sum_of_other_weighted_grades) / target_weight
+    needed_grade = (desired_overall_grade * total_weight - sum_of_other_weighted_grades) / target_weight
 
     return {'needed_grade': needed_grade, 'state': _state_for(needed_grade)}
 
 
 def calculate_needed_assignment_score(graded_points_earned, graded_points_possible, assignment_points_possible,
-                                      desired_overall_grade):
+                                      desired_overall_grade, other_remaining_points_possible=0):
     """
     The score needed on one remaining assignment, as a percentage of its points possible, to bring a points-based
-    total (earned over possible, once it's graded) to a desired grade.
+    total (earned over possible) to a desired grade. The other remaining assignments come in at the graded work's
+    average, the class's current pace (left out while nothing is graded).
 
     :param graded_points_earned: Points earned on graded work.
     :param graded_points_possible: Points possible on graded work.
     :param assignment_points_possible: The remaining assignment's points possible.
     :param desired_overall_grade: The desired grade (0-100).
+    :param other_remaining_points_possible: Points possible on the other assignments still to be graded.
     :return: A dict with `needed_grade` and `state`.
     """
-    needed_points = (desired_overall_grade / 100 * (graded_points_possible + assignment_points_possible)
-                     - graded_points_earned)
+    if graded_points_possible > 0:
+        other_points_possible = other_remaining_points_possible
+        other_points_earned = graded_points_earned / graded_points_possible * other_remaining_points_possible
+    else:
+        other_points_possible = other_points_earned = 0
+    needed_points = (desired_overall_grade / 100
+                     * (graded_points_possible + other_points_possible + assignment_points_possible)
+                     - graded_points_earned - other_points_earned)
     needed_grade = needed_points / assignment_points_possible * 100
 
     return {'needed_grade': needed_grade, 'state': _state_for(needed_grade)}
@@ -89,7 +93,7 @@ def to_assignment_score(category_need, category_graded_points_earned, category_g
                         assignment_points_possible):
     """
     Convert a needed category average into the score needed on that category's one remaining assignment, from the
-    category's graded points. Weight errors pass through unchanged.
+    category's graded points. A target category with no weight passes through unchanged.
 
     :param category_need: The result of `calculate_needed_grade()`.
     :param category_graded_points_earned: The category's points earned on graded work.
@@ -97,7 +101,7 @@ def to_assignment_score(category_need, category_graded_points_earned, category_g
     :param assignment_points_possible: The remaining assignment's points possible.
     :return: A dict with `needed_grade` and `state`.
     """
-    if category_need['state'] in WEIGHT_ERRORS:
+    if category_need['state'] == TARGET_CATEGORY_HAS_NO_WEIGHT:
         return category_need
 
     return calculate_needed_assignment_score(category_graded_points_earned, category_graded_points_possible,
@@ -106,13 +110,13 @@ def to_assignment_score(category_need, category_graded_points_earned, category_g
 
 def get_needed_grade(user_id, course_id, target_id, desired_grade=None, desired_gpa=None) -> dict:
     """
-    What a class needs to reach a desired overall grade, or a desired term GPA, as the grade calculator in the app
-    works it out.
+    What a class needs to reach a desired overall grade, or a desired term GPA.
 
     A weighted class (any category with weight) solves for a category with weight and exactly one ungraded assignment
     left, then for that assignment's score when it's in the class's ungraded work. A points-based class solves for one
-    of its ungraded assignments. A desired term GPA is first turned into the lowest band of the class's grade scale
-    that brings the term GPA to it, as the app displays the GPA, and that band's `min_grade` is solved for.
+    of its ungraded assignments. Either way, the rest of the class's ungraded work is taken at its current pace. A
+    desired term GPA is first turned into the lowest band of the class's grade scale that brings the term GPA to it,
+    with the GPA rounded to two places, and that band's `min_grade` is solved for.
 
     :param user_id: The user whose class it is.
     :param course_id: The class.
@@ -120,8 +124,8 @@ def get_needed_grade(user_id, course_id, target_id, desired_grade=None, desired_
     :param desired_grade: The desired overall grade (0-100), or None when `desired_gpa` is given.
     :param desired_gpa: The desired term GPA, or None when `desired_grade` is given.
     :return: A dict with `state`, `needed_grade`, `weighted`, `category` (weighted classes), `assignment` (when one is
-        solved for, with `needed_points`), `total_weight_accounted_for` (when weights don't total 100), and
-        `grade_band` (for a desired GPA: the band solved for, or the class's top band when even it falls short).
+        solved for, with `needed_points`), and `grade_band` (for a desired GPA: the band solved for, or the class's top
+        band when even it falls short).
     """
     if desired_grade is None and desired_gpa is None:
         raise ValidationError("One of 'desired_grade' or 'desired_gpa' must be given.")
@@ -164,13 +168,16 @@ def get_needed_grade(user_id, course_id, target_id, desired_grade=None, desired_
         desired_grade = grade_band['min_grade']
 
     if weighted:
-        category_need = calculate_needed_grade(categories, target_id, desired_grade)
+        category_need = calculate_needed_grade(categories, target_id, desired_grade, float(course['overall_grade']))
         result = category_need if assignment is None else to_assignment_score(
             category_need, float(category['points_earned']), float(category['points_possible']),
             assignment.points_possible)
     else:
+        other_remaining_points_possible = sum(float(item.points_possible or 0) for item in ungraded
+                                              if item is not assignment)
         result = calculate_needed_assignment_score(float(course['points_earned']), float(course['points_possible']),
-                                                   assignment.points_possible, desired_grade)
+                                                   assignment.points_possible, desired_grade,
+                                                   other_remaining_points_possible)
 
     return _describe(result, weighted, category, assignment, grade_band)
 
@@ -210,10 +217,9 @@ def _describe(result, weighted, category, assignment, grade_band=None):
         'weighted': weighted,
         'category': {'id': category['id'], 'title': category['title']} if category else None,
         'assignment': None,
-        'total_weight_accounted_for': result.get('total_weight_accounted_for'),
         'grade_band': grade_band,
     }
-    if assignment is not None and result['state'] not in WEIGHT_ERRORS:
+    if assignment is not None and result['state'] != TARGET_CATEGORY_HAS_NO_WEIGHT:
         described['assignment'] = {
             'id': assignment.id,
             'title': assignment.title,
