@@ -68,12 +68,13 @@ class NeededGradeApiResourceView(HeliumAPIView):
     def get(self, request, *args, **kwargs):
         """
         Return the score needed to bring a class's overall grade to `desired_grade`, or its term GPA to `desired_gpa`.
-        This is the "What Do I Need?" grade calculator in the app, worked out from the same grades
-        `GET /planner/grades/` returns. With `desired_gpa`, the GPA is counted as the app shows it, to two places.
+        It's worked out from the same grades `GET /planner/grades/` returns. With `desired_gpa`, the GPA is rounded to
+        two places.
 
         For a class with weighted grading, the result is the score needed on the category's last ungraded assignment
-        (or the category average, when that assignment isn't in the class's ungraded work). Categories with nothing
-        graded yet count as `0`. For a class graded by points, it's the score needed on the chosen assignment.
+        (or the category average, when that assignment isn't in the class's ungraded work). For a class graded by
+        points, it's the score needed on the chosen assignment. Either way, the class's other ungraded work is taken
+        at its current grade.
         """
         try:
             course_id = int(request.query_params['course'])

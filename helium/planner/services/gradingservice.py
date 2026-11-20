@@ -1,10 +1,6 @@
-# Grading math is also implemented in the frontend at
-# projects/frontend/lib/utils/grade_helpers.dart. The frontend operates on
-# category aggregates produced by this service (it does NOT recompute course
-# grades from raw homework — those come from here). The "What Grade Do I Need?"
-# inverse calculation lives in neededgradeservice.py. If you change the weighted-grade math
-# here, audit grade_helpers.dart for consistency. Both sides have their own
-# test suites covering the math at their respective layers.
+# Grading math: class, category, and group grades, grade points, and GPAs, and the aggregates get_grade_data() returns
+# for clients to build on. The inverse, the score needed to reach a desired grade or GPA, lives in
+# neededgradeservice.py and works on those same aggregates.
 
 import datetime
 import logging
@@ -240,8 +236,8 @@ def get_grade_data(user_id):
 
 def grade_point_for(grade: Union[Decimal, float], grade_scale: List[dict]) -> float:
     """
-    The grade point of the last band whose `min_grade` the grade reaches, as the app displays the grade (two
-    places). A grade above 100 earns the top band.
+    The grade point of the last band whose `min_grade` the grade reaches, with the grade rounded to two places. A
+    grade above 100 earns the top band.
 
     :param grade: A class grade percentage, or -1 when the class is ungraded.
     :param grade_scale: Bands in ascending `min_grade` order, or empty for no scale.
@@ -281,7 +277,7 @@ def gpa_for(classes: Iterable[Tuple[Decimal, Union[Decimal, float]]]) -> float:
 def displayed_gpa(gpa: Union[Decimal, float]) -> Decimal:
     """
     :param gpa: A GPA from `gpa_for`.
-    :return: The GPA as the app displays it (two places).
+    :return: The GPA rounded to two places, as it's displayed.
     """
     return Decimal(str(gpa)).quantize(_DISPLAYED_GRADE_PLACES, rounding=ROUND_HALF_UP)
 
