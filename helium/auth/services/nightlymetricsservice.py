@@ -14,6 +14,11 @@ from helium.planner.models import Attachment, Course, CourseGroup, CourseSchedul
 
 logger = logging.getLogger(__name__)
 
+ADOPTION_WINDOWS = [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]
+
+# Adoption stops short of a year: feed adoption reads per-day Redis keys that expire before then
+ACTIVE_USER_WINDOWS = ADOPTION_WINDOWS + [('365d', 365)]
+
 
 def emit_nightly_metrics():
     UserModel = get_user_model()
@@ -24,7 +29,7 @@ def emit_nightly_metrics():
 
     # Active users by window
     try:
-        for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
+        for window_tag, days in ACTIVE_USER_WINDOWS:
             cutoff = datetime.now().replace(tzinfo=timezone.utc) - timedelta(days=days)
             base_qs = UserModel.objects.filter(
                 is_active=True,
@@ -49,7 +54,7 @@ def emit_nightly_metrics():
     try:
         now_utc = datetime.now().replace(tzinfo=timezone.utc)
 
-        for window_tag, days in [('1d', 1), ('7d', 7), ('30d', 30), ('90d', 90), ('180d', 180)]:
+        for window_tag, days in ADOPTION_WINDOWS:
             cutoff = now_utc - timedelta(days=days)
             base_qs = UserModel.objects.filter(is_active=True, last_activity__gte=cutoff)
 
