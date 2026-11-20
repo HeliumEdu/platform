@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.9.12"
+__version__ = "2.9.13"
 
 import json
 import os
