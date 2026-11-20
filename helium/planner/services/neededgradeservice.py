@@ -67,7 +67,7 @@ def calculate_needed_assignment_score(graded_points_earned, graded_points_possib
     """
     The score needed on one remaining assignment, as a percentage of its points possible, to bring a points-based
     total (earned over possible) to a desired grade. The other remaining assignments come in at the graded work's
-    average, the class's current pace (left out while nothing is graded).
+    average (left out while nothing is graded).
 
     :param graded_points_earned: Points earned on graded work.
     :param graded_points_possible: Points possible on graded work.
@@ -173,8 +173,7 @@ def get_needed_grade(user_id, course_id, target_id, desired_grade=None, desired_
             category_need, float(category['points_earned']), float(category['points_possible']),
             assignment.points_possible)
     else:
-        other_remaining_points_possible = sum(float(item.points_possible or 0) for item in ungraded
-                                              if item is not assignment)
+        other_remaining_points_possible = sum(item.points_possible for item in ungraded if item is not assignment)
         result = calculate_needed_assignment_score(float(course['points_earned']), float(course['points_possible']),
                                                    assignment.points_possible, desired_grade,
                                                    other_remaining_points_possible)
@@ -217,6 +216,7 @@ def _describe(result, weighted, category, assignment, grade_band=None):
         'weighted': weighted,
         'category': {'id': category['id'], 'title': category['title']} if category else None,
         'assignment': None,
+        'total_weight_accounted_for': None,
         'grade_band': grade_band,
     }
     if assignment is not None and result['state'] != TARGET_CATEGORY_HAS_NO_WEIGHT:

@@ -1,6 +1,5 @@
-# Grading math: class, category, and group grades, grade points, and GPAs, and the aggregates get_grade_data() returns
-# for clients to build on. The inverse, the score needed to reach a desired grade or GPA, lives in
-# neededgradeservice.py and works on those same aggregates.
+# The inverse, the score needed to reach a desired grade or GPA, lives in neededgradeservice.py and works on the
+# aggregates get_grade_data() returns.
 
 import datetime
 import logging
@@ -277,7 +276,7 @@ def gpa_for(classes: Iterable[Tuple[Decimal, Union[Decimal, float]]]) -> float:
 def displayed_gpa(gpa: Union[Decimal, float]) -> Decimal:
     """
     :param gpa: A GPA from `gpa_for`.
-    :return: The GPA rounded to two places, as it's displayed.
+    :return: The GPA rounded to two places.
     """
     return Decimal(str(gpa)).quantize(_DISPLAYED_GRADE_PLACES, rounding=ROUND_HALF_UP)
 

@@ -191,7 +191,7 @@ class TestCaseGradeResourceViews(APITestCase):
         self.assertEqual(final.pk, response.data['assignment']['id'])
         self.assertAlmostEqual(76.25, response.data['assignment']['needed_points'], places=4)
         self.assertEqual(100, response.data['assignment']['points_possible'])
-        self.assertNotIn('total_weight_accounted_for', response.data)
+        self.assertIsNone(response.data['total_weight_accounted_for'])
 
     def test_needed_grade_weighted_solves_for_the_last_remaining_occurrence_of_a_repeating_homework(self):
         # GIVEN
