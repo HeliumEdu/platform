@@ -207,7 +207,7 @@ class TestCaseTasks(APITestCase):
 
         # THEN
         active_user_calls = [c for c in mock_gauge.call_args_list if c.args[0] == 'users.active']
-        self.assertEqual(len(active_user_calls), 10)
+        self.assertEqual(len(active_user_calls), 12)
 
     @mock.patch('helium.auth.tasks.metricutils.gauge')
     def test_emit_nightly_metrics_emits_class_schedules_adoption(self, mock_gauge):

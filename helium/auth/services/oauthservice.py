@@ -136,8 +136,7 @@ def describe_authorization(request) -> dict:
     return {
         'client_name': application.name,
         'redirect_uri': credentials['redirect_uri'],
-        'scopes': [{'scope': scope, 'description': descriptions[scope],
-                    'required': scope not in settings.OAUTH_OPTIONAL_SCOPES} for scope in scopes],
+        'scopes': _describe_scopes(scopes, descriptions),
     }
 
 
@@ -178,9 +177,7 @@ def connected_apps(user) -> list[dict]:
         apps.append({
             'id': application.pk,
             'name': application.name,
-            'scopes': [{'scope': scope, 'description': descriptions.get(scope, scope),
-                        'required': scope not in settings.OAUTH_OPTIONAL_SCOPES}
-                       for scope in (token.scope.split() if token else [])],
+            'scopes': _describe_scopes(token.scope.split() if token else [], descriptions),
             'last_used_at': token.created if token else None,
         })
     return sorted(apps, key=lambda app: app['last_used_at'] or timezone.now(), reverse=True)
@@ -246,6 +243,16 @@ def record_token_issued(token, request) -> None:
 
     UserClientActivity.objects.get_or_create(user=user, date=timezone.now().date(),
                                              client=UserClientActivity.CLIENT_CONNECTOR)
+
+
+def _describe_scopes(scopes, descriptions) -> list[dict]:
+    """
+    Describe scopes for the user, required ones first and optional ones after, each in the order given; the consent
+    screen and the connected apps list both show them in this order.
+    """
+    ordered = sorted(scopes, key=lambda scope: scope in settings.OAUTH_OPTIONAL_SCOPES)
+    return [{'scope': scope, 'description': descriptions.get(scope, scope),
+             'required': scope not in settings.OAUTH_OPTIONAL_SCOPES} for scope in ordered]
 
 
 def _granted_scopes(requested, approved) -> list[str]:
