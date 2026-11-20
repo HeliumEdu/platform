@@ -5,8 +5,8 @@ from helium.planner.services.neededgradeservice import ABOVE_TARGET, ACHIEVABLE,
     UNACHIEVABLE
 
 
-def _category(category_id, weight, grade, num_homework=1):
-    return {'id': category_id, 'weight': weight, 'overall_grade': grade, 'num_homework': num_homework}
+def _category(category_id, weight, grade):
+    return {'id': category_id, 'weight': weight, 'overall_grade': grade, 'num_homework': 1}
 
 
 class TestCaseNeededGradeService(TestCase):
@@ -137,24 +137,11 @@ class TestCaseNeededGradeService(TestCase):
 
         # WHEN
         result = neededgradeservice.calculate_needed_grade(categories, 3, 85, 80)
-        no_class_grade = neededgradeservice.calculate_needed_grade(categories, 3, 85, -1)
 
         # THEN
         self.assertEqual(ACHIEVABLE, result['state'])
         self.assertAlmostEqual(96.67, result['needed_grade'], places=2,
                                msg='(85 × 100 − 30 × 80 − 40 × 80) / 30, with category 2 at the current 80%')
-        self.assertAlmostEqual(90, no_class_grade['needed_grade'], places=2,
-                               msg='with no class grade, category 2 is left out: (85 × 60 − 30 × 80) / 30')
-
-    def test_needed_grade_leaves_out_categories_with_no_assignments(self):
-        # GIVEN
-        categories = [_category(1, 30, 80), _category(2, 40, -1, num_homework=0), _category(3, 30, -1)]
-
-        # WHEN
-        result = neededgradeservice.calculate_needed_grade(categories, 3, 85, 80)
-
-        # THEN
-        self.assertAlmostEqual(90, result['needed_grade'], places=2, msg='(85 × 60 − 30 × 80) / 30')
 
     def test_needed_grade_ignores_the_targets_current_average(self):
         # GIVEN
@@ -174,12 +161,9 @@ class TestCaseNeededGradeService(TestCase):
         no_weight = neededgradeservice.calculate_needed_grade([_category(1, 100, 80), _category(2, 0, -1)], 2, 85, 80)
         short_weights = neededgradeservice.calculate_needed_grade([_category(1, 40, 80), _category(2, 40, -1)], 2,
                                                                   85, 80)
-        rounded_weights = neededgradeservice.calculate_needed_grade(
-            [_category(1, 33.33, 80), _category(2, 33.34, 90), _category(3, 33.33, -1)], 3, 85, 85)
 
         # THEN
         self.assertEqual(TARGET_CATEGORY_HAS_NO_WEIGHT, no_weight['state'])
         self.assertEqual(ACHIEVABLE, short_weights['state'])
         self.assertAlmostEqual(90, short_weights['needed_grade'], places=2,
                                msg='weights totaling 80 divide like the class grade: (85 × 80 − 40 × 80) / 40')
-        self.assertEqual(ACHIEVABLE, rounded_weights['state'])

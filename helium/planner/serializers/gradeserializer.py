@@ -114,7 +114,7 @@ class NeededGradeSerializer(serializers.Serializer):
                   '`desired_gpa`.')
     needed_grade = serializers.FloatField(
         help_text='The percentage needed on `assignment`, or as the `category` average when there\'s no '
-                  '`assignment`, with the class\'s other ungraded work at its current grade. `0` with '
+                  '`assignment`, with the class\'s other ungraded work scoring as the class does now. `0` with '
                   '`target_category_has_no_weight` or `gpa_unreachable`.')
     weighted = serializers.BooleanField(help_text='Whether the class uses weighted grading.')
     category = NeededGradeTargetSerializer(allow_null=True,
@@ -122,6 +122,7 @@ class NeededGradeSerializer(serializers.Serializer):
     assignment = NeededGradeAssignmentSerializer(
         allow_null=True,
         help_text='The assignment the score is for: the chosen one, or the category\'s last ungraded assignment.')
+    total_weight_accounted_for = serializers.FloatField(allow_null=True, help_text='Always null.')
     grade_band = GradeScaleBandSerializer(
         allow_null=True,
         help_text='With `desired_gpa`: the band of the class\'s `grade_scale` whose `min_grade` is the class grade '

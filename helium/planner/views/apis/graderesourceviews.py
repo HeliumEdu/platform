@@ -73,8 +73,9 @@ class NeededGradeApiResourceView(HeliumAPIView):
 
         For a class with weighted grading, the result is the score needed on the category's last ungraded assignment
         (or the category average, when that assignment isn't in the class's ungraded work). For a class graded by
-        points, it's the score needed on the chosen assignment. Either way, the class's other ungraded work is taken
-        at its current grade.
+        points, it's the score needed on the chosen assignment. Either way, the class's other ungraded work is assumed
+        to score as the class does now: in a class with weighted grading, each other category at its average, or at
+        the class's grade while nothing in it is graded; otherwise, at the class's grade.
         """
         try:
             course_id = int(request.query_params['course'])

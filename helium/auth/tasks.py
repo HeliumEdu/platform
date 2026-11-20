@@ -293,7 +293,8 @@ def emit_online_users(self):
     metricutils.task_stop(metrics)
 
 
-@app.task(bind=True)
+@app.task(bind=True, soft_time_limit=settings.NIGHTLY_METRICS_TASK_SOFT_TIME_LIMIT,
+          time_limit=settings.NIGHTLY_METRICS_TASK_TIME_LIMIT)
 def emit_nightly_metrics(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("metrics.nightly", priority="low", published_at_ms=published_at_ms)
