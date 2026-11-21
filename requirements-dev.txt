@@ -2,3 +2,4 @@ pyngrok==9.0.3
 django-debug-toolbar==6.2.0
 pytest-django==4.12.0
 coverage==7.13.5
+django-migration-linter==7.0.0
