@@ -374,41 +374,54 @@ def rollup_client_activity(self):
         raise
 
 
+def _count_by_latest_app_platform(user_ids):
+    """
+    Count users by the platform of their most recently updated app push token (`ios` or `android`), or `unknown`
+    when they have none.
+    """
+    latest_platform_by_user = {}
+    for user_id, platform in (UserPushToken.objects
+                              .filter(user_id__in=user_ids, platform__in=settings.APP_CLIENT_PLATFORMS)
+                              .order_by('user_id', 'updated_at')
+                              .values_list('user_id', 'platform')):
+        latest_platform_by_user[user_id] = platform
+
+    counts = {platform: 0 for platform in sorted(settings.APP_CLIENT_PLATFORMS)} | {'unknown': 0}
+    for user_id in user_ids:
+        counts[latest_platform_by_user.get(user_id, 'unknown')] += 1
+
+    return counts
+
+
 @app.task(bind=True)
 def evaluate_review_prompts(self):
     published_at_ms = metricutils.get_published_at_ms(self)
     metrics = metricutils.task_start("user.review-prompt.evaluate", priority="low", published_at_ms=published_at_ms)
 
     try:
-        eligible = list(UserSettings.objects.eligible_for_review_prompt()
-                        .values_list('pk', 'user_id', 'review_prompts_requested'))
+        eligible = list(UserSettings.objects.eligible_for_review_prompt().values_list('pk', 'user_id'))
 
-        recent_cutoff = datetime.now().replace(tzinfo=timezone.utc) - timedelta(
-            days=settings.REVIEW_PROMPT_RECENT_WINDOW_DAYS)
-        counts = (Homework.objects
-                  .filter(completed=True,
-                          course__course_group__example_schedule=False,
-                          course__course_group__user_id__in=[user_id for _, user_id, _ in eligible])
-                  .values('course__course_group__user_id')
-                  .annotate(total=Count('pk'),
-                            recent=Count('pk', filter=Q(completed_at__gte=recent_cutoff))))
-        counts_by_user = {row['course__course_group__user_id']: (row['total'], row['recent'])
-                          for row in counts}
+        users_with_completions = set(
+            Homework.objects
+            .filter(completed=True,
+                    course__course_group__example_schedule=False,
+                    course__course_group__user_id__in=[user_id for _, user_id in eligible])
+            .values_list('course__course_group__user_id', flat=True)
+            .distinct())
 
-        flagged_ids = []
-        for user_settings_id, user_id, prompts_requested in eligible:
-            total_completed, recent_completed = counts_by_user.get(user_id, (0, 0))
-            threshold = settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD * (prompts_requested + 1)
-            if (total_completed >= threshold
-                    and recent_completed >= settings.REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD):
-                flagged_ids.append(user_settings_id)
+        flagged = [(user_settings_id, user_id) for user_settings_id, user_id in eligible
+                   if user_id in users_with_completions]
 
-        if flagged_ids:
-            UserSettings.objects.filter(pk__in=flagged_ids).update(prompt_for_review=True)
+        if flagged:
+            UserSettings.objects.filter(pk__in=[user_settings_id for user_settings_id, _ in flagged]) \
+                .update(prompt_for_review=True)
 
-        metricutils.increment('action.review_prompt.flagged', value=len(flagged_ids))
+        flagged_by_platform = _count_by_latest_app_platform([user_id for _, user_id in flagged])
+        for platform, count in flagged_by_platform.items():
+            metricutils.increment('action.review_prompt.flagged', value=count, extra_tags=[f'client_os:{platform}'])
+
         metricutils.task_stop(metrics, value=len(eligible))
-        logger.info(f"Evaluated {len(eligible)} user(s) for review prompt, flagged {len(flagged_ids)}")
+        logger.info(f"Evaluated {len(eligible)} user(s) for review prompt, flagged {len(flagged)}")
 
     except Exception as e:
         logger.error(f'Failed to evaluate review prompts: {e}', exc_info=True)
