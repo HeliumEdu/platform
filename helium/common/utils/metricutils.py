@@ -16,7 +16,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from helium.auth.utils.userutils import is_staff_user
 from helium.common.utils import redisutils
-from helium.common.utils.versionutils import get_client_version
+from helium.common.utils.versionutils import get_client_platform, get_client_version
 
 initialize(statsd_host=settings.DATADOG_STATSD_HOST)
 
@@ -58,17 +58,10 @@ def _normalize_user_agent_tag(user_agent):
     return "other"
 
 
-def _normalize_client_platform(request):
-    """Read the client's OS from X-Client-Platform, or None if absent or unrecognized."""
-    value = (request.headers.get(settings.CLIENT_PLATFORM_HEADER) or "").strip().lower()
-
-    return value if value in settings.CLIENT_PLATFORMS else None
-
-
 def _client_tags(request):
     """Resolve the client's form factor (`client`) and operating system (`client_os`)."""
     normalized_ua = _normalize_user_agent_tag(request.headers.get("User-Agent"))
-    client_platform = _normalize_client_platform(request)
+    client_platform = get_client_platform(request)
 
     if client_platform in settings.APP_CLIENT_PLATFORMS:
         client, client_os = "app", client_platform

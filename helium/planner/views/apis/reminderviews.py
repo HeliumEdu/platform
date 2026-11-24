@@ -180,7 +180,7 @@ class RemindersApiDetailView(HeliumAPIView, RetrieveModelMixin, UpdateModelMixin
         # On the false->true dismiss transition, clear the reminder's already-
         # delivered push from all of the user's devices.
         if reminder.dismissed and not was_dismissed:
-            push_tokens = pushservice.get_push_tokens(reminder.user)
+            push_tokens = pushservice.get_push_tokens(reminder.user, silent=True)
             if push_tokens:
                 taskutils.safe_apply_async(
                     send_dismiss_pushes,
@@ -261,7 +261,7 @@ class RemindersApiDismissAllView(ViewSet, HeliumAPIView):
         if reminder_ids:
             queryset.update(dismissed=True)
 
-            push_tokens = pushservice.get_push_tokens(request.user)
+            push_tokens = pushservice.get_push_tokens(request.user, silent=True)
             if push_tokens:
                 for reminder_id in reminder_ids:
                     taskutils.safe_apply_async(

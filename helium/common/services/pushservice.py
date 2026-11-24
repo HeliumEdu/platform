@@ -154,10 +154,18 @@ def send_notifications(push_tokens, subject, message, reminder_data):
         raise
 
 
-def get_push_tokens(user):
-    """The user's most recently registered push tokens, at most ``MAX_PUSH_TOKENS_PER_USER``."""
-    return list(user.push_tokens.order_by('-updated_at', '-pk')
-                .values_list('token', flat=True)[:settings.MAX_PUSH_TOKENS_PER_USER])
+def get_push_tokens(user, silent=False):
+    """
+    The user's most recently registered push tokens, at most ``MAX_PUSH_TOKENS_PER_USER``.
+
+    A ``silent`` push leaves out web registrations: a browser must show a notification for every push, so Chrome
+    answers a silent one with its own "updated in the background" notice.
+    """
+    push_tokens = user.push_tokens.order_by('-updated_at', '-pk')
+    if silent:
+        push_tokens = push_tokens.exclude(platform='web')
+
+    return list(push_tokens.values_list('token', flat=True)[:settings.MAX_PUSH_TOKENS_PER_USER])
 
 
 def send_dismiss(push_tokens, reminder_id):

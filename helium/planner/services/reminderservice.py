@@ -351,7 +351,7 @@ def clear_delivered_push(reminder):
     clear it: it is no longer `sent`, so it drops out of the notification list and cannot be
     dismissed.
     """
-    push_tokens = pushservice.get_push_tokens(reminder.get_user())
+    push_tokens = pushservice.get_push_tokens(reminder.get_user(), silent=True)
     if not push_tokens:
         return
 
