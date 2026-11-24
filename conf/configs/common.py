@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.9.15"
+__version__ = "2.9.16"
 
 import json
 import os
@@ -216,7 +216,7 @@ REVIEW_PROMPT_RECENT_WINDOW_DAYS = 7
 
 EMAIL_SEND_RATE_PER_SEC = 7
 
-BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 30
+REFRESH_TOKEN_GRACE_PERIOD_SECONDS = 30
 
 # Application definition
 
@@ -313,20 +313,16 @@ OAUTH_CONNECTOR_RESOURCES = (f'{PROJECT_CONNECTOR_HOST}/mcp',)
 OAUTH_CONSENT_TTL_SECONDS = 60 * 60
 
 # Scopes the user opts in to on the consent screen; a client that requests one gets it only if the user approves it
-OAUTH_OPTIONAL_SCOPES = ('planner:notes:read',)
+OAUTH_OPTIONAL_SCOPES = (enums.PLANNER_NOTES_READ,)
 
 OAUTH2_PROVIDER = {
-    'SCOPES': {
-        'planner:read': 'Read your assignments, events, classes, resources, and grades',
-        'planner:notes:read': 'Read your notes',
-        'planner:import': 'Import new terms and classes with their assignments, events, and class schedules',
-    },
-    'DEFAULT_SCOPES': ['planner:read'],
+    'SCOPES': dict(enums.OAUTH_SCOPE_CHOICES),
+    'DEFAULT_SCOPES': [enums.PLANNER_READ],
     'AUTHORIZATION_CODE_EXPIRE_SECONDS': 60,
     'ACCESS_TOKEN_EXPIRE_SECONDS': 60 * 60,
     'REFRESH_TOKEN_EXPIRE_SECONDS': 60 * 60 * 24 * 90,
     'ROTATE_REFRESH_TOKEN': True,
-    'REFRESH_TOKEN_GRACE_PERIOD_SECONDS': BLACKLIST_REFRESH_TOKEN_DELAY_SECS,
+    'REFRESH_TOKEN_GRACE_PERIOD_SECONDS': REFRESH_TOKEN_GRACE_PERIOD_SECONDS,
     'REFRESH_TOKEN_REUSE_PROTECTION': True,
     'PKCE_REQUIRED': True,
     'ALLOW_LOCALHOST_LOOPBACK': True,

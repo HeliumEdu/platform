@@ -155,7 +155,7 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
                 taskutils.safe_apply_async(blacklist_refresh_token,
                     (refresh.token,),
                     critical=True,
-                    countdown=settings.BLACKLIST_REFRESH_TOKEN_DELAY_SECS,
+                    countdown=settings.REFRESH_TOKEN_GRACE_PERIOD_SECONDS,
                     priority=settings.CELERY_PRIORITY_LOW,
                 )
 

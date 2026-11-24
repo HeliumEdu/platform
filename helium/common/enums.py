@@ -247,3 +247,12 @@ GRADE_SCALE_TEMPLATES = {
 GRADE_SCALE_TEMPLATE_CHOICES = tuple((key, template['label']) for key, template in GRADE_SCALE_TEMPLATES.items())
 COURSE_GRADE_SCALE_TEMPLATE_CHOICES = tuple(choice for choice in GRADE_SCALE_TEMPLATE_CHOICES
                                             if choice[0] != GRADE_SCALE_NONE)
+
+PLANNER_READ = 'planner:read'
+PLANNER_NOTES_READ = 'planner:notes:read'
+PLANNER_IMPORT = 'planner:import'
+OAUTH_SCOPE_CHOICES = (
+    (PLANNER_READ, 'Read your assignments, events, classes, resources, and grades'),
+    (PLANNER_NOTES_READ, 'Read your notes'),
+    (PLANNER_IMPORT, 'Import new terms and classes with their assignments, events, and class schedules'),
+)
