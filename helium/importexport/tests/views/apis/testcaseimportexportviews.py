@@ -1164,6 +1164,52 @@ class TestCaseImportExportViews(APITestCase):
         self.assertTrue(response.data['courses'][1].startswith('courses id 2, credits: '))
         self.assertFalse(Course.objects.exists())
 
+    def test_rejected_import_adds_structured_row_errors_when_asked(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['courses'][0]['credits'] = 'three'
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload,
+                                                  headers={'X-Helium-Structured-Errors': '1'})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(response.data['courses'][0].startswith('courses id 1, credits: '))
+        self.assertEqual(1, len(response.data['row_errors']))
+        row_error = response.data['row_errors'][0]
+        self.assertEqual(('courses', 1, 'credits'), (row_error['section'], row_error['id'], row_error['field']))
+        self.assertEqual(response.data['courses'][0], f"courses id 1, credits: {row_error['message']}")
+
+    def test_rejected_import_reports_a_non_field_row_error_without_a_field(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['resources'][0]['courses'] = 'not a list'
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload,
+                                                  headers={'X-Helium-Structured-Errors': '1'})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual([{'section': 'resources', 'id': 1, 'field': None,
+                           'message': 'Field `courses` must be a list.'}], response.data['row_errors'])
+
+    def test_rejected_import_leaves_row_errors_out_unless_asked(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['courses'][0]['credits'] = 'three'
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(['courses'], list(response.data.keys()))
+
     def test_import_note_invalid_payload_rejects_whole_import(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)

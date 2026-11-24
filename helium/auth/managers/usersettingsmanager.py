@@ -3,14 +3,21 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import Exists, OuterRef
 from django.utils import timezone
+
+from helium.auth.models.userclientactivity import UserClientActivity
 
 logger = logging.getLogger(__name__)
 
 
 class UserSettingsQuerySet(models.query.QuerySet):
     def eligible_for_review_prompt(self):
-        return self.filter(user__is_active=True,
+        has_mobile_activity = Exists(UserClientActivity.objects.filter(user_id=OuterRef('user_id'),
+                                                                       client=UserClientActivity.CLIENT_MOBILE_APP))
+
+        return self.filter(has_mobile_activity,
+                           user__is_active=True,
                            prompt_for_review=False,
                            next_review_prompt_date__isnull=False,
                            next_review_prompt_date__lte=timezone.now(),

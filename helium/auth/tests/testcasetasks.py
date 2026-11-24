@@ -13,7 +13,7 @@ from unittest import mock
 
 from django.utils import timezone
 
-from helium.auth.models import UserClientActivity
+from helium.auth.models import UserClientActivity, UserPushToken
 from helium.auth.tasks import (
     sweep_dangling_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics,
     emit_online_users, evaluate_review_prompts, delete_user, process_dormant_users, purge_oauth_tokens,
@@ -21,6 +21,7 @@ from helium.auth.tasks import (
 )
 from helium.auth.tests.helpers import oauthhelper, userhelper
 from helium.common import enums
+from helium.planner.models import Homework
 from helium.planner.tests.helpers import coursegrouphelper, coursehelper, courseschedulehelper, homeworkhelper
 
 
@@ -621,26 +622,41 @@ class TestCaseTasks(APITestCase):
         mock_delete.assert_not_called()
         self.assertEqual(get_user_model().objects.count(), 1)
 
-    def given_a_user_due_for_a_review_prompt(self, completed_count, completed_at):
-        user = userhelper.given_a_user_exists()
+    def given_a_user_due_for_a_review_prompt(self, completed_count=1, example_schedule=False, uses_mobile_app=True,
+                                             username='test_user', email='user@test.com'):
+        user = userhelper.given_a_user_exists(username=username, email=email)
         user.settings.next_review_prompt_date = timezone.now() - timedelta(days=1)
         user.settings.prompt_for_review = False
         user.settings.review_prompts_requested = 0
         user.settings.save()
 
-        course_group = coursegrouphelper.given_course_group_exists(user)
+        if uses_mobile_app:
+            UserClientActivity.objects.create(user=user, date=timezone.now().date(),
+                                              client=UserClientActivity.CLIENT_MOBILE_APP)
+
+        course_group = coursegrouphelper.given_course_group_exists(user, example_schedule=example_schedule)
         course = coursehelper.given_course_exists(course_group)
         for _ in range(completed_count):
-            homework = homeworkhelper.given_homework_exists(course, completed=True)
-            homework.completed_at = completed_at
-            homework.save()
+            homeworkhelper.given_homework_exists(course, completed=True)
 
         return user
 
-    def test_evaluate_review_prompts_flags_a_qualifying_user(self):
+    def test_evaluate_review_prompts_flags_a_user_with_one_completion(self):
         # GIVEN
-        user = self.given_a_user_due_for_a_review_prompt(
-            settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD, timezone.now() - timedelta(days=1))
+        user = self.given_a_user_due_for_a_review_prompt()
+
+        # WHEN
+        evaluate_review_prompts()
+
+        # THEN
+        user.settings.refresh_from_db()
+        self.assertTrue(user.settings.prompt_for_review)
+
+    def test_evaluate_review_prompts_flags_a_user_whose_completions_are_old(self):
+        # GIVEN
+        user = self.given_a_user_due_for_a_review_prompt()
+        Homework.objects.filter(course__course_group__user=user).update(
+            completed_at=timezone.now() - timedelta(days=365))
 
         # WHEN
         evaluate_review_prompts()
@@ -651,8 +667,7 @@ class TestCaseTasks(APITestCase):
 
     def test_evaluate_review_prompts_skips_a_user_whose_prompt_date_has_not_arrived(self):
         # GIVEN
-        user = self.given_a_user_due_for_a_review_prompt(
-            settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD, timezone.now() - timedelta(days=1))
+        user = self.given_a_user_due_for_a_review_prompt()
         user.settings.next_review_prompt_date = timezone.now() + timedelta(days=1)
         user.settings.save()
 
@@ -663,11 +678,9 @@ class TestCaseTasks(APITestCase):
         user.settings.refresh_from_db()
         self.assertFalse(user.settings.prompt_for_review)
 
-    @override_settings(REVIEW_PROMPT_MAX_REQUESTED=2, REVIEW_PROMPT_HOMEWORK_THRESHOLD=1,
-                       REVIEW_PROMPT_RECENT_HOMEWORK_THRESHOLD=1)
     def test_evaluate_review_prompts_skips_a_user_at_the_request_cap(self):
         # GIVEN
-        user = self.given_a_user_due_for_a_review_prompt(3, timezone.now() - timedelta(days=1))
+        user = self.given_a_user_due_for_a_review_prompt()
         user.settings.review_prompts_requested = settings.REVIEW_PROMPT_MAX_REQUESTED
         user.settings.save()
 
@@ -678,11 +691,9 @@ class TestCaseTasks(APITestCase):
         user.settings.refresh_from_db()
         self.assertFalse(user.settings.prompt_for_review)
 
-    def test_evaluate_review_prompts_skips_a_user_without_recent_completions(self):
+    def test_evaluate_review_prompts_skips_a_user_without_completions(self):
         # GIVEN
-        stale = timezone.now() - timedelta(days=settings.REVIEW_PROMPT_RECENT_WINDOW_DAYS + 1)
-        user = self.given_a_user_due_for_a_review_prompt(
-            settings.REVIEW_PROMPT_HOMEWORK_THRESHOLD, stale)
+        user = self.given_a_user_due_for_a_review_prompt(completed_count=0)
 
         # WHEN
         evaluate_review_prompts()
@@ -690,3 +701,46 @@ class TestCaseTasks(APITestCase):
         # THEN
         user.settings.refresh_from_db()
         self.assertFalse(user.settings.prompt_for_review)
+
+    def test_evaluate_review_prompts_skips_a_user_with_only_example_schedule_completions(self):
+        # GIVEN
+        user = self.given_a_user_due_for_a_review_prompt(example_schedule=True)
+
+        # WHEN
+        evaluate_review_prompts()
+
+        # THEN
+        user.settings.refresh_from_db()
+        self.assertFalse(user.settings.prompt_for_review)
+
+    def test_evaluate_review_prompts_skips_a_user_without_mobile_app_activity(self):
+        # GIVEN
+        user = self.given_a_user_due_for_a_review_prompt(uses_mobile_app=False)
+        UserClientActivity.objects.create(user=user, date=timezone.now().date(), client=UserClientActivity.CLIENT_WEB)
+
+        # WHEN
+        evaluate_review_prompts()
+
+        # THEN
+        user.settings.refresh_from_db()
+        self.assertFalse(user.settings.prompt_for_review)
+
+    @mock.patch('helium.auth.tasks.metricutils.increment')
+    def test_evaluate_review_prompts_counts_flagged_users_by_latest_app_push_token(self, mock_increment):
+        # GIVEN
+        switched_to_ios = self.given_a_user_due_for_a_review_prompt()
+        UserPushToken.objects.create(user=switched_to_ios, token='old', device_id='android-phone', platform='android')
+        UserPushToken.objects.create(user=switched_to_ios, token='new', device_id='iphone', platform='ios')
+        UserPushToken.objects.filter(user=switched_to_ios, platform='android').update(
+            updated_at=timezone.now() - timedelta(days=30))
+        UserPushToken.objects.filter(user=switched_to_ios, platform='ios').update(updated_at=timezone.now())
+        self.given_a_user_due_for_a_review_prompt(username='no_token', email='no-token@test.com')
+
+        # WHEN
+        evaluate_review_prompts()
+
+        # THEN
+        flagged_counts = {call.kwargs['extra_tags'][0]: call.kwargs['value'] for call in mock_increment.call_args_list
+                          if call.args == ('action.review_prompt.flagged',)}
+        self.assertEqual({'client_os:android': 0, 'client_os:ios': 1, 'client_os:unknown': 1}, flagged_counts)
+

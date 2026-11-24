@@ -3,6 +3,7 @@ import logging
 import os
 
 import icalendar
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter
@@ -212,6 +213,10 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
         With `course_group`, the file's classes are added to that existing Course Group (a term already in the
         account) rather than to a new one.
+
+        Send the header `X-Helium-Structured-Errors: 1` to also receive a rejected import's row errors as
+        `row_errors`, a list of `{section, id, field, message}` (`field` is null when the error isn't about one field),
+        next to the usual messages.
         """
         dry_run = is_dry_run(request)
         course_group_id = self._course_group_param(request)
@@ -266,6 +271,10 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                 homework_count += homework_count_file
                 reminders_count += reminders_count_file
                 notes_count += notes_count_file
+            except importservice.ImportRowValidationError as error:
+                if request.headers.get(settings.STRUCTURED_ERRORS_HEADER) != '1':
+                    raise
+                return Response({**error.detail, 'row_errors': error.row_errors}, status=status.HTTP_400_BAD_REQUEST)
             except ValueError:
                 raise ValidationError({
                     'details': f'Invalid JSON in file: {upload}.'

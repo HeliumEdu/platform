@@ -26,21 +26,21 @@ def given_resource_upload(filename, content_type='application/json'):
         return SimpleUploadedFile(filename, fp.read(), content_type=content_type)
 
 
-def post_import(client, payload, filename='import.json', content_type='application/json', **query):
+def post_import(client, payload, filename='import.json', content_type='application/json', headers=None, **query):
     upload = SimpleUploadedFile(filename, json.dumps(payload).encode(), content_type=content_type)
-    return post_import_upload(client, upload, **query)
+    return post_import_upload(client, upload, headers=headers, **query)
 
 
 def post_import_resource(client, filename, content_type='application/json', **query):
     return post_import_upload(client, given_resource_upload(filename, content_type), **query)
 
 
-def post_import_upload(client, upload, **query):
+def post_import_upload(client, upload, headers=None, **query):
     url = reverse('importexport_import')
     if query:
         url = f'{url}?{urlencode(query)}'
 
-    return client.post(url, {'file[]': [upload]})
+    return client.post(url, {'file[]': [upload]}, headers=headers)
 
 
 def verify_nothing_imported(test_case):

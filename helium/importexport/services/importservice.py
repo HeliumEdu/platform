@@ -33,17 +33,30 @@ _SECTIONS_WITH_IDS = (
 )
 
 
+class ImportRowValidationError(ValidationError):
+    """
+    A rejected import's row errors, as messages and also as `row_errors`: one `{section, id, field, message}` per
+    message, `field` null when the error isn't about one field.
+    """
+
+    def __init__(self, detail, row_errors):
+        super().__init__(detail)
+        self.row_errors = row_errors
+
+
 def _row_validation_error(section, row_id, errors):
     """
     Flatten a row's serializer errors into messages naming the section and `id` they came from,
     so a bare field name can't be read as belonging to the wrong entity.
     """
     messages = []
+    row_errors = []
     for field, field_errors in errors.items():
         for error in (field_errors if isinstance(field_errors, (list, tuple)) else [field_errors]):
             messages.append(f'{section} id {row_id}, {field}: {error}')
+            row_errors.append({'section': section, 'id': row_id, 'field': field, 'message': str(error)})
 
-    return ValidationError({section: messages})
+    return ImportRowValidationError({section: messages}, row_errors)
 
 
 class _SectionErrors:
@@ -55,6 +68,7 @@ class _SectionErrors:
     def __init__(self, section):
         self.section = section
         self.messages = []
+        self.row_errors = []
 
     @contextmanager
     def row(self, row_id):
@@ -63,14 +77,21 @@ class _SectionErrors:
         except ValidationError as error:
             detail = dict(error.detail) if isinstance(error.detail, dict) else {'non_field_errors': error.detail}
             own = detail.pop(self.section, [])
-            self.messages.extend(str(message) for message in (own if isinstance(own, list) else [own]))
+            own_messages = [str(message) for message in (own if isinstance(own, list) else [own])]
+            self.messages.extend(own_messages)
+            if isinstance(error, ImportRowValidationError) and not detail:
+                self.row_errors.extend(error.row_errors)
+            else:
+                self.row_errors.extend({'section': self.section, 'id': row_id, 'field': None, 'message': message}
+                                       for message in own_messages)
             if detail:
-                self.messages.extend(str(message) for message in
-                                     _row_validation_error(self.section, row_id, detail).detail[self.section])
+                remainder = _row_validation_error(self.section, row_id, detail)
+                self.messages.extend(str(message) for message in remainder.detail[self.section])
+                self.row_errors.extend(remainder.row_errors)
 
     def raise_if_any(self):
         if self.messages:
-            raise ValidationError({self.section: self.messages})
+            raise ImportRowValidationError({self.section: self.messages}, self.row_errors)
 
 
 def _coerce_id(value, section, key='id'):
