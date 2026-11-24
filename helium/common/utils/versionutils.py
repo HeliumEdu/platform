@@ -1,6 +1,8 @@
 import logging
 import re
 
+from django.conf import settings
+
 logger = logging.getLogger(__name__)
 
 _VERSION_PATTERN = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\+\d+)?$")
@@ -25,6 +27,13 @@ def get_client_version(request):
         return None
 
     return tuple(int(g) for g in match.groups())
+
+
+def get_client_platform(request):
+    """Read the client's OS from X-Client-Platform, or None if absent or unrecognized."""
+    value = (request.headers.get(settings.CLIENT_PLATFORM_HEADER) or "").strip().lower()
+
+    return value if value in settings.CLIENT_PLATFORMS else None
 
 
 def client_version_gte(request, min_version):

@@ -11,6 +11,7 @@ from helium.auth.models.userpushtoken import UserPushToken
 from helium.auth.serializers.userpushtokenserializer import UserPushTokenSerializer
 from helium.common.permissions import IsOwner
 from helium.common.utils import metricutils
+from helium.common.utils.versionutils import get_client_platform
 from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ class UserPushTokenApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         obj, _ = UserPushToken.objects.update_or_create(
             user=self.request.user,
             device_id=device_id,
-            defaults={'token': token},
+            defaults={'token': token, 'platform': get_client_platform(self.request)},
         )
         serializer.instance = obj
 

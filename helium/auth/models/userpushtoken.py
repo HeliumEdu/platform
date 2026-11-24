@@ -14,6 +14,10 @@ class UserPushToken(BaseModel):
 
     token = models.TextField(help_text='The token used for push notifications.')
 
+    platform = models.CharField(max_length=20, blank=True, null=True,
+                                help_text='The platform the device registered from (`ios`, `android`, or `web`), '
+                                          'or null if unknown.')
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='push_tokens', on_delete=models.CASCADE)
 
     class Meta:

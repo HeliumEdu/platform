@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones sync-shared-constants sync-assets test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish promote start-frontend stop-frontend test-with-frontend
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones sync-shared-constants sync-assets check-migrations test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish promote start-frontend stop-frontend test-with-frontend
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -94,7 +94,13 @@ migrate-dev: install-dev
 		ENVIRONMENT=local python manage.py migrate; \
 	)
 
-test: install-dev build-docs
+check-migrations: install-dev
+	@( \
+		source $(PLATFORM_VENV)/bin/activate; \
+		ENVIRONMENT=local python manage.py checkmigrations; \
+	)
+
+test: install-dev build-docs check-migrations
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		coverage run -m pytest && coverage report && coverage html && coverage xml; \
