@@ -22,6 +22,7 @@ from rest_framework.exceptions import APIException, ValidationError
 
 from helium.auth.models import UserClientActivity
 from helium.auth.utils.userutils import mark_user_active
+from helium.common import enums
 from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 #: The endpoints each OAuth scope reaches, as (URL name, method). OAuth tokens are refused everywhere else, so a new
 #: endpoint is never reachable with one until it's listed here.
 OAUTH_SCOPE_ENDPOINTS = {
-    'planner:read': {
+    enums.PLANNER_READ: {
         ('auth_user_detail', 'GET'),
         ('planner_coursegroups_list', 'GET'),
         ('planner_courses_list', 'GET'),
@@ -42,11 +43,11 @@ OAUTH_SCOPE_ENDPOINTS = {
         ('planner_resourcegroups_list', 'GET'),
         ('planner_resources_list', 'GET'),
     },
-    'planner:notes:read': {
+    enums.PLANNER_NOTES_READ: {
         ('auth_user_detail', 'GET'),
         ('planner_notes_list', 'GET'),
     },
-    'planner:import': {
+    enums.PLANNER_IMPORT: {
         ('auth_user_detail', 'GET'),
         ('planner_coursegroups_list', 'GET'),
         ('importexport_import', 'POST'),

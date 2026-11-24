@@ -17,7 +17,7 @@ ANDROID_BROWSER = ('Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 
 DESKTOP_BROWSER = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '
                    'Chrome/120.0 Safari/537.36')
 CRAWLER = 'Googlebot/2.1 (+http://www.google.com/bot.html)'
-CONNECTOR = 'heliumedu helium-connector/1.2.0'
+CONNECTOR = 'pyheliumedu/1.2.0 helium-connector/1.2.0'
 
 
 def _request(client_platform=None, user_agent=None):

@@ -10,7 +10,7 @@ Reads ``helium/common/enums.py`` and writes:
   (``RESOURCE_STATUS_CHOICES``, ``CONDITION_CHOICES``).
 * ``projects/frontend/lib/utils/preferred_colors.dart`` — the course color palette (``PREFERRED_COLORS``).
 * ``projects/connector/helium_connector/platform_enums.py`` — resource status and condition labels, the ungraded
-  sentinels, the recurrence horizon, and the grade scale preset names and ids.
+  sentinels, the recurrence horizon, the grade scale preset names and ids, and the OAuth scopes.
 """
 
 import sys
@@ -135,6 +135,7 @@ GradeScalePreset = Literal[
 {grade_scale_preset_names}]
 GRADE_SCALE_PRESETS: Final[dict[GradeScalePreset, int]] = {{
 {grade_scale_presets}}}
+OAUTH_SCOPES: Final = {as_tuple(scope for scope, _ in enums.OAUTH_SCOPE_CHOICES)}
 """
 
 

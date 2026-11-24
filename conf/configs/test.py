@@ -13,7 +13,7 @@ BASE_DIR = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file_
 
 # Project configuration
 
-BLACKLIST_REFRESH_TOKEN_DELAY_SECS = 0
+REFRESH_TOKEN_GRACE_PERIOD_SECONDS = 0
 
 # Application definition
 
