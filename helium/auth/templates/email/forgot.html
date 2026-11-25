@@ -1,15 +1,20 @@
 {% extends "email/base.html" %}
+{% load i18n %}
 
-{% block greeting %}Reset Your Password{% endblock %}
+{% block greeting %}{% translate "Reset Your Password" %}{% endblock %}
 
 {% block content %}
     <tr>
         <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px;">
-            We received a request to reset your Helium password.
-            <a href="{{ reset_url }}" target="_blank">Click here to choose a new password.</a>
-            <br/><br/>If you did not request this, you can safely ignore this email.
-            <br/><br/>If you have any trouble, <a href="{{ support_url }}" target="_blank">contact support</a>
-            and we'll get it sorted out.
+            {% blocktranslate trimmed %}
+                We received a request to reset your Helium password.
+                <a href="{{ reset_url }}" target="_blank">Click here to choose a new password.</a>
+            {% endblocktranslate %}
+            <br/><br/>{% translate "If you did not request this, you can safely ignore this email." %}
+            <br/><br/>{% blocktranslate trimmed %}
+                If you have any trouble, <a href="{{ support_url }}" target="_blank">contact support</a>
+                and we'll get it sorted out.
+            {% endblocktranslate %}
         </td>
     </tr>
 {% endblock %}

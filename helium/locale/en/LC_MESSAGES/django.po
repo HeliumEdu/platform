@@ -1,0 +1,377 @@
+# AUTO-GENERATED — DO NOT EDIT.
+# Extracted from the email templates and subjects by:
+#   platform: make build-messages
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-25 06:12+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: auth/tasks.py
+msgid "Verify Your Email Address with Helium"
+msgstr ""
+
+#: auth/tasks.py
+msgid "Welcome to Helium"
+msgstr ""
+
+#: auth/tasks.py
+msgid "Reset Your Helium Password"
+msgstr ""
+
+#: auth/templates/email/dormant_warning.html
+#: auth/templates/email/dormant_warning.txt
+msgid "This is your final notice."
+msgstr ""
+
+#: auth/templates/email/dormant_warning.html
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid ""
+"Your Helium account will be permanently deleted tomorrow due to %(years)s+ "
+"years of inactivity."
+msgstr ""
+
+#: auth/templates/email/dormant_warning.html
+#, python-format
+msgid ""
+"Your Helium account is scheduled for deletion in <strong>%(days)s day</"
+"strong> due to %(years)s+ years of inactivity."
+msgid_plural ""
+"Your Helium account is scheduled for deletion in <strong>%(days)s days</"
+"strong> due to %(years)s+ years of inactivity."
+msgstr[0] ""
+msgstr[1] ""
+
+#: auth/templates/email/dormant_warning.html
+#: auth/templates/email/dormant_warning.txt
+msgid ""
+"When your account is deleted, all data stored in Helium will also be deleted "
+"and cannot be recovered, including your classes, assignments, grades, notes, "
+"and attachments."
+msgstr ""
+
+#: auth/templates/email/dormant_warning.html
+#, python-format
+msgid ""
+"<strong>To keep your free account,</strong> simply <a href=\"%(login_url)s\" "
+"target=\"_blank\">log in</a>. That's all it takes."
+msgstr ""
+
+#: auth/templates/email/dormant_warning.html
+#, python-format
+msgid ""
+"If you'd like to delete your account, but also want a copy of your data, see "
+"our guide on <a href=\"%(export_url)s\" target=\"_blank\">exporting your "
+"data</a>, and our guide on <a href=\"%(delete_account_url)s\" "
+"target=\"_blank\">deleting your account manually</a>."
+msgstr ""
+
+#: auth/templates/email/dormant_warning.html
+#, python-format
+msgid ""
+"Questions? <a href=\"%(support_url)s\" target=\"_blank\">Contact support</a>."
+msgstr ""
+
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid ""
+"Your Helium account is scheduled for deletion in %(days)s day due to "
+"%(years)s+ years of inactivity."
+msgid_plural ""
+"Your Helium account is scheduled for deletion in %(days)s days due to "
+"%(years)s+ years of inactivity."
+msgstr[0] ""
+msgstr[1] ""
+
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid ""
+"To keep your free account, simply log in at %(login_url)s. That's all it "
+"takes."
+msgstr ""
+
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid ""
+"If you'd like to delete your account, but also want a copy of your data, see "
+"our guide on exporting your data (%(export_url)s), and our guide on deleting "
+"your account manually (%(delete_account_url)s)."
+msgstr ""
+
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid "Questions? Contact support at %(support_url)s."
+msgstr ""
+
+#: auth/templates/email/dormant_warning.txt auth/templates/email/register.txt
+msgid "Thanks,"
+msgstr ""
+
+#: auth/templates/email/dormant_warning.txt auth/templates/email/forgot.txt
+#: auth/templates/email/register.txt auth/templates/email/verification.txt
+#: common/templates/email/base.html planner/templates/email/reminder.txt
+msgid "The Helium Team"
+msgstr ""
+
+#: auth/templates/email/forgot.html auth/templates/email/forgot.txt
+msgid "Reset Your Password"
+msgstr ""
+
+#: auth/templates/email/forgot.html
+#, python-format
+msgid ""
+"We received a request to reset your Helium password. <a "
+"href=\"%(reset_url)s\" target=\"_blank\">Click here to choose a new password."
+"</a>"
+msgstr ""
+
+#: auth/templates/email/forgot.html auth/templates/email/forgot.txt
+msgid "If you did not request this, you can safely ignore this email."
+msgstr ""
+
+#: auth/templates/email/forgot.html
+#, python-format
+msgid ""
+"If you have any trouble, <a href=\"%(support_url)s\" "
+"target=\"_blank\">contact support</a> and we'll get it sorted out."
+msgstr ""
+
+#: auth/templates/email/forgot.txt
+msgid ""
+"We received a request to reset your Helium password. Use the link below to "
+"choose a new password."
+msgstr ""
+
+#: auth/templates/email/forgot.txt
+#, python-format
+msgid ""
+"If you have any trouble, contact support at %(support_url)s and we'll get it "
+"sorted out."
+msgstr ""
+
+#: auth/templates/email/forgot.txt auth/templates/email/verification.txt
+#: common/templates/email/base.html planner/templates/email/reminder.txt
+msgid "Regards,"
+msgstr ""
+
+#: auth/templates/email/register.html auth/templates/email/register.txt
+#: auth/templates/email/verification.html auth/templates/email/verification.txt
+msgid "Hey!"
+msgstr ""
+
+#: auth/templates/email/register.html
+#, python-format
+msgid ""
+"You've been successfully signed up for Helium. <a href=\"%(login_url)s\" "
+"target=\"_blank\">Click here</a> to get started."
+msgstr ""
+
+#: auth/templates/email/register.txt
+msgid ""
+"You've been successfully registered for Helium! To log in and get started, "
+"visit the link below."
+msgstr ""
+
+#: auth/templates/email/verification.html
+#, python-format
+msgid ""
+"You're almost there. Your verification code is: <strong>%(code)s</strong>"
+msgstr ""
+
+#: auth/templates/email/verification.html
+#, python-format
+msgid ""
+"<a href=\"%(url)s?email=%(email)s&code=%(code)s\" target=\"_blank\">Click "
+"here</a> to verify this email address with Helium."
+msgstr ""
+
+#: auth/templates/email/verification.txt
+#, python-format
+msgid "You're almost there. Your verification code is: %(code)s."
+msgstr ""
+
+#: auth/templates/email/verification.txt
+msgid ""
+"Paste the link below into your browser to verify this email address with "
+"Helium."
+msgstr ""
+
+#: auth/utils/userutils.py
+#, python-format
+msgid "Your Account Will Be Deleted in %(days)s Day"
+msgid_plural "Your Account Will Be Deleted in %(days)s Days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: auth/utils/userutils.py
+#, python-format
+msgid "Reminder: %(days)s Day Until Account Deletion"
+msgid_plural "Reminder: %(days)s Days Until Account Deletion"
+msgstr[0] ""
+msgstr[1] ""
+
+#: auth/utils/userutils.py
+#, python-format
+msgid "Reminder: Only %(days)s Day Left"
+msgid_plural "Reminder: Only %(days)s Days Left"
+msgstr[0] ""
+msgstr[1] ""
+
+#: auth/utils/userutils.py
+msgid "Final Notice: Account Deletion Tomorrow"
+msgstr ""
+
+#: common/templates/email/base.html
+msgid "Logo"
+msgstr ""
+
+#: common/templates/email/base.html
+msgid "Support on Patreon"
+msgstr ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(course)s in %(count)s minute"
+msgid_plural "%(title)s in %(course)s in %(count)s minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(course)s in %(count)s hour"
+msgid_plural "%(title)s in %(course)s in %(count)s hours"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(course)s in %(count)s day"
+msgid_plural "%(title)s in %(course)s in %(count)s days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(course)s in %(count)s week"
+msgid_plural "%(title)s in %(course)s in %(count)s weeks"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(count)s minute"
+msgid_plural "%(title)s in %(count)s minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(count)s hour"
+msgid_plural "%(title)s in %(count)s hours"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(count)s day"
+msgid_plural "%(title)s in %(count)s days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(count)s week"
+msgid_plural "%(title)s in %(count)s weeks"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(course)s in %(count)s minute"
+msgid_plural "%(course)s in %(count)s minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(course)s in %(count)s hour"
+msgid_plural "%(course)s in %(count)s hours"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(course)s in %(count)s day"
+msgid_plural "%(course)s in %(count)s days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(course)s in %(count)s week"
+msgid_plural "%(course)s in %(count)s weeks"
+msgstr[0] ""
+msgstr[1] ""
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "When:"
+msgstr ""
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "Info:"
+msgstr ""
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+#, python-format
+msgid "%(category)s for "
+msgstr ""
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "Location:"
+msgstr ""
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "Teacher:"
+msgstr ""
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "Note:"
+msgstr ""
+
+#: planner/templates/email/reminder.html
+msgid "Open"
+msgstr ""
+
+#: planner/templates/email/reminder.html
+msgid "Resources"
+msgstr ""
+
+#: planner/templates/email/reminder.html
+msgid "Attachments"
+msgstr ""
+
+#: planner/templates/email/reminder.html
+msgid "Open in Helium"
+msgstr ""
+
+#: planner/templates/email/reminder.txt
+msgid "Resources:"
+msgstr ""
+
+#: planner/templates/email/reminder.txt
+msgid "Attachments:"
+msgstr ""
+
+#: planner/templates/email/reminder.txt
+msgid "Open in Helium:"
+msgstr ""

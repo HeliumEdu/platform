@@ -9,7 +9,7 @@ import logging
 
 from rest_framework.exceptions import ValidationError
 
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.planner.serializers.noteserializer import NoteSerializer
 from helium.planner.utils.quillutils import html_to_quill
 
@@ -57,7 +57,7 @@ def upgrade_legacy_import(data):
     _move_text_to_notes(data, errors)
 
     if errors:
-        raise ValidationError(errors)
+        raise ValidationError(errors, code=errorcodes.IMPORT_LEGACY_INVALID)
 
     return data
 
@@ -78,7 +78,8 @@ def _rename_sections(data):
         if old not in data:
             continue
         if new in data:
-            raise ValidationError(f"Provide either '{new}' or '{old}', not both.")
+            raise ValidationError(f"Provide either '{new}' or '{old}', not both.",
+                                  code=errorcodes.IMPORT_LEGACY_KEY_CONFLICT)
         data[new] = data.pop(old)
 
 

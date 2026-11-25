@@ -464,7 +464,7 @@ class TestCaseHomeworkViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('must be before', response.data['non_field_errors'][0])
+        self.assertIn('must be before', response.data['non_field_errors'][0]['message'])
 
     def test_patch_converts_to_utc(self):
         # GIVEN
@@ -1160,7 +1160,7 @@ class TestCaseHomeworkOccurrenceViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['recurrence_rule'], 'It repeats more than 366 times.')
+        self.assertEqual(response.data['recurrence_rule']['message'], 'It repeats more than 366 times.')
         self.assertFalse(Homework.objects.exists())
 
     def test_create_repeating_homework_with_no_dates_by_the_class_last_day_returns_400(self):
@@ -1175,7 +1175,7 @@ class TestCaseHomeworkOccurrenceViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['recurrence_rule'], "It has no dates by the class's last day.")
+        self.assertEqual(response.data['recurrence_rule']['message'], "It has no dates by the class's last day.")
         self.assertFalse(Homework.objects.exists())
 
     def test_create_repeating_homework_completed_or_graded_returns_400(self):
@@ -1301,7 +1301,7 @@ class TestCaseHomeworkOccurrenceViews(APITestCase):
 
                 # THEN
                 self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-                self.assertEqual(response.data['scope'],
+                self.assertEqual(response.data['scope']['message'],
                                  'Change `recurrence_rule` or `exception_dates` with `scope=all`.')
                 self.assertEqual(Homework.objects.count(), 1)
                 series.refresh_from_db()
@@ -1509,7 +1509,7 @@ class TestCaseHomeworkOccurrenceViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['occurrence_start'], 'Not an occurrence of this assignment.')
+        self.assertEqual(response.data['occurrence_start']['message'], 'Not an occurrence of this assignment.')
         self.assertEqual(Homework.objects.count(), 1)
 
 

@@ -7,6 +7,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import FileField, IntegerField
 
+from helium.common import errorcodes
 from helium.planner.models import Attachment, Course, Homework, Event, Resource
 
 logger = logging.getLogger(__name__)
@@ -33,23 +34,26 @@ class AttachmentSerializer(serializers.ModelSerializer):
     def validate_attachment(self, attachment):
         if attachment.size > settings.MAX_UPLOAD_SIZE:
             raise ValidationError(
-                f'The uploaded file exceeds the max upload size of {filesizeformat(settings.MAX_UPLOAD_SIZE)}.')
+                f'The uploaded file exceeds the max upload size of {filesizeformat(settings.MAX_UPLOAD_SIZE)}.',
+                code=errorcodes.FILE_TOO_LARGE)
 
         ext = os.path.splitext(attachment.name)[1].lower()
         if ext in settings.BLOCKED_ATTACHMENT_EXTENSIONS:
-            raise ValidationError('This file type is not allowed.')
+            raise ValidationError('This file type is not allowed.', code=errorcodes.ATTACHMENT_TYPE_NOT_ALLOWED)
 
         if attachment.content_type in settings.BLOCKED_ATTACHMENT_MIME_TYPES:
-            raise ValidationError('This file type is not allowed.')
+            raise ValidationError('This file type is not allowed.', code=errorcodes.ATTACHMENT_TYPE_NOT_ALLOWED)
 
         return attachment
 
     def validate(self, attrs):
         parents = [field for field in _PARENT_FIELDS if attrs.get(field, None)]
         if not parents:
-            raise serializers.ValidationError("One of `course`, `event`, `homework`, or `resource` must be given.")
+            raise serializers.ValidationError("One of `course`, `event`, `homework`, or `resource` must be given.",
+                                              code=errorcodes.ATTACHMENT_PARENT_REQUIRED)
         elif len(parents) > 1:
-            raise serializers.ValidationError("Only one of `course`, `event`, `homework`, or `resource` may be given.")
+            raise serializers.ValidationError("Only one of `course`, `event`, `homework`, or `resource` may be given.",
+                                              code=errorcodes.ATTACHMENT_PARENT_MULTIPLE)
 
         return attrs
 

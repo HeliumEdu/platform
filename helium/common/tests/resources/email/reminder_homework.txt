@@ -1,0 +1,19 @@
+Essay 1 in Writing 101 in 30 minutes
+
+Turn in the essay
+
+When: Fri, Sep 4 at 3:05 PM
+Info: Papers for Writing 101 (https://example.com/w101)
+Location: Room 12
+Note: https://app.heliumedu.com/notebook/1
+
+Resources:
+ - Style Guide (https://example.com/guide)
+
+Attachments: https://app.heliumedu.com/planner/assignments/1/attachments
+ - draft.pdf
+
+Open in Helium: https://app.heliumedu.com/planner/assignments/1
+
+Regards,
+The Helium Team

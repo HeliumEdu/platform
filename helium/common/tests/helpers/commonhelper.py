@@ -1,5 +1,6 @@
 from unittest import mock
 
+from django.utils import translation
 from rest_framework import status
 
 
@@ -22,3 +23,15 @@ def verify_responses_hide_other_users_data(test_case, responses):
         else:
             test_case.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
             test_case.assertIn('matches the given query', response.data['detail'].lower())
+
+
+def given_sent_emails_are_recorded(*mock_sends):
+    sent = []
+
+    def record(template_name, context, subject, to, **kwargs):
+        sent.append((template_name, subject, translation.get_language()))
+
+    for mock_send in mock_sends:
+        mock_send.side_effect = record
+
+    return sent

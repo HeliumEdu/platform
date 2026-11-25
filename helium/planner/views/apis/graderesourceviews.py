@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from helium.common import errorcodes
 from helium.common.views.base import HeliumAPIView
 from helium.planner.serializers.gradeserializer import GradeSerializer, NeededGradeSerializer
 from helium.planner.services import gradingservice, neededgradeservice
@@ -83,7 +84,8 @@ class NeededGradeApiResourceView(HeliumAPIView):
             desired_grade = _optional_float(request.query_params.get('desired_grade'))
             desired_gpa = _optional_float(request.query_params.get('desired_gpa'))
         except (KeyError, ValueError):
-            raise ValidationError("'course', 'target', 'desired_grade', and 'desired_gpa' must be given as numbers")
+            raise ValidationError("'course', 'target', 'desired_grade', and 'desired_gpa' must be given as numbers",
+                                  code=errorcodes.NEEDED_GRADE_PARAMS_INVALID)
 
         needed = neededgradeservice.get_needed_grade(request.user.pk, course_id, target_id,
                                                      desired_grade=desired_grade, desired_gpa=desired_gpa)

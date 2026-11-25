@@ -15,9 +15,10 @@ from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.utils import get_md5_hash_password
 
-from helium.auth.models import UserClientActivity, UserOAuthProvider
+from helium.auth.models import UserClientActivity, UserOAuthProvider, UserSettings
 from helium.auth.tasks import blacklist_refresh_token
 from helium.auth.utils.userutils import mark_user_active
+from helium.common import enums, errorcodes
 from helium.common.utils import metricutils, taskutils
 from helium.common.utils.metricutils import _normalize_user_agent_tag
 
@@ -79,14 +80,14 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
 
             if not user:
                 raise AuthenticationFailed('Oops! We don\'t recognize that account. Check to make sure you '
-                                           'entered your credentials properly.')
+                                           'entered your credentials properly.', code=errorcodes.CREDENTIALS_INVALID)
 
             if not api_settings.USER_AUTHENTICATION_RULE(user):
                 raise PermissionDenied(
                     detail={
                         'detail': "Your account isn't active yet. Check your inbox for the verification email we "
                                   'sent when you registered.',
-                        'code': 'account_inactive',
+                        'code': errorcodes.ACCOUNT_INACTIVE,
                         'email': identifier,
                     }
                 )
@@ -94,7 +95,8 @@ class TokenObtainSerializer(TokenResponseFieldsMixin, jwt_serializers.TokenObtai
             try:
                 token = self.get_token(user)
             except IntegrityError:
-                raise PermissionDenied('That token is no longer valid. Request a new one.')
+                raise PermissionDenied('That token is no longer valid. Request a new one.',
+                                       code=errorcodes.TOKEN_NO_LONGER_VALID)
 
             attrs["access"] = str(token.access_token)
             attrs["refresh"] = str(token)
@@ -135,14 +137,17 @@ class TokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
                     )
             ):
                 if not api_settings.USER_AUTHENTICATION_RULE(user):
-                    raise PermissionDenied('Your account is no longer active.')
+                    raise PermissionDenied('Your account is no longer active.',
+                                           code=errorcodes.ACCOUNT_NO_LONGER_ACTIVE)
         except UserModel.DoesNotExist:
-            raise PermissionDenied("That token doesn't have access to this account, or the account is inactive.")
+            raise PermissionDenied("That token doesn't have access to this account, or the account is inactive.",
+                                   code=errorcodes.TOKEN_ACCOUNT_UNAVAILABLE)
 
         if user:
             if api_settings.CHECK_REVOKE_TOKEN and user.has_usable_password():
                 if refresh.payload.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password):
-                    raise AuthenticationFailed("The user's password has been changed.")
+                    raise AuthenticationFailed("The user's password has been changed.",
+                                               code=errorcodes.PASSWORD_CHANGED)
 
             mark_user_active(user)
 
@@ -194,5 +199,17 @@ class OAuthLoginSerializer(serializers.Serializer):
     provider = serializers.ChoiceField(
         choices=UserOAuthProvider.PROVIDER_CHOICES,
         help_text='The OAuth provider (google or apple).',
+        write_only=True
+    )
+    time_zone = serializers.ChoiceField(
+        choices=enums.TIME_ZONE_CHOICES, required=False,
+        help_text=f"{UserSettings._meta.get_field('time_zone').help_text} Applied only when this sign-in creates the "
+                  'account.',
+        write_only=True
+    )
+    language = serializers.ChoiceField(
+        choices=settings.LANGUAGES, required=False,
+        help_text=f"{UserSettings._meta.get_field('language').help_text} Applied only when this sign-in creates the "
+                  'account.',
         write_only=True
     )

@@ -2,6 +2,7 @@ import logging
 
 from rest_framework import serializers
 
+from helium.common import errorcodes
 from helium.common.utils import datetimeutils
 from helium.planner.models import Reminder, Homework, Event, Course
 
@@ -42,11 +43,13 @@ class ReminderSerializer(serializers.ModelSerializer):
 
         # For new instances, require exactly one parent
         if not self.instance and request_set_count == 0:
-            raise serializers.ValidationError("One of `event`, `homework`, or `course` must be given.")
+            raise serializers.ValidationError("One of `event`, `homework`, or `course` must be given.",
+                                              code=errorcodes.REMINDER_PARENT_REQUIRED)
 
         # Don't allow multiple parents to be set in the same request
         if request_set_count > 1:
-            raise serializers.ValidationError("Only one of `event`, `homework`, or `course` may be given.")
+            raise serializers.ValidationError("Only one of `event`, `homework`, or `course` may be given.",
+                                              code=errorcodes.REMINDER_PARENT_MULTIPLE)
 
         # Capture original parent refs before nulling them out below, for the sent-reset check.
         orig_homework = self.instance.homework if self.instance else None
@@ -110,7 +113,8 @@ class ReminderSerializer(serializers.ModelSerializer):
 
         if dismissed and not sent:
             raise serializers.ValidationError(
-                "A reminder cannot be `dismissed` unless it has been `sent`.")
+                "A reminder cannot be `dismissed` unless it has been `sent`.",
+                code=errorcodes.REMINDER_DISMISSED_BEFORE_SENT)
 
     def _validate_one_active_per_series(self, attrs):
         course = attrs.get('course', getattr(self.instance, 'course', None))
@@ -142,7 +146,7 @@ class ReminderSerializer(serializers.ModelSerializer):
         if series.exists():
             raise serializers.ValidationError(
                 f"An active reminder already exists for this {label}, `type`, `offset` and "
-                "`offset_type`.")
+                "`offset_type`.", code=errorcodes.REMINDER_DUPLICATE)
 
 
 class ReminderExtendedSerializer(ReminderSerializer):

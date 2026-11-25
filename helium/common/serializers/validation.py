@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
+from helium.common import errorcodes
 from helium.common.utils.validators import validate_and_normalize_date_csv
 
 
@@ -19,7 +20,7 @@ def normalize_exceptions(exceptions, start_date=None, end_date=None, range_label
     try:
         return validate_and_normalize_date_csv(exceptions, start_date, end_date, range_label=range_label)
     except DjangoValidationError as e:
-        raise serializers.ValidationError({'exceptions': e.message})
+        raise serializers.ValidationError({'exceptions': e.message}, code=e.code)
 
 
 def validate_start_before_end(attrs, instance):
@@ -39,7 +40,7 @@ def validate_start_before_end(attrs, instance):
         end = instance.end
 
     if start and end and start > end:
-        raise serializers.ValidationError("The 'start' must be before the 'end'")
+        raise serializers.ValidationError("The 'start' must be before the 'end'", code=errorcodes.START_AFTER_END)
 
     return start
 
@@ -62,7 +63,8 @@ def validate_date_range_and_exceptions(attrs, instance, range_label):
         end_date = instance.end_date
 
     if start_date and end_date and start_date > end_date:
-        raise serializers.ValidationError("The 'start_date' must be before the 'end_date'")
+        raise serializers.ValidationError("The 'start_date' must be before the 'end_date'",
+                                          code=errorcodes.START_DATE_AFTER_END_DATE)
 
     if 'exceptions' in attrs or 'start_date' in attrs or 'end_date' in attrs:
         exceptions = attrs.get('exceptions', None)

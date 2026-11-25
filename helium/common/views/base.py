@@ -9,6 +9,7 @@ from drf_spectacular.utils import OpenApiParameter
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView
 
+from helium.common import errorcodes
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import PreconditionFailedError
 
@@ -113,6 +114,7 @@ def _parse_if_match(value: str) -> datetime:
         tag = tag[2:]
     parsed = parse_datetime(tag.strip('"'))
     if parsed is None:
-        raise ValidationError({'If-Match': ['The If-Match header must be the updated_at of the item being changed.']})
+        raise ValidationError({'If-Match': ['The If-Match header must be the updated_at of the item being changed.']},
+                              code=errorcodes.IF_MATCH_INVALID)
 
     return timezone.make_aware(parsed, dt_timezone.utc) if timezone.is_naive(parsed) else parsed

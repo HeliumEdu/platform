@@ -1,14 +1,14 @@
-{{ subject }}
+{% load i18n %}{{ subject }}
 
-{% if is_final_warning %}This is your final notice. Your Helium account will be permanently deleted tomorrow{% else %}Your Helium account is scheduled for deletion in {{ days_remaining }} days{% endif %} due to {{ dormancy_years }}+ years of inactivity.
+{% if is_final_warning %}{% translate "This is your final notice." %} {% blocktranslate with years=dormancy_years %}Your Helium account will be permanently deleted tomorrow due to {{ years }}+ years of inactivity.{% endblocktranslate %}{% else %}{% blocktranslate count days=days_remaining with years=dormancy_years %}Your Helium account is scheduled for deletion in {{ days }} day due to {{ years }}+ years of inactivity.{% plural %}Your Helium account is scheduled for deletion in {{ days }} days due to {{ years }}+ years of inactivity.{% endblocktranslate %}{% endif %}
 
-When your account is deleted, all data stored in Helium will also be deleted and cannot be recovered, including your classes, assignments, grades, notes, and attachments.
+{% translate "When your account is deleted, all data stored in Helium will also be deleted and cannot be recovered, including your classes, assignments, grades, notes, and attachments." %}
 
-To keep your free account, simply log in at {{ login_url }}. That's all it takes.
+{% blocktranslate %}To keep your free account, simply log in at {{ login_url }}. That's all it takes.{% endblocktranslate %}
 
-If you'd like to delete your account, but also want a copy of your data, see our guide on exporting your data ({{ export_url }}), and our guide on deleting your account manually ({{ delete_account_url }}).
+{% blocktranslate %}If you'd like to delete your account, but also want a copy of your data, see our guide on exporting your data ({{ export_url }}), and our guide on deleting your account manually ({{ delete_account_url }}).{% endblocktranslate %}
 
-Questions? Contact support at {{ support_url }}.
+{% blocktranslate %}Questions? Contact support at {{ support_url }}.{% endblocktranslate %}
 
-Thanks,
-The Helium Team
+{% translate "Thanks," %}
+{% translate "The Helium Team" %}

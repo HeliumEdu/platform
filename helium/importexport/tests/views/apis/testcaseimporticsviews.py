@@ -24,7 +24,7 @@ class TestCaseImportICSViews(APITestCase):
                                  'course': course.pk})
 
     def _given_course(self, end_date=datetime.date(2017, 5, 8)):
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Los_Angeles')
         course_group = coursegrouphelper.given_course_group_exists(user, end_date=end_date)
         return coursehelper.given_course_exists(course_group, end_date=end_date)
 
@@ -369,7 +369,7 @@ class TestCaseImportICSViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data['homework']), '"Daily log": It repeats more than 366 times.')
+        self.assertEqual(response.data['homework']['message'], '"Daily log": It repeats more than 366 times.')
         self.assertFalse(Homework.objects.filter(course=course).exists())
 
     def test_import_ics_unexpandable_rule_falls_back_to_one_assignment(self):

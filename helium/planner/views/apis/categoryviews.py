@@ -7,7 +7,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateMode
     CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.common.permissions import IsOwner
 from helium.common.views.base import IF_MATCH_PARAMETER, HeliumAPIView, PreconditionMixin
 from helium.planner.filters import CategoryFilter
@@ -168,7 +168,8 @@ class CourseGroupCourseCategoriesApiDetailView(PreconditionMixin, HeliumAPIView,
         category = self.get_object()
 
         if category.title == 'Uncategorized':
-            raise ValidationError("The 'Uncategorized' category cannot be deleted")
+            raise ValidationError("The 'Uncategorized' category cannot be deleted",
+                                  code=errorcodes.UNCATEGORIZED_NOT_DELETABLE)
 
         homework = list(category.homework.all())
 

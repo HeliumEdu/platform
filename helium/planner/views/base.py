@@ -11,6 +11,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
 
+from helium.common import errorcodes
 from helium.common.serializers.fields import TzAwareDateTimeField
 from helium.common.utils import datetimeutils
 from helium.common.views.base import HeliumAPIView
@@ -57,7 +58,8 @@ def recurrence_scope(request, default):
     """
     scope = request.query_params.get('scope', default)
     if scope not in (SCOPE_THIS, SCOPE_ALL):
-        raise ValidationError({'scope': f'`scope` must be `{SCOPE_THIS}` or `{SCOPE_ALL}`.'})
+        raise ValidationError({'scope': f'`scope` must be `{SCOPE_THIS}` or `{SCOPE_ALL}`.'},
+                              code=errorcodes.SCOPE_INVALID)
     return scope
 
 
@@ -70,7 +72,8 @@ def occurrence_start_param(request, required):
     value = request.query_params.get('occurrence_start')
     if not value:
         if required:
-            raise ValidationError({'occurrence_start': '`occurrence_start` is required with this `scope`.'})
+            raise ValidationError({'occurrence_start': '`occurrence_start` is required with this `scope`.'},
+                                  code=errorcodes.OCCURRENCE_START_REQUIRED)
         return None
     try:
         return TzAwareDateTimeField().run_validation(value)
@@ -140,7 +143,7 @@ class HeliumCalendarItemAPIView(HeliumAPIView, ListModelMixin):
         if (_from and not to) or (to and not _from):
             raise ValidationError(
                 detail="Both 'from' and 'to' must be provided together.",
-                code=status.HTTP_400_BAD_REQUEST
+                code=errorcodes.FROM_TO_REQUIRED
             )
 
         return self.list(request, *args, **kwargs)
@@ -159,7 +162,8 @@ class RepeatingItemDetailMixin:
 
         if scope == SCOPE_THIS:
             if 'recurrence_rule' in request.data or 'exception_dates' in request.data:
-                raise ValidationError({'scope': 'Change `recurrence_rule` or `exception_dates` with `scope=all`.'})
+                raise ValidationError({'scope': 'Change `recurrence_rule` or `exception_dates` with `scope=all`.'},
+                                      code=errorcodes.SCOPE_ALL_REQUIRED)
             with transaction.atomic():
                 detached = recurrenceservice.detach_occurrence(instance, occurrence_start)
                 serializer = self.get_serializer(detached, data=request.data, partial=True)

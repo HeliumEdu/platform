@@ -231,7 +231,7 @@ class TestCaseAttachmentViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Only one of', response.data[0]['non_field_errors'][0])
+        self.assertIn('Only one of', response.data[0]['non_field_errors'][0]['message'])
         self.assertEqual(Attachment.objects.count(), 0)
 
     def test_resource_owned_by_another_user_forbidden(self):
@@ -298,7 +298,7 @@ class TestCaseAttachmentViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('One of', response.data[0]['non_field_errors'][0])
+        self.assertIn('One of', response.data[0]['non_field_errors'][0]['message'])
 
     def test_get_attachment_by_id(self):
         # GIVEN
@@ -394,7 +394,7 @@ class TestCaseAttachmentViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('error occurred', response.data['details'])
+        self.assertIn('error occurred', response.data['details']['message'])
         self.assertEqual(Attachment.objects.count(), 0)
 
     def test_not_found(self):

@@ -32,7 +32,7 @@ class ExternalCalendarSerializer(serializers.ModelSerializer):
             try:
                 icalexternalcalendarservice.validate_url(url)
             except HeliumICalendarError as e:
-                raise serializers.ValidationError({'url': str(e)})
+                raise serializers.ValidationError({'url': str(e)}, code=e.code)
 
         return attrs
 

@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.viewsets import ViewSet
 
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.common.views.base import HeliumAPIView
 from helium.feed.models import ExternalCalendar
 from helium.feed.services import feedservice
@@ -104,7 +104,8 @@ class ExportResourceView(ViewSet, HeliumAPIView):
         user = self.request.user
         calendar = request.query_params.get('calendar', 'all')
         if calendar not in _ICS_EXPORTS:
-            raise ValidationError({'calendar': f'Must be one of: {", ".join(_ICS_EXPORTS)}.'})
+            raise ValidationError({'calendar': f'Must be one of: {", ".join(_ICS_EXPORTS)}.'},
+                                  code=errorcodes.INVALID_CHOICE)
 
         return _download_response(user, _ICS_EXPORTS[calendar](user), 'text/calendar; charset=utf-8', 'ics',
                                   label=calendar)

@@ -375,7 +375,7 @@ class TestCaseCategoryViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('class already has a category named', response.data['title'][0])
+        self.assertIn('class already has a category named', response.data['title'][0]['message'])
         self.assertEqual(Category.objects.count(), 1)
 
     def test_updated_at_filter(self):

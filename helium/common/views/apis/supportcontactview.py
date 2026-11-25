@@ -6,6 +6,8 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from helium.common import errorcodes
+from helium.common.handlers.exceptions import detail_body
 from helium.common.serializers.supportcontactserializer import SupportContactSerializer
 from helium.common.services.jsmservice import (
     JsmAttachmentException,
@@ -85,10 +87,10 @@ class SupportContactView(HeliumAPIView):
                 create_jsm_request(**fields)
         except JsmRequestException:
             return Response(
-                {'detail': (
-                    'We were unable to deliver your message. '
-                    f'Please email {settings.ADMIN_EMAIL_ADDRESS} directly.'
-                )},
+                detail_body(request,
+                            'We were unable to deliver your message. '
+                            f'Please email {settings.ADMIN_EMAIL_ADDRESS} directly.',
+                            errorcodes.SUPPORT_DELIVERY_FAILED),
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 

@@ -4,7 +4,7 @@ from django.db import transaction
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.common.serializers.validation import validate_date_range_and_exceptions
 from helium.common.utils import gradeutils
 from helium.common.utils.openapiutils import support_article_url
@@ -136,4 +136,5 @@ def _validate_grade_scale_template(validated_data, group_grade_scale):
                   for preset in gradeutils.compatible_presets(group_grade_scale)]
     raise serializers.ValidationError({'grade_scale_template': (
         "Doesn't fit the group's grade scale: a class's preset can only award grades the group's scale does. "
-        + (f"Compatible presets: {', '.join(compatible)}." if compatible else "The group has no grade scale."))})
+        + (f"Compatible presets: {', '.join(compatible)}." if compatible else "The group has no grade scale."))},
+        code=errorcodes.GRADE_SCALE_TEMPLATE_INCOMPATIBLE)

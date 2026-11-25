@@ -16,7 +16,7 @@ from django.db.models import F
 from django.utils import timezone
 from rest_framework import status
 
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.common.utils import datetimeutils, metricutils
 from helium.common.utils.commonutils import HeliumError, deterministic_id
 from helium.common.utils.httputils import urlopen_secure
@@ -30,6 +30,14 @@ logger = logging.getLogger(__name__)
 url_validator = validators.URLValidator()
 
 
+_ERROR_CODES = {
+    'bad_response': errorcodes.EXTERNAL_CALENDAR_BAD_RESPONSE,
+    'invalid_url': errorcodes.EXTERNAL_CALENDAR_INVALID_URL,
+    'unreachable': errorcodes.EXTERNAL_CALENDAR_UNREACHABLE,
+    'invalid_calendar': errorcodes.EXTERNAL_CALENDAR_INVALID_CALENDAR,
+}
+
+
 class HeliumICalendarError(HeliumError):
     """Raised when an external calendar's iCalendar URL cannot be fetched or parsed."""
 
@@ -37,6 +45,7 @@ class HeliumICalendarError(HeliumError):
         super().__init__(message)
 
         self.reason = reason
+        self.code = _ERROR_CODES[reason]
 
 
 def _get_cache_prefix(external_calendar):

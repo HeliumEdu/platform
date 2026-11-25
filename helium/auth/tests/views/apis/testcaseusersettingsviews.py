@@ -71,8 +71,7 @@ class TestCaseUserSettingsViews(APITestCase):
 
     def test_time_zone_change_rolls_back_when_rebase_fails(self):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        self.assertEqual(user.settings.time_zone, 'America/Los_Angeles')
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Los_Angeles')
         original_start = datetimeutils.local_midnight_as_utc(datetime.date(2025, 9, 4), ZoneInfo('America/Los_Angeles'))
         event = eventhelper.given_event_exists(
             user,
@@ -97,7 +96,7 @@ class TestCaseUserSettingsViews(APITestCase):
     def test_put_user_setting(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
-        self.assertEqual(user.settings.time_zone, 'America/Los_Angeles')
+        self.assertEqual(user.settings.time_zone, 'UTC')
         self.assertTrue(user.settings.show_planner_tooltips)
 
         # WHEN
@@ -485,3 +484,77 @@ class TestCaseUserSettingsViews(APITestCase):
             # THEN
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             mock_clear_course_cache.assert_called_once_with(course)
+
+    def test_language_defaults_to_english(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        response = self.client.get(reverse('auth_user_detail'))
+
+        # THEN
+        self.assertEqual(response.data['settings']['language'], 'en')
+
+    def test_put_language(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.language = 'es'
+        user.settings.save()
+
+        # WHEN
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps({'language': 'en'}),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['language'], 'en')
+        user.settings.refresh_from_db()
+        self.assertEqual(user.settings.language, 'en')
+
+    def test_put_unsupported_or_null_language_fails(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        for language in ('xx', None):
+            with self.subTest(language=language):
+                # WHEN
+                response = self.client.put(reverse('auth_user_settings_detail'), json.dumps({'language': language}),
+                                           content_type='application/json')
+
+                # THEN
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertIn('language', response.data)
+                user.settings.refresh_from_db()
+                self.assertEqual(user.settings.language, 'en')
+
+    def test_put_without_language_leaves_it_unchanged(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user.settings.language = 'es'
+        user.settings.save()
+
+        # WHEN
+        response = self.client.put(reverse('auth_user_settings_detail'), json.dumps({'time_zone': 'America/Chicago'}),
+                                   content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.settings.refresh_from_db()
+        self.assertEqual(user.settings.language, 'es')
+
+    def test_put_errors_carry_codes(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+
+        # WHEN
+        responses = [self.client.put(reverse('auth_user_settings_detail'), json.dumps(data),
+                                     content_type='application/json')
+                     for data in ({'language': 'xx'}, {'prior_credits': '12'})]
+
+        # THEN
+        self.assertEqual(responses[0].data,
+                         {'language': [{'message': '"xx" is not a valid choice.', 'code': 'invalid_choice'}]})
+        self.assertEqual(responses[1].data,
+                         {'prior_gpa': [{'message': 'Enter the GPA for your prior credits.',
+                                         'code': 'prior_gpa_required'}]})
+

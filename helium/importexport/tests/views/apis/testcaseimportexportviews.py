@@ -319,7 +319,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Invalid JSON', response.data['details'])
+        self.assertIn('Invalid JSON', response.data['details']['message'])
         importexporthelper.verify_nothing_imported(self)
 
     def test_import_multiple_files_rejected(self):
@@ -332,7 +332,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['details'], 'Upload exactly one file per request.')
+        self.assertEqual(response.data['details']['message'], 'Upload exactly one file per request.')
         importexporthelper.verify_nothing_imported(self)
 
     def test_import_no_files_rejected(self):
@@ -347,7 +347,7 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['details'], 'Upload exactly one file per request.')
+        self.assertEqual(response.data['details']['message'], 'Upload exactly one file per request.')
 
     def test_import_invalid_relationships(self):
         # GIVEN
@@ -616,7 +616,7 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(import_response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual([f"homework id {export_data['homework'][0]['id']}, recurrence_rule: It repeats more than "
-                          f"366 times."], [str(message) for message in import_response.data['homework']])
+                          f"366 times."], [error['message'] for error in import_response.data['homework']])
         self.assertEqual(Homework.objects.for_user(user.pk).count(), 1)
 
     def test_export_import_preserves_multiple_schedules_per_course(self):
@@ -1160,8 +1160,8 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(2, len(response.data['courses']))
-        self.assertTrue(response.data['courses'][0].startswith('courses id 1, credits: '))
-        self.assertTrue(response.data['courses'][1].startswith('courses id 2, credits: '))
+        self.assertTrue(response.data['courses'][0]['message'].startswith('courses id 1, credits: '))
+        self.assertTrue(response.data['courses'][1]['message'].startswith('courses id 2, credits: '))
         self.assertFalse(Course.objects.exists())
 
     def test_rejected_import_adds_structured_row_errors_when_asked(self):
@@ -1176,11 +1176,11 @@ class TestCaseImportExportViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(response.data['courses'][0].startswith('courses id 1, credits: '))
+        self.assertTrue(response.data['courses'][0]['message'].startswith('courses id 1, credits: '))
         self.assertEqual(1, len(response.data['row_errors']))
         row_error = response.data['row_errors'][0]
         self.assertEqual(('courses', 1, 'credits'), (row_error['section'], row_error['id'], row_error['field']))
-        self.assertEqual(response.data['courses'][0], f"courses id 1, credits: {row_error['message']}")
+        self.assertEqual(response.data['courses'][0]['message'], f"courses id 1, credits: {row_error['message']}")
 
     def test_rejected_import_reports_a_non_field_row_error_without_a_field(self):
         # GIVEN
@@ -1309,8 +1309,7 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('courses', response.data)
-        errors = response.data['courses']
-        self.assertIsInstance(errors, list)
+        errors = [error['message'] for error in response.data['courses']]
         self.assertIn('courses id 1, start_date: This field is required.', errors)
         self.assertIn('courses id 1, end_date: This field is required.', errors)
         self.assertEqual(CourseGroup.objects.count(), 0)

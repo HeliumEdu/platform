@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from rest_framework.exceptions import NotFound, ValidationError
 
+from helium.common import errorcodes
 from helium.planner.services import gradingservice
 
 logger = logging.getLogger(__name__)
@@ -128,13 +129,16 @@ def get_needed_grade(user_id, course_id, target_id, desired_grade=None, desired_
         band when even it falls short).
     """
     if desired_grade is None and desired_gpa is None:
-        raise ValidationError("One of 'desired_grade' or 'desired_gpa' must be given.")
+        raise ValidationError("One of 'desired_grade' or 'desired_gpa' must be given.",
+                              code=errorcodes.NEEDED_GRADE_TARGET_REQUIRED)
     if desired_grade is not None and desired_gpa is not None:
-        raise ValidationError("Only one of 'desired_grade' or 'desired_gpa' may be given.")
+        raise ValidationError("Only one of 'desired_grade' or 'desired_gpa' may be given.",
+                              code=errorcodes.NEEDED_GRADE_TARGET_MULTIPLE)
     if desired_grade is not None and not 0 <= desired_grade <= 100:
-        raise ValidationError({'desired_grade': 'Enter a valid grade between 0 and 100.'})
+        raise ValidationError({'desired_grade': 'Enter a valid grade between 0 and 100.'},
+                              code=errorcodes.DESIRED_GRADE_OUT_OF_RANGE)
     if desired_gpa is not None and not 0 <= desired_gpa:
-        raise ValidationError({'desired_gpa': 'Enter a valid GPA.'})
+        raise ValidationError({'desired_gpa': 'Enter a valid GPA.'}, code=errorcodes.DESIRED_GPA_INVALID)
 
     course_group, course = next(((course_group, course)
                                  for course_group in gradingservice.get_grade_data(user_id)['course_groups']
@@ -151,14 +155,16 @@ def get_needed_grade(user_id, course_id, target_id, desired_grade=None, desired_
                          if category['id'] == target_id and float(category['weight']) > 0
                          and category['num_homework'] - category['num_homework_graded'] == 1), None)
         if category is None:
-            raise ValidationError({'target': 'Select a category that is down to its last ungraded assignment.'})
+            raise ValidationError({'target': 'Select a category that is down to its last ungraded assignment.'},
+                                  code=errorcodes.NEEDED_GRADE_CATEGORY_NOT_LAST)
         remaining = [item for item in ungraded if item.category_id == target_id]
         assignment = remaining[0] if len(remaining) == 1 else None
     else:
         category = None
         assignment = next((item for item in ungraded if item.id == target_id), None)
         if assignment is None:
-            raise ValidationError({'target': 'Select an ungraded assignment in this class.'})
+            raise ValidationError({'target': 'Select an ungraded assignment in this class.'},
+                                  code=errorcodes.NEEDED_GRADE_ASSIGNMENT_INVALID)
 
     grade_band = None
     if desired_gpa is not None:
@@ -184,10 +190,12 @@ def get_needed_grade(user_id, course_id, target_id, desired_grade=None, desired_
 def _grade_band_for_gpa(course_group, course, desired_gpa):
     grade_scale = course['grade_scale']
     if not grade_scale:
-        raise ValidationError({'desired_gpa': "Set a grade scale on the class's group to plan for a GPA."})
+        raise ValidationError({'desired_gpa': "Set a grade scale on the class's group to plan for a GPA."},
+                              code=errorcodes.NEEDED_GRADE_NO_GRADE_SCALE)
     credits = Decimal(str(course['credits']))
     if credits <= 0:
-        raise ValidationError({'desired_gpa': 'Add credits to this class to plan for a GPA.'})
+        raise ValidationError({'desired_gpa': 'Add credits to this class to plan for a GPA.'},
+                              code=errorcodes.NEEDED_GRADE_NO_CREDITS)
 
     other_classes = [(other['credits'], other['grade_point']) for other in course_group['courses']
                      if other['id'] != course['id']]

@@ -190,7 +190,7 @@ class TestCasePlannerTasks(TestCase):
     @mock.patch('helium.planner.tasks.commonutils.send_multipart_email')
     def test_send_email_reminder_for_event(self, mock_send_multipart_email):
         # GIVEN
-        user = userhelper.given_a_user_exists()
+        user = userhelper.given_a_user_exists(time_zone='America/Los_Angeles')
         event = eventhelper.given_event_exists(user)
         reminder = reminderhelper.given_reminder_exists(user, type=enums.EMAIL, event=event)
 
@@ -338,7 +338,7 @@ class TestCasePlannerTasks(TestCase):
 
     def test_send_email_reminder_plain_text_groups_details_resources_and_attachments(self):
         # GIVEN
-        user = userhelper.given_a_user_exists()
+        user = userhelper.given_a_user_exists(time_zone='America/Los_Angeles')
         course_group = coursegrouphelper.given_course_group_exists(user)
         course = coursehelper.given_course_exists(course_group, title='Creative Writing', room='ARTS 302',
                                                   website='https://example.edu/cw')

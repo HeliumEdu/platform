@@ -1,10 +1,12 @@
 import json
+from contextlib import contextmanager
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from knox.models import AuthToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from helium.auth.models import UserSettings
 from helium.auth.models.userpushtoken import UserPushToken
 
 
@@ -95,3 +97,14 @@ def verify_push_token_matches(test_case, push_token, data):
     test_case.assertEqual(push_token.device_id, data['device_id'])
     test_case.assertEqual(push_token.token, data['token'])
     test_case.assertEqual(push_token.user.pk, data['user'])
+
+
+@contextmanager
+def given_languages_supported(*languages):
+    field = UserSettings._meta.get_field('language')
+    choices = field.choices
+    field.choices = [(language, language) for language in languages]
+    try:
+        yield
+    finally:
+        field.choices = choices

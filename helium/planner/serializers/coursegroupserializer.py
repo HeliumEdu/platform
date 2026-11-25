@@ -3,7 +3,7 @@ import logging
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.common.serializers.validation import validate_date_range_and_exceptions
 from helium.common.utils import gradeutils
 from helium.common.utils.openapiutils import support_article_url
@@ -71,7 +71,7 @@ class CourseGroupSerializer(serializers.ModelSerializer):
             elif gradeutils.preset_for(attrs['grade_scale']) != template:
                 raise serializers.ValidationError(
                     {'grade_scale_template': "Doesn't match 'grade_scale'. Send one or the other, or values that "
-                                             "match the preset."})
+                                             "match the preset."}, code=errorcodes.GRADE_SCALE_TEMPLATE_MISMATCH)
 
         return attrs
 

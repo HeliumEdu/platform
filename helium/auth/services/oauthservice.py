@@ -22,7 +22,7 @@ from rest_framework.exceptions import APIException, ValidationError
 
 from helium.auth.models import UserClientActivity
 from helium.auth.utils.userutils import mark_user_active
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.common.utils import metricutils
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ class ConsentAccountChangedError(APIException):
     status_code = status.HTTP_409_CONFLICT
     default_detail = ("You switched Helium accounts since this page loaded. Reload it to see which account you're "
                       "connecting.")
-    default_code = 'consent_account_changed'
+    default_code = errorcodes.CONSENT_ACCOUNT_CHANGED
 
 
 class HeliumCIMDMetadataFetcher(SafeMetadataFetcher):
@@ -262,15 +262,17 @@ def _granted_scopes(requested, approved) -> list[str]:
     else:
         unrequested = sorted(set(approved) - set(requested))
         if unrequested:
-            raise ValidationError({'scopes': [f"Not requested by the client: {', '.join(unrequested)}."]})
+            raise ValidationError({'scopes': [f"Not requested by the client: {', '.join(unrequested)}."]},
+                                  code=errorcodes.SCOPES_NOT_REQUESTED)
         declined_required = sorted(scope for scope in requested
                                    if scope not in settings.OAUTH_OPTIONAL_SCOPES and scope not in approved)
         if declined_required:
-            raise ValidationError({'scopes': [f"Required by the client: {', '.join(declined_required)}."]})
+            raise ValidationError({'scopes': [f"Required by the client: {', '.join(declined_required)}."]},
+                                  code=errorcodes.SCOPES_REQUIRED_DECLINED)
         granted = [scope for scope in requested if scope in approved]
 
     if not granted:
-        raise ValidationError({'scopes': ['Approve at least one scope.']})
+        raise ValidationError({'scopes': ['Approve at least one scope.']}, code=errorcodes.SCOPES_NONE_APPROVED)
 
     return granted
 

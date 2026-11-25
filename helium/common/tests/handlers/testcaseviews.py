@@ -11,4 +11,12 @@ class TestCaseHandlerViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(json.loads(response.content), {'detail': 'Route not found.', 'code': 'not_found'})
+
+    def test_unknown_route_for_a_legacy_app(self):
+        # WHEN
+        response = self.client.get('/this-route-does-not-exist/', HTTP_X_CLIENT_VERSION='3.16.12')
+
+        # THEN
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(json.loads(response.content), {'detail': 'Route not found.'})

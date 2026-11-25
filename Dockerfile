@@ -21,6 +21,18 @@ RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-dep
 
 ######################################################################
 
+FROM ubuntu:24.04 AS messages
+
+RUN apt-get --fix-missing update && \
+    apt-get install -y --no-install-recommends gettext && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY helium/locale /locale
+RUN set -e; for po in $(find /locale -name '*.po'); do msgfmt --check-format --output-file "${po%.po}.mo" "$po"; done
+
+######################################################################
+
 FROM ubuntu:24.04 AS platform_resource
 
 RUN apt-get --fix-missing update && \
@@ -41,6 +53,7 @@ COPY container/docker-resource-entrypoint.sh /docker-entrypoint.sh
 
 COPY --chown=ubuntu:ubuntu conf conf
 COPY --chown=ubuntu:ubuntu helium helium
+COPY --from=messages --chown=ubuntu:ubuntu /locale helium/locale
 COPY --chown=ubuntu:ubuntu manage.py .
 COPY --from=build --chown=ubuntu:ubuntu /venv /venv
 
@@ -68,6 +81,7 @@ RUN chown -R ubuntu:ubuntu .
 
 COPY --chown=ubuntu:ubuntu conf conf
 COPY --chown=ubuntu:ubuntu helium helium
+COPY --from=messages --chown=ubuntu:ubuntu /locale helium/locale
 COPY --chown=ubuntu:ubuntu manage.py .
 COPY --from=build --chown=ubuntu:ubuntu /venv /venv
 
@@ -102,6 +116,7 @@ RUN chown -R ubuntu:ubuntu .
 
 COPY --chown=ubuntu:ubuntu conf conf
 COPY --chown=ubuntu:ubuntu helium helium
+COPY --from=messages --chown=ubuntu:ubuntu /locale helium/locale
 COPY --chown=ubuntu:ubuntu manage.py .
 COPY --from=build --chown=ubuntu:ubuntu /venv /venv
 
