@@ -3,7 +3,8 @@ import sys
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
-from helium.auth.utils.userutils import admin_allowed_email_error, is_admin_allowed_email
+from helium.auth.utils.userutils import is_admin_allowed_email
+from helium.common.errormessages import admin_allowed_email_error
 
 
 class Command(BaseCommand):

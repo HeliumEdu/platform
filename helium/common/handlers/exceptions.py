@@ -1,9 +1,11 @@
 from django.conf import settings
 from rest_framework import status
-from rest_framework.exceptions import ErrorDetail, Throttled
+from rest_framework.exceptions import ErrorDetail, NotAuthenticated, Throttled
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
+from rest_framework_simplejwt.exceptions import InvalidToken
 
+from helium.common.errormessages import SIGN_IN_TO_CONTINUE_MESSAGE, throttled_message
 from helium.common.utils.commonutils import PreconditionFailedError
 from helium.common.utils.versionutils import client_version_gte, get_client_version
 
@@ -42,12 +44,11 @@ def helium_exception_handler(exc, context):
         return Response(exc.current, status=status.HTTP_412_PRECONDITION_FAILED)
 
     if isinstance(exc, Throttled):
-        wait = round(exc.wait) if exc.wait is not None else None
-        if wait is not None:
-            message = f"Request was throttled. Try again in {wait} second{'s' if wait != 1 else ''}."
-        else:
-            message = "Request was throttled. Try again later."
-        exc.detail = ErrorDetail(message, code=exc.default_code)
+        exc.detail = ErrorDetail(throttled_message(exc.wait), code=exc.default_code)
+    elif isinstance(exc, InvalidToken):
+        exc.detail['detail'] = ErrorDetail(SIGN_IN_TO_CONTINUE_MESSAGE, code=exc.detail['detail'].code)
+    elif isinstance(exc, NotAuthenticated):
+        exc.detail = ErrorDetail(SIGN_IN_TO_CONTINUE_MESSAGE, code=exc.detail.code)
 
     response = exception_handler(exc, context)
 

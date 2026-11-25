@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Exists, OuterRef, Q
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.translation import gettext
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.exceptions import ValidationError
@@ -104,7 +105,8 @@ class ExportResourceView(ViewSet, HeliumAPIView):
         user = self.request.user
         calendar = request.query_params.get('calendar', 'all')
         if calendar not in _ICS_EXPORTS:
-            raise ValidationError({'calendar': f'Must be one of: {", ".join(_ICS_EXPORTS)}.'},
+            raise ValidationError({'calendar': gettext('Must be one of: %(calendars)s.') % {
+                'calendars': ', '.join(_ICS_EXPORTS)}},
                                   code=errorcodes.INVALID_CHOICE)
 
         return _download_response(user, _ICS_EXPORTS[calendar](user), 'text/calendar; charset=utf-8', 'ics',

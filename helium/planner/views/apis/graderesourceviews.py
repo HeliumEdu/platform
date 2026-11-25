@@ -1,5 +1,6 @@
 import logging
 
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -84,7 +85,8 @@ class NeededGradeApiResourceView(HeliumAPIView):
             desired_grade = _optional_float(request.query_params.get('desired_grade'))
             desired_gpa = _optional_float(request.query_params.get('desired_gpa'))
         except (KeyError, ValueError):
-            raise ValidationError("'course', 'target', 'desired_grade', and 'desired_gpa' must be given as numbers",
+            raise ValidationError(gettext("'course', 'target', 'desired_grade', and 'desired_gpa' must be given as "
+                                          'numbers'),
                                   code=errorcodes.NEEDED_GRADE_PARAMS_INVALID)
 
         needed = neededgradeservice.get_needed_grade(request.user.pk, course_id, target_id,

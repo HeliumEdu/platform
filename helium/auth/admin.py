@@ -30,11 +30,11 @@ from helium.auth.services import oauthservice
 from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.services.tokenservice import blacklist_refresh_tokens, revoke_auth_tokens
 from helium.auth.tasks import send_password_reset_email, send_dormant_user_warning_email
-from helium.auth.utils.userutils import admin_allowed_email_error, generate_unique_username_from_email, \
-    is_admin_allowed_email
+from helium.auth.utils.userutils import generate_unique_username_from_email, is_admin_allowed_email
 from helium.common.admin import admin_site, BaseModelAdmin, ObjectActionsMixin, staff_filter, \
     has_course_schedule_filter, has_credits_filter, has_weighted_grading_filter, prompt_for_review_filter, \
     review_prompts_requested_filter, logged_action
+from helium.common.errormessages import admin_allowed_email_error
 from helium.common.utils.commonutils import clear_ses_suppression_if_exists
 from helium.feed.models.externalcalendar import ExternalCalendar
 from helium.planner.models.attachment import Attachment

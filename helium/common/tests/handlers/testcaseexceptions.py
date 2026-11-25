@@ -2,7 +2,8 @@ from unittest import mock
 
 from django.http import Http404
 from django.test import TestCase
-from rest_framework.exceptions import AuthenticationFailed, NotFound, PermissionDenied, Throttled, ValidationError
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated, NotFound, PermissionDenied, Throttled, \
+    ValidationError
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 from rest_framework_simplejwt.exceptions import InvalidToken
@@ -27,13 +28,13 @@ class TestCaseExceptions(TestCase):
         helium_exception_handler(exc, context)
 
         # THEN
-        self.assertEqual(exc.detail, 'Request was throttled. Try again in 1 second.')
+        self.assertEqual(exc.detail, 'Too many attempts. Try again in a minute.')
         mock_handler.assert_called_once_with(exc, context)
 
     @mock.patch('helium.common.handlers.exceptions.exception_handler')
     def test_throttled_with_wait_plural(self, mock_handler):
         # GIVEN
-        exc = Throttled(wait=5.7)
+        exc = Throttled(wait=150.7)
         context = _context()
         mock_handler.return_value = mock.MagicMock()
 
@@ -41,8 +42,32 @@ class TestCaseExceptions(TestCase):
         helium_exception_handler(exc, context)
 
         # THEN
-        self.assertEqual(exc.detail, 'Request was throttled. Try again in 6 seconds.')
+        self.assertEqual(exc.detail, 'Too many attempts. Try again in 3 minutes.')
         mock_handler.assert_called_once_with(exc, context)
+
+    @mock.patch('helium.common.handlers.exceptions.exception_handler')
+    def test_throttled_with_wait_of_an_hour(self, mock_handler):
+        # GIVEN
+        exc = Throttled(wait=3600)
+        mock_handler.return_value = mock.MagicMock()
+
+        # WHEN
+        helium_exception_handler(exc, _context())
+
+        # THEN
+        self.assertEqual(exc.detail, 'Too many attempts. Try again in about an hour.')
+
+    @mock.patch('helium.common.handlers.exceptions.exception_handler')
+    def test_throttled_with_wait_of_hours_rounds_half_hours_up(self, mock_handler):
+        # GIVEN
+        exc = Throttled(wait=9000)
+        mock_handler.return_value = mock.MagicMock()
+
+        # WHEN
+        helium_exception_handler(exc, _context())
+
+        # THEN
+        self.assertEqual(exc.detail, 'Too many attempts. Try again in about 3 hours.')
 
     @mock.patch('helium.common.handlers.exceptions.exception_handler')
     def test_throttled_without_wait(self, mock_handler):
@@ -56,7 +81,7 @@ class TestCaseExceptions(TestCase):
         helium_exception_handler(exc, context)
 
         # THEN
-        self.assertEqual(exc.detail, 'Request was throttled. Try again later.')
+        self.assertEqual(exc.detail, 'Too many attempts. Try again later.')
         mock_handler.assert_called_once_with(exc, context)
 
     @mock.patch('helium.common.handlers.exceptions.exception_handler')
@@ -143,6 +168,17 @@ class TestCaseExceptions(TestCase):
 
                 # THEN
                 self.assertEqual(response.data, expected)
+
+    def test_ended_session_asks_to_sign_in_again(self):
+        for exc, code in ((InvalidToken('Token is expired'), 'token_not_valid'),
+                          (NotAuthenticated(), 'not_authenticated')):
+            with self.subTest(exc=exc):
+                # WHEN
+                response = helium_exception_handler(exc, _context())
+
+                # THEN
+                self.assertEqual(response.data['detail'], 'Please sign in to continue.')
+                self.assertEqual(response.data['code'], code)
 
     def test_field_shaped_authentication_failure_with_codes(self):
         # GIVEN

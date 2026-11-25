@@ -2,9 +2,11 @@ import logging
 from zoneinfo import ZoneInfo
 
 from django.db import transaction
-from rest_framework.exceptions import ValidationError
+from django.utils.translation import gettext
+from rest_framework.exceptions import ErrorDetail, ValidationError
 
 from helium.common import enums, errorcodes
+from helium.common.errormessages import titled_message
 from helium.feed.services.icalparseservice import parse_events
 from helium.planner.models import Category, Course, CourseGroup, Event, Homework
 from helium.planner.serializers.courseserializer import CourseSerializer
@@ -46,7 +48,8 @@ def import_ics(request, calendar, *, target_type, course_id=None, course_group_i
     """
     if target_type not in TARGET_TYPE_CHOICES:
         raise ValidationError(
-            {'target_type': f"`target_type` must be one of {', '.join(TARGET_TYPE_CHOICES)}."},
+            {'target_type': gettext('`target_type` must be one of %(choices)s.') % {
+                'choices': ', '.join(TARGET_TYPE_CHOICES)}},
             code=errorcodes.INVALID_CHOICE)
 
     time_zone = ZoneInfo(request.user.settings.time_zone)
@@ -75,7 +78,7 @@ def _require_imported(count):
     unwinding the transaction is what keeps an empty one from surviving.
     """
     if count == 0:
-        raise ValidationError({'details': 'No events in the calendar file could be imported.'},
+        raise ValidationError({'details': gettext('No events in the calendar file could be imported.')},
                               code=errorcodes.IMPORT_ICS_NO_EVENTS)
 
 
@@ -85,14 +88,14 @@ def _resolve_target_course(request, target_type, course_id, course_group_id, cal
     if target_type == TARGET_COURSE:
         course = Course.objects.for_user(request.user.pk).filter(pk=course_id).first()
         if course is None:
-            raise ValidationError({'course': f"Unresolved `course` reference `{course_id}`."},
+            raise ValidationError({'course': gettext('Unresolved `course` reference `%(id)s`.') % {'id': course_id}},
                                   code=errorcodes.UNRESOLVED_REFERENCE)
         return course, False
 
     course_group = CourseGroup.objects.for_user(request.user.pk).filter(pk=course_group_id).first()
     if course_group is None:
         raise ValidationError(
-            {'course_group': f"Unresolved `course_group` reference `{course_group_id}`."},
+            {'course_group': gettext('Unresolved `course_group` reference `%(id)s`.') % {'id': course_group_id}},
             code=errorcodes.UNRESOLVED_REFERENCE)
     return _create_course_in_group(request, course_group, calendar, default_course_title), True
 
@@ -110,7 +113,7 @@ def _create_course_in_group(request, course_group, calendar, default_course_titl
     }
     serializer = CourseSerializer(data=data, context={'request': request})
     if not serializer.is_valid():
-        raise ValidationError({'course': serializer.errors})
+        raise ValidationError({'course': _titled_errors(title, serializer.errors)})
     return serializer.save(course_group_id=course_group.pk)
 
 
@@ -169,14 +172,14 @@ def _build_assignment(request, parsed, start, end, course, category, *, recurren
     }
     serializer = HomeworkSerializer(data=data, context={'request': request}, partial=True)
     if not serializer.is_valid():
-        raise ValidationError({'homework': serializer.errors})
+        raise ValidationError({'homework': _titled_errors(parsed['title'], serializer.errors)})
     validated = serializer.validated_data
     if validated.get('recurrence_rule'):
         try:
             validated['recurrence_rule'] = recurrenceservice.bound_to_course(
                 validated['recurrence_rule'], start, end, validated['all_day'], course)
         except ValidationError as ex:
-            raise ValidationError({'homework': f"\"{parsed['title']}\": {ex.detail['recurrence_rule']}"},
+            raise ValidationError({'homework': titled_message(parsed['title'], ex.detail['recurrence_rule'])},
                                   code=errorcodes.IMPORT_ICS_RECURRENCE_RULE_INVALID)
     return Homework(**validated, course=course, category=category)
 
@@ -222,7 +225,7 @@ def _build_event(request, parsed, start, end, *, recurrence_rule=None, exception
     }
     serializer = EventSerializer(data=data)
     if not serializer.is_valid():
-        raise ValidationError({'events': serializer.errors})
+        raise ValidationError({'events': _titled_errors(parsed['title'], serializer.errors)})
     return Event(**serializer.validated_data, user=request.user)
 
 
@@ -243,7 +246,7 @@ def _create_with_description_notes(request, model, instances, descriptions, sect
         try:
             noteservice.create_linked_note(content, request.user, instance, context={'request': request})
         except ValidationError as e:
-            raise ValidationError({section: e.detail})
+            raise ValidationError({section: _titled_errors(instance.title, e.detail)})
 
 
 def _is_duplicate_uid(parsed, seen_uids):
@@ -254,3 +257,8 @@ def _is_duplicate_uid(parsed, seen_uids):
         return True
     seen_uids.add(uid)
     return False
+
+
+def _titled_errors(title, errors):
+    return [ErrorDetail(titled_message(title, error), code=error.code)
+            for field_errors in errors.values() for error in field_errors]

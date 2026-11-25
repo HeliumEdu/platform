@@ -3,6 +3,7 @@ import os
 
 from django.conf import settings
 from django.template.defaultfilters import filesizeformat
+from django.utils.translation import gettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import FileField, IntegerField
@@ -34,25 +35,29 @@ class AttachmentSerializer(serializers.ModelSerializer):
     def validate_attachment(self, attachment):
         if attachment.size > settings.MAX_UPLOAD_SIZE:
             raise ValidationError(
-                f'The uploaded file exceeds the max upload size of {filesizeformat(settings.MAX_UPLOAD_SIZE)}.',
-                code=errorcodes.FILE_TOO_LARGE)
+                gettext('The uploaded file exceeds the max upload size of %(size)s.') % {
+                    'size': filesizeformat(settings.MAX_UPLOAD_SIZE)}, code=errorcodes.FILE_TOO_LARGE)
 
         ext = os.path.splitext(attachment.name)[1].lower()
         if ext in settings.BLOCKED_ATTACHMENT_EXTENSIONS:
-            raise ValidationError('This file type is not allowed.', code=errorcodes.ATTACHMENT_TYPE_NOT_ALLOWED)
+            raise ValidationError(gettext('This file type is not allowed.'),
+                                  code=errorcodes.ATTACHMENT_TYPE_NOT_ALLOWED)
 
         if attachment.content_type in settings.BLOCKED_ATTACHMENT_MIME_TYPES:
-            raise ValidationError('This file type is not allowed.', code=errorcodes.ATTACHMENT_TYPE_NOT_ALLOWED)
+            raise ValidationError(gettext('This file type is not allowed.'),
+                                  code=errorcodes.ATTACHMENT_TYPE_NOT_ALLOWED)
 
         return attachment
 
     def validate(self, attrs):
         parents = [field for field in _PARENT_FIELDS if attrs.get(field, None)]
         if not parents:
-            raise serializers.ValidationError("One of `course`, `event`, `homework`, or `resource` must be given.",
+            raise serializers.ValidationError(gettext('One of `course`, `event`, `homework`, or `resource` must be '
+                                                      'given.'),
                                               code=errorcodes.ATTACHMENT_PARENT_REQUIRED)
         elif len(parents) > 1:
-            raise serializers.ValidationError("Only one of `course`, `event`, `homework`, or `resource` may be given.",
+            raise serializers.ValidationError(gettext('Only one of `course`, `event`, `homework`, or `resource` may be '
+                                                      'given.'),
                                               code=errorcodes.ATTACHMENT_PARENT_MULTIPLE)
 
         return attrs

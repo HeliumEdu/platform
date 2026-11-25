@@ -1,6 +1,7 @@
 import logging
 
 from django.utils import timezone
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
@@ -37,7 +38,7 @@ class UserSettingsSerializer(serializers.ModelSerializer):
         prior_credits = attrs.get('prior_credits', self.instance.prior_credits)
         prior_gpa = attrs.get('prior_gpa', self.instance.prior_gpa)
         if prior_credits > 0 and prior_gpa == 0:
-            raise serializers.ValidationError({'prior_gpa': 'Enter the GPA for your prior credits.'},
+            raise serializers.ValidationError({'prior_gpa': gettext('Enter the GPA for your prior credits.')},
                                               code=errorcodes.PRIOR_GPA_REQUIRED)
 
         return attrs

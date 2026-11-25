@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated, NotFound, ValidationError
@@ -112,10 +113,11 @@ class UserDeleteResourceView(HeliumAPIView):
         # Only require password verification if user has a usable password
         if user.has_usable_password():
             if 'password' not in request.data:
-                raise ValidationError({'password': ['This field is required.']}, code=errorcodes.REQUIRED)
+                raise ValidationError({'password': [gettext('This field is required.')]}, code=errorcodes.REQUIRED)
 
             if not user.check_password(request.data['password']):
-                raise ValidationError({'password': ['The password is incorrect.']}, code=errorcodes.PASSWORD_INCORRECT)
+                raise ValidationError({'password': [gettext('The password is incorrect.')]},
+                                      code=errorcodes.PASSWORD_INCORRECT)
 
         logger.info(f'User {user.pk} will be deleted')
 

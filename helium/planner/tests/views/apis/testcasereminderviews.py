@@ -1504,7 +1504,7 @@ class TestCaseRecurringEventReminderViews(APITestCase):
 
         # THEN
         self.assertEqual(recurring_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('repeating `event`', str(recurring_response.data))
+        self.assertIn('This repeating event already has the same reminder.', str(recurring_response.data))
         self.assertEqual(Reminder.objects.filter(event=recurring).count(), 1)
         self.assertEqual(single_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Reminder.objects.filter(event=single).count(), 2)
@@ -1549,5 +1549,5 @@ class TestCaseRecurringHomeworkReminderViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('repeating `homework`', str(response.data))
+        self.assertIn('This repeating assignment already has the same reminder.', str(response.data))
         self.assertEqual(Reminder.objects.filter(homework=homework).count(), 1)

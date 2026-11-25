@@ -251,7 +251,7 @@ class TestCaseOAuthViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertIn('Invalid', str(response.data))
+        self.assertEqual(response.data['detail'], 'Sign in with Google failed. Please try again.')
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_expired_token(self, mock_verify_token):
@@ -317,7 +317,7 @@ class TestCaseOAuthViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertIn('Email', str(response.data))
+        self.assertEqual(response.data['detail'], "Google didn't share this account's email address.")
 
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')

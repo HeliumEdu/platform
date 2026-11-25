@@ -12,6 +12,7 @@ from rest_framework_simplejwt.utils import get_md5_hash_password
 
 from helium.auth.services import oauthservice
 from helium.common import errorcodes
+from helium.common.errormessages import SIGN_IN_TO_CONTINUE_MESSAGE
 
 
 _AUTH_HEADER_TYPE_BYTES_LOWER = {prefix.lower() for prefix in AUTH_HEADER_TYPE_BYTES}
@@ -66,24 +67,24 @@ class JWTAuthentication(BaseJWTAuthentication):
         try:
             user_id = validated_token[api_settings.USER_ID_CLAIM]
         except KeyError:
-            raise InvalidToken(_("Token contained no recognizable user identification"))
+            raise InvalidToken(SIGN_IN_TO_CONTINUE_MESSAGE)
 
         try:
             user = (self.user_model.objects
                     .select_related('settings')
                     .get(**{api_settings.USER_ID_FIELD: user_id}))
         except self.user_model.DoesNotExist:
-            raise AuthenticationFailed(_("User not found"), code=errorcodes.USER_NOT_FOUND)
+            raise AuthenticationFailed(SIGN_IN_TO_CONTINUE_MESSAGE, code=errorcodes.USER_NOT_FOUND)
 
         if user.deletion_requested_at is not None:
-            raise AuthenticationFailed(_("User not found"), code=errorcodes.USER_NOT_FOUND)
+            raise AuthenticationFailed(SIGN_IN_TO_CONTINUE_MESSAGE, code=errorcodes.USER_NOT_FOUND)
 
         if api_settings.CHECK_USER_IS_ACTIVE and not user.is_active:
-            raise AuthenticationFailed(_("User is inactive"), code=errorcodes.USER_INACTIVE)
+            raise AuthenticationFailed(SIGN_IN_TO_CONTINUE_MESSAGE, code=errorcodes.USER_INACTIVE)
 
         if api_settings.CHECK_REVOKE_TOKEN and user.has_usable_password():
             if validated_token.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password):
-                raise AuthenticationFailed(_("The user's password has been changed."), code=errorcodes.PASSWORD_CHANGED)
+                raise AuthenticationFailed(SIGN_IN_TO_CONTINUE_MESSAGE, code=errorcodes.PASSWORD_CHANGED)
 
         return user
 

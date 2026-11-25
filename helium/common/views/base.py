@@ -3,13 +3,16 @@ from datetime import datetime, timezone as dt_timezone
 
 from django.conf import settings
 from django.db import transaction
+from django.http import Http404
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.translation import gettext
 from drf_spectacular.utils import OpenApiParameter
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import GenericAPIView
 
 from helium.common import errorcodes
+from helium.common.errormessages import not_found_message
 from helium.common.utils import metricutils
 from helium.common.utils.commonutils import PreconditionFailedError
 
@@ -51,6 +54,12 @@ class HeliumAPIView(GenericAPIView):
         if settings.SENTRY_ENABLED and request.user and request.user.is_authenticated:
             import sentry_sdk
             sentry_sdk.set_user({"id": request.user.id})
+
+    def get_object(self):
+        try:
+            return super().get_object()
+        except Http404:
+            raise NotFound(not_found_message(self.get_queryset().model))
 
     def finalize_response(self, request, response, *args, **kwargs):
         response = super().finalize_response(request, response, *args, **kwargs)
@@ -114,7 +123,7 @@ def _parse_if_match(value: str) -> datetime:
         tag = tag[2:]
     parsed = parse_datetime(tag.strip('"'))
     if parsed is None:
-        raise ValidationError({'If-Match': ['The If-Match header must be the updated_at of the item being changed.']},
-                              code=errorcodes.IF_MATCH_INVALID)
+        raise ValidationError({'If-Match': [gettext('The If-Match header must be the updated_at of the item being '
+                                                    'changed.')]}, code=errorcodes.IF_MATCH_INVALID)
 
     return timezone.make_aware(parsed, dt_timezone.utc) if timezone.is_naive(parsed) else parsed

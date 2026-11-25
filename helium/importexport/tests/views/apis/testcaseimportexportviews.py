@@ -1197,6 +1197,23 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual([{'section': 'resources', 'id': 1, 'field': None,
                            'message': 'Field `courses` must be a list.'}], response.data['row_errors'])
 
+    def test_rejected_import_drops_the_label_of_a_non_field_serializer_error(self):
+        # GIVEN
+        userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        payload = self._minimal_import_payload()
+        payload['courses'][0]['start_date'] = '2024-06-01'
+
+        # WHEN
+        response = importexporthelper.post_import(self.client, payload,
+                                                  headers={'X-Helium-Structured-Errors': '1'})
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual("courses id 1: The 'start_date' must be before the 'end_date'",
+                         response.data['courses'][0]['message'])
+        self.assertEqual([{'section': 'courses', 'id': 1, 'field': None,
+                           'message': "The 'start_date' must be before the 'end_date'"}], response.data['row_errors'])
+
     def test_rejected_import_leaves_row_errors_out_unless_asked(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -1236,7 +1253,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('notes', response.data)
         self.assertIsInstance(response.data['notes'], list)
-        self.assertIn('notes id 1, ', str(response.data['notes'][0]))
+        self.assertIn('notes id 1: ', str(response.data['notes'][0]))
         self.assertEqual(CourseGroup.objects.count(), 0)
         self.assertEqual(Course.objects.count(), 0)
         self.assertEqual(Homework.objects.count(), 0)

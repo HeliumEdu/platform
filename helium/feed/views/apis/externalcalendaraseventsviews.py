@@ -1,5 +1,6 @@
 import logging
 
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.permissions import IsAuthenticated
@@ -131,7 +132,8 @@ class ExternalCalendarAsEventsListView(HeliumCalendarItemAPIView):
             events = icalexternalcalendarservice.calendar_to_events(external_calendar, _from, to)
         except HeliumICalendarError as e:
             if icalexternalcalendarservice.record_fetch_failure(external_calendar, e):
-                raise ValidationError(f"External Calendar {external_calendar.pk} is not a valid calendar, disabled.",
+                raise ValidationError(gettext('External Calendar %(id)s is not a valid calendar, disabled.') % {
+                    'id': external_calendar.pk},
                                       code=errorcodes.EXTERNAL_CALENDAR_DISABLED)
 
             raise ValidationError(str(e), code=e.code)

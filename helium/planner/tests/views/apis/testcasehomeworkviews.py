@@ -713,7 +713,7 @@ class TestCaseHomeworkViews(APITestCase):
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('matches the given query', response.data['detail'].lower())
+                self.assertRegex(response.data['detail'], commonhelper.NOT_FOUND_MESSAGE_PATTERN)
 
     def test_filter_id(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
@@ -1175,7 +1175,8 @@ class TestCaseHomeworkOccurrenceViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['recurrence_rule']['message'], "It has no dates by the class's last day.")
+        self.assertEqual(response.data['recurrence_rule']['message'],
+                         "It has no dates by the class's last day.")
         self.assertFalse(Homework.objects.exists())
 
     def test_create_repeating_homework_completed_or_graded_returns_400(self):

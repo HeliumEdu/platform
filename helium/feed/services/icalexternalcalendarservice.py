@@ -14,6 +14,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 from django.core.exceptions import ValidationError
 from django.db.models import F
 from django.utils import timezone
+from django.utils.translation import gettext
 from rest_framework import status
 
 from helium.common import enums, errorcodes
@@ -241,7 +242,7 @@ def validate_url(url):
         response = urlopen_secure(url)
 
         if response.getcode() != status.HTTP_200_OK:
-            raise HeliumICalendarError("The URL did not return a valid response.", 'bad_response')
+            raise HeliumICalendarError(gettext("The URL did not return a valid response."), 'bad_response')
 
         return icalendar.Calendar.from_ical(response.read())
     except ValidationError as ex:
@@ -251,11 +252,11 @@ def validate_url(url):
     except (OSError, http.client.HTTPException) as ex:
         logger.info(f"The URL is not reachable: {ex}")
 
-        raise HeliumICalendarError("The URL is not reachable.", 'unreachable')
+        raise HeliumICalendarError(gettext("The URL is not reachable."), 'unreachable')
     except ValueError as ex:
         logger.info(f"The URL did not return a valid calendar: {ex}")
 
-        raise HeliumICalendarError("The URL did not return a valid calendar.", 'invalid_calendar')
+        raise HeliumICalendarError(gettext("The URL did not return a valid calendar."), 'invalid_calendar')
 
 
 def fetch_icalendar_conditional(external_calendar):
@@ -291,7 +292,7 @@ def fetch_icalendar_conditional(external_calendar):
         response_code = response.getcode()
 
         if response_code != status.HTTP_200_OK:
-            raise HeliumICalendarError("The URL did not return a valid response.", 'bad_response')
+            raise HeliumICalendarError(gettext("The URL did not return a valid response."), 'bad_response')
 
         # Store caching headers from the response for next time
         new_etag = response.getheader('ETag')
@@ -313,10 +314,10 @@ def fetch_icalendar_conditional(external_calendar):
 
     except (OSError, http.client.HTTPException) as ex:
         logger.info(f"The URL is not reachable: {ex}")
-        raise HeliumICalendarError("The URL is not reachable.", 'unreachable')
+        raise HeliumICalendarError(gettext("The URL is not reachable."), 'unreachable')
     except ValueError as ex:
         logger.info(f"The URL did not return a valid calendar: {ex}")
-        raise HeliumICalendarError("The URL did not return a valid calendar.", 'invalid_calendar')
+        raise HeliumICalendarError(gettext("The URL did not return a valid calendar."), 'invalid_calendar')
 
 
 def calendar_to_events(external_calendar, _from=None, to=None):

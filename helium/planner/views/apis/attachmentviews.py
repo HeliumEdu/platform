@@ -1,5 +1,6 @@
 import logging
 
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -104,7 +105,8 @@ class AttachmentsApiListView(HeliumAPIView, ListModelMixin):
         elif len(errors) > 0:
             raise ValidationError(errors)
         else:
-            raise ValidationError({'details': 'An unknown error occurred.'}, code=errorcodes.ATTACHMENT_UPLOAD_FAILED)
+            raise ValidationError({'details': gettext('An unknown error occurred.')},
+                                  code=errorcodes.ATTACHMENT_UPLOAD_FAILED)
 
 
 @extend_schema(

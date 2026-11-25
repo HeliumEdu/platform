@@ -1,5 +1,6 @@
 import logging
 
+from django.utils.translation import gettext
 from rest_framework import serializers
 
 from helium.common import errorcodes
@@ -46,10 +47,10 @@ class ICSImportCreateSerializer(serializers.Serializer):
         target_type = attrs.get('target_type')
         if target_type == icsimportservice.TARGET_COURSE and not attrs.get('course'):
             raise serializers.ValidationError(
-                {'course': '`course` is required when `target_type` is `course`.'}, code=errorcodes.REQUIRED)
+                {'course': gettext('`course` is required when `target_type` is `course`.')}, code=errorcodes.REQUIRED)
         if target_type == icsimportservice.TARGET_NEW_COURSE and not attrs.get('course_group'):
             raise serializers.ValidationError(
-                {'course_group': '`course_group` is required when `target_type` is `new_course`.'},
+                {'course_group': gettext('`course_group` is required when `target_type` is `new_course`.')},
                 code=errorcodes.REQUIRED)
         return attrs
 

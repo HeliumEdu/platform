@@ -1,11 +1,14 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils.translation import gettext
 from rest_framework import serializers
 
 from helium.common import errorcodes
+from helium.common.errormessages import EXCEPTION_DATES_OUT_OF_RANGE_MESSAGE
 from helium.common.utils.validators import validate_and_normalize_date_csv
 
 
-def normalize_exceptions(exceptions, start_date=None, end_date=None, range_label='date range'):
+def normalize_exceptions(exceptions, start_date=None, end_date=None,
+                         out_of_range_message=EXCEPTION_DATES_OUT_OF_RANGE_MESSAGE):
     """
     Validate and normalize a CSV of YYYYMMDD exception dates, each within [`start_date`, `end_date`] when both are
     given.
@@ -13,12 +16,13 @@ def normalize_exceptions(exceptions, start_date=None, end_date=None, range_label
     :param exceptions: The raw comma-separated dates.
     :param start_date: The inclusive lower bound, or None for no range check.
     :param end_date: The inclusive upper bound, or None for no range check.
-    :param range_label: How the range is described in the out-of-range error (e.g. "class date range").
+    :param out_of_range_message: The error message for a date outside the range.
     :return: The deduplicated, sorted CSV.
     :raises serializers.ValidationError: On `exceptions`, for a malformed or out-of-range date.
     """
     try:
-        return validate_and_normalize_date_csv(exceptions, start_date, end_date, range_label=range_label)
+        return validate_and_normalize_date_csv(exceptions, start_date, end_date,
+                                               out_of_range_message=out_of_range_message)
     except DjangoValidationError as e:
         raise serializers.ValidationError({'exceptions': e.message}, code=e.code)
 
@@ -40,12 +44,13 @@ def validate_start_before_end(attrs, instance):
         end = instance.end
 
     if start and end and start > end:
-        raise serializers.ValidationError("The 'start' must be before the 'end'", code=errorcodes.START_AFTER_END)
+        raise serializers.ValidationError(gettext("The 'start' must be before the 'end'"),
+                                          code=errorcodes.START_AFTER_END)
 
     return start
 
 
-def validate_date_range_and_exceptions(attrs, instance, range_label):
+def validate_date_range_and_exceptions(attrs, instance, out_of_range_message):
     """
     Raise if the effective `start_date` is after the effective `end_date`, then validate and normalize `exceptions`
     against that range whenever the exceptions or either bound is being set. Values missing from `attrs` fall back
@@ -53,7 +58,7 @@ def validate_date_range_and_exceptions(attrs, instance, range_label):
 
     :param attrs: The serializer's incoming attributes; `exceptions` is replaced with its normalized form.
     :param instance: The instance being updated, or None on create.
-    :param range_label: How the range is described in exception errors (e.g. "class date range").
+    :param out_of_range_message: The error message for an exception date outside the range.
     """
     start_date = attrs.get('start_date', None)
     if not start_date and instance:
@@ -63,7 +68,7 @@ def validate_date_range_and_exceptions(attrs, instance, range_label):
         end_date = instance.end_date
 
     if start_date and end_date and start_date > end_date:
-        raise serializers.ValidationError("The 'start_date' must be before the 'end_date'",
+        raise serializers.ValidationError(gettext("The 'start_date' must be before the 'end_date'"),
                                           code=errorcodes.START_DATE_AFTER_END_DATE)
 
     if 'exceptions' in attrs or 'start_date' in attrs or 'end_date' in attrs:
@@ -71,4 +76,4 @@ def validate_date_range_and_exceptions(attrs, instance, range_label):
         if exceptions is None and instance:
             exceptions = instance.exceptions
         if exceptions:
-            attrs['exceptions'] = normalize_exceptions(exceptions, start_date, end_date, range_label)
+            attrs['exceptions'] = normalize_exceptions(exceptions, start_date, end_date, out_of_range_message)

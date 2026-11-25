@@ -3,6 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from helium.common import enums
+from helium.common.errormessages import EXCEPTION_DATES_OUTSIDE_CLASS_MESSAGE
 from helium.common.models import BaseModel
 from helium.common.utils.commonutils import random_color
 from helium.common.utils.validators import validate_and_normalize_date_csv, validate_hex_color
@@ -74,7 +75,8 @@ class Course(BaseModel):
         super().clean()
         if self.exceptions:
             self.exceptions = validate_and_normalize_date_csv(
-                self.exceptions, self.start_date, self.end_date, range_label='class date range')
+                self.exceptions, self.start_date, self.end_date,
+                out_of_range_message=EXCEPTION_DATES_OUTSIDE_CLASS_MESSAGE)
 
     def __str__(self):  # pragma: no cover
         return str(f'{self.title} ({self.get_user().get_username()})')

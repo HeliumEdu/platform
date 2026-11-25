@@ -6,6 +6,7 @@ import icalendar
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -225,7 +226,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         if len(uploads) != 1:
             logger.warning(f'Rejected import request from user {request.user.pk} with {len(uploads)} files.')
             raise ValidationError({
-                'details': 'Upload exactly one file per request.'
+                'details': gettext('Upload exactly one file per request.')
             }, code=errorcodes.UPLOAD_FILE_COUNT)
 
         external_calendar_count = 0
@@ -248,7 +249,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
                 if isinstance(data, list):
                     raise ValidationError({
-                        'details': f'Invalid JSON structure: {upload}.'
+                        'details': gettext('Invalid JSON structure: %(file)s.') % {'file': upload}
                     }, code=errorcodes.IMPORT_JSON_STRUCTURE_INVALID)
 
                 ((external_calendar_count_file, course_groups_count_file, courses_count_file,
@@ -279,7 +280,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
                                 status=status.HTTP_400_BAD_REQUEST)
             except ValueError:
                 raise ValidationError({
-                    'details': f'Invalid JSON in file: {upload}.'
+                    'details': gettext('Invalid JSON in file: %(file)s.') % {'file': upload}
                 }, code=errorcodes.IMPORT_JSON_INVALID)
 
         serializer = ImportSerializer({
@@ -307,8 +308,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         try:
             return int(course_group)
         except ValueError:
-            raise ValidationError({'course_group': f"Unresolved `course_group` reference `{course_group}`."},
-                                  code=errorcodes.UNRESOLVED_REFERENCE)
+            raise ValidationError({'course_group': gettext('Unresolved `course_group` reference `%(id)s`.') % {
+                'id': course_group}}, code=errorcodes.UNRESOLVED_REFERENCE)
 
     @extend_schema(
         summary='Import a calendar (.ics) file',
@@ -341,7 +342,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         uploads = request.data.getlist('file[]')
         if len(uploads) != 1:
             logger.warning(f'Rejected .ics import from user {request.user.pk} with {len(uploads)} files.')
-            raise ValidationError({'details': 'Upload exactly one file per request.'},
+            raise ValidationError({'details': gettext('Upload exactly one file per request.')},
                                   code=errorcodes.UPLOAD_FILE_COUNT)
 
         serializer = ICSImportCreateSerializer(data=request.data)
@@ -352,7 +353,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         try:
             calendar = icalendar.Calendar.from_ical(uploadfileservice.read(upload))
         except ValueError:
-            raise ValidationError({'details': f'Invalid iCalendar in file: {upload}.'},
+            raise ValidationError({'details': gettext('Invalid iCalendar in file: %(file)s.') % {'file': upload}},
                                   code=errorcodes.IMPORT_ICS_INVALID)
 
         courses_count, events_count, homework_count = icsimportservice.import_ics(
@@ -386,8 +387,9 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             if not (UserSettings.objects
                     .filter(user=request.user, show_getting_started=False)
                     .update(show_getting_started=True, updated_at=timezone.now())):
-                raise ValidationError('The example schedule has already been imported. Please clear it before '
-                                      'importing it again.', code=errorcodes.EXAMPLE_SCHEDULE_ALREADY_IMPORTED)
+                raise ValidationError(gettext('The example schedule has already been imported. Please clear it '
+                                              'before importing it again.'),
+                                      code=errorcodes.EXAMPLE_SCHEDULE_ALREADY_IMPORTED)
 
             examplescheduleimportservice.import_example_schedule(request.user)
 

@@ -372,6 +372,21 @@ class TestCaseImportICSViews(APITestCase):
         self.assertEqual(response.data['homework']['message'], '"Daily log": It repeats more than 366 times.')
         self.assertFalse(Homework.objects.filter(course=course).exists())
 
+    def test_import_ics_field_error_names_the_entry(self):
+        # GIVEN
+        course = self._given_course()
+        title = 'x' * 256
+
+        # WHEN
+        response = self._post_inline_ics(
+            f'BEGIN:VEVENT\r\nUID:long\r\nSUMMARY:{title}\r\nDTSTART:20170110T140000Z\r\n'
+            'DTEND:20170110T150000Z\r\nEND:VEVENT\r\n', course)
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'homework': [
+            {'message': f'"{title}": Ensure this field has no more than 255 characters.', 'code': 'max_length'}]})
+
     def test_import_ics_unexpandable_rule_falls_back_to_one_assignment(self):
         # GIVEN
         course = self._given_course()

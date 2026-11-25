@@ -18,9 +18,9 @@ from django.core.management.base import CommandError
 from django.db import IntegrityError
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from helium.auth.utils.userutils import admin_allowed_email_error, generate_unique_username_from_email, \
-    is_admin_allowed_email
+from helium.auth.utils.userutils import generate_unique_username_from_email, is_admin_allowed_email
 from helium.common import enums
+from helium.common.errormessages import admin_allowed_email_error
 
 
 class Command(BaseCommand):

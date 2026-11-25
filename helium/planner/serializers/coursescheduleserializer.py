@@ -1,11 +1,14 @@
 import datetime
 import logging
 
+from django.utils.dates import WEEKDAYS
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from helium.common import enums, errorcodes
+from helium.common.errormessages import EXCEPTION_DATES_OUTSIDE_SCHEDULE_MESSAGE
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.serializers.validation import normalize_exceptions
 from helium.planner.models import CourseSchedule
@@ -14,6 +17,8 @@ from helium.planner.services import coursescheduleservice
 logger = logging.getLogger(__name__)
 
 _DAYS = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
+_DAY_NAMES = {_DAYS[helium_day]: WEEKDAYS[python_day]
+              for python_day, helium_day in enums.PYTHON_TO_HELIUM_DAY_OF_WEEK.items()}
 _MIDNIGHT = datetime.time(0, 0, 0)
 _MAX_CYCLE_LENGTH = 20
 
@@ -104,8 +109,9 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         is_week_based = self._resolve(attrs, 'is_week_based')
 
         if cycle_length is not None and is_week_based:
-            raise ValidationError("A schedule cannot be both a day cycle ('cycle_length') and a week-based "
-                                  "rotation ('is_week_based').", code=errorcodes.SCHEDULE_CYCLE_AND_WEEK_BASED)
+            raise ValidationError(gettext("A schedule cannot be both a day cycle ('cycle_length') and a week-based "
+                                          "rotation ('is_week_based')."),
+                                  code=errorcodes.SCHEDULE_CYCLE_AND_WEEK_BASED)
 
         if cycle_length is not None:
             self._validate_cycle(cycle_length, self._resolve(attrs, 'anchor_date'),
@@ -117,8 +123,9 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         else:
             if attrs.get('anchor_date') is not None or attrs.get('cycle_slots') is not None \
                     or attrs.get('week_offset') is not None:
-                raise ValidationError("'anchor_date', 'cycle_slots', and 'week_offset' are only valid on a "
-                                      "rotating schedule.", code=errorcodes.SCHEDULE_ROTATION_FIELDS_NOT_ROTATING)
+                raise ValidationError(gettext("'anchor_date', 'cycle_slots', and 'week_offset' are only valid on a "
+                                              "rotating schedule."),
+                                      code=errorcodes.SCHEDULE_ROTATION_FIELDS_NOT_ROTATING)
             self._validate_weekly(attrs)
             if self.context.get('request') is not None:
                 self._require_meeting_day(attrs)
@@ -129,13 +136,14 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         attrs['template'] = self._canonical_template(cycle_length, is_week_based)
         stored_requested_template = None if requested_template == enums.WEEKLY else requested_template
         if requested_template is not None and attrs['template'] != stored_requested_template:
-            raise ValidationError("'template' doesn't match the rotation fields. Send one or the other, or fields "
-                                  "that match the template.", code=errorcodes.SCHEDULE_TEMPLATE_MISMATCH)
+            raise ValidationError(gettext("'template' doesn't match the rotation fields. Send one or the other, or "
+                                          "fields that match the template."),
+                                  code=errorcodes.SCHEDULE_TEMPLATE_MISMATCH)
 
         start_date = self._resolve(attrs, 'start_date')
         end_date = self._resolve(attrs, 'end_date')
         if start_date and end_date and start_date > end_date:
-            raise ValidationError("The 'start_date' must be before the 'end_date'",
+            raise ValidationError(gettext("The 'start_date' must be before the 'end_date'"),
                                   code=errorcodes.START_DATE_AFTER_END_DATE)
 
         if attrs.get('exceptions'):
@@ -149,7 +157,8 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             course = self.instance.course
             added = set(exceptions.split(',')) - set(self.instance.exceptions.split(','))
             normalize_exceptions(','.join(added), max(start_date or course.start_date, course.start_date),
-                                 min(end_date or course.end_date, course.end_date), 'schedule date range')
+                                 min(end_date or course.end_date, course.end_date),
+                                 EXCEPTION_DATES_OUTSIDE_SCHEDULE_MESSAGE)
         return exceptions
 
     def _apply_template_defaults(self, attrs, template):
@@ -181,23 +190,23 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
     def _validate_week_based(self, week_offset, anchor_date, attrs):
         if anchor_date is None:
-            raise ValidationError("'anchor_date' is required for a week-based rotation.",
+            raise ValidationError(gettext("'anchor_date' is required for a week-based rotation."),
                                   code=errorcodes.SCHEDULE_ANCHOR_DATE_REQUIRED)
         if week_offset not in (0, 1):
-            raise ValidationError("'week_offset' must be 0 (Week A) or 1 (Week B).",
+            raise ValidationError(gettext("'week_offset' must be 0 (Week A) or 1 (Week B)."),
                                   code=errorcodes.SCHEDULE_WEEK_OFFSET_INVALID)
 
         self._validate_weekly(attrs)
 
     def _validate_cycle(self, cycle_length, anchor_date, cycle_slots):
         if not 2 <= cycle_length <= _MAX_CYCLE_LENGTH:
-            raise ValidationError(f"'cycle_length' must be between 2 and {_MAX_CYCLE_LENGTH}.",
-                                  code=errorcodes.SCHEDULE_CYCLE_LENGTH_OUT_OF_RANGE)
+            raise ValidationError(gettext("'cycle_length' must be between 2 and %(max)s.") % {
+                'max': _MAX_CYCLE_LENGTH}, code=errorcodes.SCHEDULE_CYCLE_LENGTH_OUT_OF_RANGE)
         if anchor_date is None:
-            raise ValidationError("'anchor_date' is required for a cycle schedule.",
+            raise ValidationError(gettext("'anchor_date' is required for a cycle schedule."),
                                   code=errorcodes.SCHEDULE_ANCHOR_DATE_REQUIRED)
         if not cycle_slots:
-            raise ValidationError("'cycle_slots' must be a non-empty list for a cycle schedule.",
+            raise ValidationError(gettext("'cycle_slots' must be a non-empty list for a cycle schedule."),
                                   code=errorcodes.SCHEDULE_CYCLE_SLOTS_REQUIRED)
 
         seen_indices = set()
@@ -205,10 +214,11 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
             indices = slot.get('indices') if isinstance(slot, dict) else None
             if not indices or not all(isinstance(i, int) and 1 <= i <= cycle_length for i in indices):
                 raise ValidationError(
-                    f"Each cycle slot's 'indices' must be a non-empty list of integers in [1, {cycle_length}].",
+                    gettext("Each cycle slot's 'indices' must be a non-empty list of integers in "
+                            "[1, %(cycle_length)s].") % {'cycle_length': cycle_length},
                     code=errorcodes.SCHEDULE_CYCLE_SLOT_INDICES_INVALID)
             if seen_indices.intersection(indices):
-                raise ValidationError("A cycle-day index cannot appear in more than one slot.",
+                raise ValidationError(gettext('A cycle-day index cannot appear in more than one slot.'),
                                       code=errorcodes.SCHEDULE_CYCLE_SLOT_INDICES_OVERLAP)
             seen_indices.update(indices)
 
@@ -216,10 +226,10 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
                 start_time = datetime.time.fromisoformat(slot['start_time'])
                 end_time = datetime.time.fromisoformat(slot['end_time'])
             except (KeyError, TypeError, ValueError):
-                raise ValidationError("Each cycle slot needs 'start_time' and 'end_time' as 'HH:MM:SS'.",
+                raise ValidationError(gettext("Each cycle slot needs 'start_time' and 'end_time' as 'HH:MM:SS'."),
                                       code=errorcodes.SCHEDULE_CYCLE_SLOT_TIMES_REQUIRED)
             if start_time > end_time:
-                raise ValidationError("A cycle slot's 'start_time' must be before its 'end_time'.",
+                raise ValidationError(gettext("A cycle slot's 'start_time' must be before its 'end_time'."),
                                       code=errorcodes.START_TIME_AFTER_END_TIME)
 
     def _validate_weekly(self, attrs):
@@ -240,14 +250,13 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
                 end_time = getattr(self.instance, end_key)
 
             if start_time and end_time and start_time > end_time:
-                raise ValidationError(f"The 'start_time' of '{day}' must be before 'end_time'",
+                raise ValidationError(gettext("The 'start_time' of '%(day)s' must be before 'end_time'") % {'day': day},
                                       code=errorcodes.START_TIME_AFTER_END_TIME)
 
             if days_of_week and days_of_week[i] == '1' and (start_time == _MIDNIGHT or end_time == _MIDNIGHT):
                 raise ValidationError(
-                    f"'{day}' is marked active in 'days_of_week' but '{day}_start_time' / '{day}_end_time' "
-                    f"are `00:00:00`. Set non-zero meeting times for active days, or mark the day inactive "
-                    f"in 'days_of_week'.", code=errorcodes.SCHEDULE_ACTIVE_DAY_MIDNIGHT
+                    gettext("Class times can't start or end at midnight. Pick other times for %(day)s.") % {
+                        'day': _DAY_NAMES[day]}, code=errorcodes.SCHEDULE_ACTIVE_DAY_MIDNIGHT
                 )
 
     def _require_meeting_day(self, attrs):
@@ -255,4 +264,5 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         if days_of_week is None and self.instance:
             days_of_week = self.instance.days_of_week
         if not days_of_week or '1' not in days_of_week:
-            raise ValidationError("A schedule must meet on at least one day.", code=errorcodes.SCHEDULE_NO_DAYS)
+            raise ValidationError(gettext('A schedule must meet on at least one day.'),
+                                  code=errorcodes.SCHEDULE_NO_DAYS)

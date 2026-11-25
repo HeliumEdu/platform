@@ -284,7 +284,7 @@ class TestCaseAuthenticationViews(TestCase):
         )
 
         # THEN
-        self.assertContains(response, "don't recognize that account",
+        self.assertContains(response, 'Check your credentials and try again.',
                             status_code=status.HTTP_401_UNAUTHORIZED)
 
     def test_verification_success(self):
@@ -363,7 +363,7 @@ class TestCaseAuthenticationViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         user = get_user_model().objects.get(email=user.email)
-        self.assertIn("'email' and 'code' must be given", response.data[0]['message'])
+        self.assertEqual("'email' and 'code' must be given as query parameters", response.data[0]['message'])
         self.assertFalse(user.is_active)
 
     def test_verification_not_found(self):

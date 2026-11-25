@@ -540,7 +540,7 @@ class TestCaseCourseViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("'tue' is marked active", str(response.data))
+        self.assertIn("Class times can't start or end at midnight. Pick other times for Tuesday.", str(response.data))
         self.assertEqual(CourseSchedule.objects.count(), 0)
 
     def test_not_found(self):

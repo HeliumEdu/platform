@@ -3,6 +3,7 @@ import logging
 from rest_framework import permissions
 from rest_framework.exceptions import NotFound
 
+from helium.common.errormessages import not_found_message
 from helium.planner.models import Course, CourseGroup, ResourceGroup, Event, Homework, Category, Resource
 
 logger = logging.getLogger(__name__)
@@ -51,34 +52,34 @@ def requested_ids(data, key):
 
 def check_course_group_permission(user_id, course_group_id):
     if not CourseGroup.objects.exists_for_user(course_group_id, user_id):
-        raise NotFound('No CourseGroup matches the given query.')
+        raise NotFound(not_found_message(CourseGroup))
 
 
 def check_course_permission(user_id, course_id):
     if not Course.objects.exists_for_user(course_id, user_id):
-        raise NotFound('No Course matches the given query.')
+        raise NotFound(not_found_message(Course))
 
 
 def check_resource_group_permission(user_id, resource_group_id):
     if not ResourceGroup.objects.exists_for_user(resource_group_id, user_id):
-        raise NotFound('No ResourceGroup matches the given query.')
+        raise NotFound(not_found_message(ResourceGroup))
 
 
 def check_event_permission(user_id, event_id):
     if not Event.objects.exists_for_user(event_id, user_id):
-        raise NotFound('No Event matches the given query.')
+        raise NotFound(not_found_message(Event))
 
 
 def check_homework_permission(user_id, homework_id):
     if not Homework.objects.exists_for_user(homework_id, user_id):
-        raise NotFound('No Homework matches the given query.')
+        raise NotFound(not_found_message(Homework))
 
 
 def check_category_permission(user_id, category_id):
     if not Category.objects.exists_for_user(category_id, user_id):
-        raise NotFound('No Category matches the given query.')
+        raise NotFound(not_found_message(Category))
 
 
 def check_resource_permission(user_id, resource_id):
     if not Resource.objects.exists_for_user(resource_id, user_id):
-        raise NotFound('No Resource matches the given query.')
+        raise NotFound(not_found_message(Resource))

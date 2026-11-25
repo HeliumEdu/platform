@@ -5,6 +5,7 @@ import zipfile
 
 from django.conf import settings
 from django.template.defaultfilters import filesizeformat
+from django.utils.translation import gettext
 from rest_framework.exceptions import ValidationError
 
 from helium.common import errorcodes
@@ -19,14 +20,15 @@ _READ_CHUNK_SIZE = 1024 * 1024
 def _validate_extension(name):
     ext = os.path.splitext(name)[1].removeprefix('.').lower()
     if ext not in settings.FILE_TYPES:
-        raise ValidationError(f'File type "{ext}" not supported.', code=errorcodes.FILE_TYPE_UNSUPPORTED)
+        raise ValidationError(gettext('File type "%(ext)s" not supported.') % {'ext': ext},
+                              code=errorcodes.FILE_TYPE_UNSUPPORTED)
     return ext
 
 
 def _too_large_when_expanded():
     return ValidationError(
-        f'The expanded archive exceeds the max import size of '
-        f'{filesizeformat(settings.MAX_IMPORT_SIZE)}.', code=errorcodes.ARCHIVE_TOO_LARGE)
+        gettext('The expanded archive exceeds the max import size of %(size)s.') % {
+            'size': filesizeformat(settings.MAX_IMPORT_SIZE)}, code=errorcodes.ARCHIVE_TOO_LARGE)
 
 
 def _archived_file(archive):
@@ -36,13 +38,13 @@ def _archived_file(archive):
                and not os.path.basename(entry.filename).startswith('._')]
 
     if len(entries) != 1:
-        raise ValidationError('The archive must contain exactly one file.', code=errorcodes.ARCHIVE_FILE_COUNT)
+        raise ValidationError(gettext('The archive must contain exactly one file.'), code=errorcodes.ARCHIVE_FILE_COUNT)
 
     entry = entries[0]
     if entry.flag_bits & 0x1:
-        raise ValidationError('Encrypted archives are not supported.', code=errorcodes.ARCHIVE_ENCRYPTED)
+        raise ValidationError(gettext('Encrypted archives are not supported.'), code=errorcodes.ARCHIVE_ENCRYPTED)
     if _validate_extension(entry.filename) == 'zip':
-        raise ValidationError('The archive must not contain another archive.', code=errorcodes.ARCHIVE_NESTED)
+        raise ValidationError(gettext('The archive must not contain another archive.'), code=errorcodes.ARCHIVE_NESTED)
 
     return entry
 
@@ -66,7 +68,7 @@ def _read_archived(data):
 
             return expanded.getvalue()
     except zipfile.BadZipFile:
-        raise ValidationError('The archive could not be read.', code=errorcodes.ARCHIVE_UNREADABLE)
+        raise ValidationError(gettext('The archive could not be read.'), code=errorcodes.ARCHIVE_UNREADABLE)
 
 
 def read(file) -> bytes:
@@ -80,8 +82,8 @@ def read(file) -> bytes:
     """
     if file.size > settings.MAX_UPLOAD_SIZE:
         raise ValidationError(
-            f'The uploaded file exceeds the max upload size of '
-            f'{filesizeformat(settings.MAX_UPLOAD_SIZE)}.', code=errorcodes.FILE_TOO_LARGE)
+            gettext('The uploaded file exceeds the max upload size of %(size)s.') % {
+                'size': filesizeformat(settings.MAX_UPLOAD_SIZE)}, code=errorcodes.FILE_TOO_LARGE)
 
     _validate_extension(file.name)
 

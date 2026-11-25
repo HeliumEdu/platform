@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Exists, Q
 from django.utils import timezone
+from django.utils.translation import gettext, gettext_lazy
 from oauth2_provider.cimd import SafeMetadataFetcher
 from oauth2_provider.exceptions import FatalClientError, OAuthToolkitError
 from oauth2_provider.models import (
@@ -62,8 +63,8 @@ class ConsentAccountChangedError(APIException):
     switches Helium accounts in another tab after the consent screen loaded.
     """
     status_code = status.HTTP_409_CONFLICT
-    default_detail = ("You switched Helium accounts since this page loaded. Reload it to see which account you're "
-                      "connecting.")
+    default_detail = gettext_lazy("You switched Helium accounts since this page loaded. Reload it to see which account "
+                                  "you're connecting.")
     default_code = errorcodes.CONSENT_ACCOUNT_CHANGED
 
 
@@ -262,17 +263,18 @@ def _granted_scopes(requested, approved) -> list[str]:
     else:
         unrequested = sorted(set(approved) - set(requested))
         if unrequested:
-            raise ValidationError({'scopes': [f"Not requested by the client: {', '.join(unrequested)}."]},
-                                  code=errorcodes.SCOPES_NOT_REQUESTED)
+            raise ValidationError({'scopes': [gettext('Not requested by the client: %(scopes)s.') % {
+                'scopes': ', '.join(unrequested)}]}, code=errorcodes.SCOPES_NOT_REQUESTED)
         declined_required = sorted(scope for scope in requested
                                    if scope not in settings.OAUTH_OPTIONAL_SCOPES and scope not in approved)
         if declined_required:
-            raise ValidationError({'scopes': [f"Required by the client: {', '.join(declined_required)}."]},
-                                  code=errorcodes.SCOPES_REQUIRED_DECLINED)
+            raise ValidationError({'scopes': [gettext('Required by the client: %(scopes)s.') % {
+                'scopes': ', '.join(declined_required)}]}, code=errorcodes.SCOPES_REQUIRED_DECLINED)
         granted = [scope for scope in requested if scope in approved]
 
     if not granted:
-        raise ValidationError({'scopes': ['Approve at least one scope.']}, code=errorcodes.SCOPES_NONE_APPROVED)
+        raise ValidationError({'scopes': [gettext('Check at least one item to allow, or choose Deny.')]},
+                              code=errorcodes.SCOPES_NONE_APPROVED)
 
     return granted
 

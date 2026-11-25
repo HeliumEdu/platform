@@ -4,9 +4,11 @@ from zoneinfo import ZoneInfo
 
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext, ngettext
 from rest_framework.exceptions import ValidationError
 
 from helium.common import enums, errorcodes
+from helium.common.errormessages import not_an_occurrence_message, not_repeating_message
 from helium.common.utils import datetimeutils
 from helium.common.utils.validators import join_recurrence_rule, normalize_recurrence_rule_for_user, \
     parse_recurrence_rule, shift_recurrence_rule_for_user
@@ -69,11 +71,13 @@ def bound_to_course(rule, start, end, all_day, course):
     count = sum(1 for _ in itertools.islice(datetimeutils.expand_recurrence(rule, start, end, tz, all_day=all_day),
                                             MAX_HOMEWORK_OCCURRENCES + 1))
     if count == 0:
-        raise ValidationError({'recurrence_rule': "It has no dates by the class's last day."},
+        raise ValidationError({'recurrence_rule': gettext("It has no dates by the class's last day.")},
                               code=errorcodes.RECURRENCE_RULE_AFTER_CLASS_END)
     if count > MAX_HOMEWORK_OCCURRENCES:
-        raise ValidationError({'recurrence_rule': f'It repeats more than {MAX_HOMEWORK_OCCURRENCES} times.'},
-                              code=errorcodes.RECURRENCE_RULE_TOO_MANY_OCCURRENCES)
+        raise ValidationError({'recurrence_rule': ngettext('It repeats more than %(count)s time.',
+                                                           'It repeats more than %(count)s times.',
+                                                           MAX_HOMEWORK_OCCURRENCES) % {
+            'count': MAX_HOMEWORK_OCCURRENCES}}, code=errorcodes.RECURRENCE_RULE_TOO_MANY_OCCURRENCES)
     return rule
 
 
@@ -86,13 +90,13 @@ def find_occurrence(source, occurrence_start):
     """
     if not source.recurrence_rule:
         if occurrence_start != source.start:
-            raise ValidationError({'occurrence_start': f'Not an occurrence of this {_noun(source)}.'},
+            raise ValidationError({'occurrence_start': not_an_occurrence_message(type(source))},
                                   code=errorcodes.OCCURRENCE_NOT_FOUND)
         return source.start, source.end
 
     first = next(source.occurrences(not_before=occurrence_start), None)
     if first is None or first[0] != occurrence_start:
-        raise ValidationError({'occurrence_start': f'Not an occurrence of this {_noun(source)}.'},
+        raise ValidationError({'occurrence_start': not_an_occurrence_message(type(source))},
                               code=errorcodes.OCCURRENCE_NOT_FOUND)
 
     return first
@@ -121,7 +125,7 @@ def detach_occurrence(source, occurrence_start):
     :raises ValidationError: if ``source`` does not repeat, or ``occurrence_start`` is not one of its occurrences
     """
     if not source.recurrence_rule:
-        raise ValidationError(f"This {_noun(source)} doesn't repeat.", code=errorcodes.NOT_REPEATING)
+        raise ValidationError(not_repeating_message(type(source)), code=errorcodes.NOT_REPEATING)
 
     start, end = find_occurrence(source, occurrence_start)
     values = {field: getattr(source, field) for field in _OCCURRENCE_FIELDS[type(source)]}
@@ -160,7 +164,7 @@ def exclude_occurrence(source, occurrence_start):
     :raises ValidationError: if ``source`` does not repeat, or ``occurrence_start`` is not one of its occurrences
     """
     if not source.recurrence_rule:
-        raise ValidationError(f"This {_noun(source)} doesn't repeat.", code=errorcodes.NOT_REPEATING)
+        raise ValidationError(not_repeating_message(type(source)), code=errorcodes.NOT_REPEATING)
 
     find_occurrence(source, occurrence_start)
 
@@ -171,10 +175,6 @@ def exclude_occurrence(source, occurrence_start):
             return None
 
     return source
-
-
-def _noun(item):
-    return item._meta.verbose_name.lower()
 
 
 def _exclude(source, occurrence_start):

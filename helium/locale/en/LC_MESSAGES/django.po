@@ -1,12 +1,12 @@
 # AUTO-GENERATED — DO NOT EDIT.
-# Extracted from the email templates and subjects by:
+# Extracted from the platform's emails and messages by:
 #   platform: make build-messages
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 06:12+0000\n"
+"POT-Creation-Date: 2026-11-25 17:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,6 +15,130 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: auth/serializers/tokenserializer.py
+msgid "Check your credentials and try again."
+msgstr ""
+
+#: auth/serializers/tokenserializer.py
+msgid ""
+"Your account isn't active yet. Check your inbox for the verification email "
+"we sent when you registered."
+msgstr ""
+
+#: auth/serializers/tokenserializer.py
+msgid "Access denied. Please sign in again."
+msgstr ""
+
+#: auth/serializers/userserializer.py
+msgid "Current password is required when changing your password."
+msgstr ""
+
+#: auth/serializers/userserializer.py
+msgid "Current password is required when changing your email."
+msgstr ""
+
+#: auth/serializers/userserializer.py
+msgid "The current password was entered incorrectly and did not match."
+msgstr ""
+
+#: auth/serializers/usersettingsserializer.py
+msgid "Enter the GPA for your prior credits."
+msgstr ""
+
+#: auth/services/authservice.py
+msgid ""
+"That sign-in method couldn't be removed right now. Try again in a moment."
+msgstr ""
+
+#: auth/services/authservice.py
+msgid "'email' is required"
+msgstr ""
+
+#: auth/services/authservice.py
+msgid "'uid', 'token', and 'password' are required"
+msgstr ""
+
+#: auth/services/authservice.py
+msgid "Password reset is not available for this account."
+msgstr ""
+
+#: auth/services/authservice.py
+msgid "'email' and 'code' must be given as query parameters"
+msgstr ""
+
+#: auth/services/authservice.py
+msgid "'email' must be given as a query parameter"
+msgstr ""
+
+#: auth/services/authservice.py
+msgid "'id_token' is required"
+msgstr ""
+
+#: auth/services/authservice.py
+msgid "'provider' is required"
+msgstr ""
+
+#: auth/services/authservice.py
+#, python-format
+msgid "'provider' must be one of: %(providers)s"
+msgstr ""
+
+#: auth/services/authservice.py
+#, python-format
+msgid "%(provider)s didn't share this account's email address."
+msgstr ""
+
+#: auth/services/authservice.py
+#, python-format
+msgid "%(provider)s hasn't verified this account's email address."
+msgstr ""
+
+#: auth/services/authservice.py
+#, python-format
+msgid ""
+"Sign in with %(provider)s failed because of an account conflict. Contact "
+"support for help."
+msgstr ""
+
+#: auth/services/authservice.py
+msgid ""
+"That email is already registered with a different sign-in method. Sign in "
+"that way instead."
+msgstr ""
+
+#: auth/services/authservice.py
+msgid "Invalid Firebase ID token"
+msgstr ""
+
+#: auth/services/authservice.py
+msgid "That sign-in is not linked to this account."
+msgstr ""
+
+#: auth/services/authservice.py
+msgid ""
+"This is the only way to sign in to this account, so it can't be removed."
+msgstr ""
+
+#: auth/services/oauthservice.py
+msgid ""
+"You switched Helium accounts since this page loaded. Reload it to see which "
+"account you're connecting."
+msgstr ""
+
+#: auth/services/oauthservice.py
+#, python-format
+msgid "Not requested by the client: %(scopes)s."
+msgstr ""
+
+#: auth/services/oauthservice.py
+#, python-format
+msgid "Required by the client: %(scopes)s."
+msgstr ""
+
+#: auth/services/oauthservice.py
+msgid "Check at least one item to allow, or choose Deny."
+msgstr ""
 
 #: auth/tasks.py
 msgid "Verify Your Email Address with Helium"
@@ -231,6 +355,213 @@ msgstr[1] ""
 msgid "Final Notice: Account Deletion Tomorrow"
 msgstr ""
 
+#: auth/views/apis/userdeleteexamplescheduleviews.py
+msgid "The example schedule was cleared, except for anything that changed."
+msgstr ""
+
+#: auth/views/apis/userviews.py
+msgid "This field is required."
+msgstr ""
+
+#: auth/views/apis/userviews.py
+msgid "The password is incorrect."
+msgstr ""
+
+#: common/enums.py
+msgid "Read your assignments, events, classes, resources, and grades"
+msgstr ""
+
+#: common/enums.py
+msgid "Read your notes"
+msgstr ""
+
+#: common/enums.py
+msgid ""
+"Import new terms and classes with their assignments, events, and class "
+"schedules"
+msgstr ""
+
+#: common/errormessages.py
+msgid "That email is already in use. Try signing in instead."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Exception dates must fall within the date range."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Exception dates must fall within the class date range."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Exception dates must fall within the group date range."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Exception dates must fall within the schedule date range."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Please wait a moment and try again."
+msgstr ""
+
+#: common/errormessages.py
+msgid "This reset link is invalid or has expired. Please request a new one."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Please sign in to continue."
+msgstr ""
+
+#: common/errormessages.py
+msgid "That code doesn't look right. Please check and try again."
+msgstr ""
+
+#: common/errormessages.py
+#, python-format
+msgid "Admin email must be within an allowed domain (%(domains)s)."
+msgstr ""
+
+#: common/errormessages.py
+#, python-format
+msgid "Attachment \"%(name)s\" file type is not allowed."
+msgstr ""
+
+#: common/errormessages.py
+#, python-format
+msgid "This class already has a category named \"%(title)s\"."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Not an occurrence of this event."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Not an occurrence of this assignment."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Class not found."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Group not found."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Resource not found."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Item not found."
+msgstr ""
+
+#: common/errormessages.py
+msgid "This event doesn't repeat."
+msgstr ""
+
+#: common/errormessages.py
+msgid "This assignment doesn't repeat."
+msgstr ""
+
+#: common/errormessages.py
+#, python-format
+msgid "Sign in with %(provider)s failed. Please try again."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Too many attempts. Try again later."
+msgstr ""
+
+#: common/errormessages.py
+msgid "Too many attempts. Try again in a minute."
+msgstr ""
+
+#: common/errormessages.py
+#, python-format
+msgid "Too many attempts. Try again in %(count)s minute."
+msgid_plural "Too many attempts. Try again in %(count)s minutes."
+msgstr[0] ""
+msgstr[1] ""
+
+#: common/errormessages.py
+msgid "Too many attempts. Try again in about an hour."
+msgstr ""
+
+#: common/errormessages.py
+#, python-format
+msgid "Too many attempts. Try again in about %(count)s hour."
+msgid_plural "Too many attempts. Try again in about %(count)s hours."
+msgstr[0] ""
+msgstr[1] ""
+
+#: common/errormessages.py
+#, python-format
+msgid "\"%(title)s\": %(error)s"
+msgstr ""
+
+#: common/handlers/views.py
+msgid "Bad request."
+msgstr ""
+
+#: common/handlers/views.py
+msgid "Permission denied."
+msgstr ""
+
+#: common/handlers/views.py
+msgid "Route not found."
+msgstr ""
+
+#: common/handlers/views.py
+msgid "Server error. Please try again later."
+msgstr ""
+
+#: common/serializers/supportcontactserializer.py
+#, python-format
+msgid "Attachment \"%(name)s\" exceeds the max upload size of %(size)s."
+msgstr ""
+
+#: common/serializers/validation.py
+msgid "The 'start' must be before the 'end'"
+msgstr ""
+
+#: common/serializers/validation.py
+#: planner/serializers/coursescheduleserializer.py
+msgid "The 'start_date' must be before the 'end_date'"
+msgstr ""
+
+#: common/services/uploadfileservice.py
+#, python-format
+msgid "File type \"%(ext)s\" not supported."
+msgstr ""
+
+#: common/services/uploadfileservice.py
+#, python-format
+msgid "The expanded archive exceeds the max import size of %(size)s."
+msgstr ""
+
+#: common/services/uploadfileservice.py
+msgid "The archive must contain exactly one file."
+msgstr ""
+
+#: common/services/uploadfileservice.py
+msgid "Encrypted archives are not supported."
+msgstr ""
+
+#: common/services/uploadfileservice.py
+msgid "The archive must not contain another archive."
+msgstr ""
+
+#: common/services/uploadfileservice.py
+msgid "The archive could not be read."
+msgstr ""
+
+#: common/services/uploadfileservice.py
+#: planner/serializers/attachmentserializer.py
+#, python-format
+msgid "The uploaded file exceeds the max upload size of %(size)s."
+msgstr ""
+
 #: common/templates/email/base.html
 msgid "Logo"
 msgstr ""
@@ -238,6 +569,583 @@ msgstr ""
 #: common/templates/email/base.html
 msgid "Support on Patreon"
 msgstr ""
+
+#: common/utils/validators.py
+msgid "Enter a valid fraction of the format 'x/y'."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "The fraction must contain valid integers."
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "Values must be less than or equal to %(max)s."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "The denominator must be greater than zero."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "The grade does not appear to be valid."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "The value must be a valid hex color code."
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "A grade scale must have between %(min)s and %(max)s bands."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "The first band's 'min_grade' must be 0."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "Each band's 'min_grade' must be greater than the band before it."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "The bands' 'grade_point' values must only rise or only fall."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "Quill content must be an object."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "Quill content must have an `ops` list."
+msgstr ""
+
+#: common/utils/validators.py
+msgid ""
+"Quill content `ops` must each be an `insert` (text or an embed object), with "
+"optional `attributes`."
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "Multiple %(key)s values are not supported for FREQ=%(freq)s."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "BYMONTH is not supported for FREQ=MONTHLY."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "BYDAY with BYMONTHDAY is not supported."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "BYDAY with both an ordinal and BYSETPOS is not supported."
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid ""
+"BYDAY without an ordinal or BYSETPOS is not supported for FREQ=%(freq)s."
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "A BYDAY position of %(position)s is not supported."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "BYSETPOS without BYDAY is not supported."
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "A BYMONTHDAY of %(by_month_day)s is not supported."
+msgstr ""
+
+#: common/utils/validators.py
+msgid "BYDAY or BYMONTHDAY without BYMONTH is not supported for FREQ=YEARLY."
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "FREQ=%(freq)s is not supported."
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "%(key)s is not supported."
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "Invalid RRULE: %(error)s"
+msgstr ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "Invalid RRULE: it has no dates within %(years)s year."
+msgid_plural "Invalid RRULE: it has no dates within %(years)s years."
+msgstr[0] ""
+msgstr[1] ""
+
+#: common/utils/validators.py
+#, python-format
+msgid "Invalid date format: %(token)s"
+msgstr ""
+
+#: common/views/apis/supportcontactview.py
+#, python-format
+msgid ""
+"We were unable to deliver your message. Please email %(email)s directly."
+msgstr ""
+
+#: common/views/base.py
+msgid "The If-Match header must be the updated_at of the item being changed."
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "%(category)s for %(course)s"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "%(class_info)s in %(room)s"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Class Info: %(class_info)s"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Resources: %(titles)s"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Note: %(url)s"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Open in Helium: %(url)s"
+msgstr ""
+
+#: feed/services/feedservice.py
+msgid "Status: Complete"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Grade: %(grade)s"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Class Website: %(url)s"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "%(project_name)s Events"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "%(project_name)s Assignments"
+msgstr ""
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "%(project_name)s Class Schedules"
+msgstr ""
+
+#: feed/services/icalexternalcalendarservice.py
+msgid "The URL did not return a valid response."
+msgstr ""
+
+#: feed/services/icalexternalcalendarservice.py
+msgid "The URL is not reachable."
+msgstr ""
+
+#: feed/services/icalexternalcalendarservice.py
+msgid "The URL did not return a valid calendar."
+msgstr ""
+
+#: feed/views/apis/externalcalendaraseventsviews.py
+#, python-format
+msgid "External Calendar %(id)s is not a valid calendar, disabled."
+msgstr ""
+
+#: importexport/serializers/importerializer.py
+msgid "`course` is required when `target_type` is `course`."
+msgstr ""
+
+#: importexport/serializers/importerializer.py
+msgid "`course_group` is required when `target_type` is `new_course`."
+msgstr ""
+
+#: importexport/services/examplescheduleimportservice.py
+msgid "Invalid JSON."
+msgstr ""
+
+#: importexport/services/icsimportservice.py
+#, python-format
+msgid "`target_type` must be one of %(choices)s."
+msgstr ""
+
+#: importexport/services/icsimportservice.py
+msgid "No events in the calendar file could be imported."
+msgstr ""
+
+#: importexport/services/icsimportservice.py
+#, python-format
+msgid "Unresolved `course` reference `%(id)s`."
+msgstr ""
+
+#: importexport/services/icsimportservice.py
+#: importexport/services/importservice.py
+#: importexport/views/apis/importviews.py
+#, python-format
+msgid "Unresolved `course_group` reference `%(id)s`."
+msgstr ""
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "%(section)s id %(id)s: %(error)s"
+msgstr ""
+
+#: importexport/services/importservice.py
+#: importexport/services/legacyimportparity.py
+#, python-format
+msgid "%(section)s id %(id)s, %(field)s: %(error)s"
+msgstr ""
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Invalid `%(key)s` value: %(value)s is not a valid id."
+msgstr ""
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Section `%(section)s` must be a list."
+msgstr ""
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Row %(index)s in `%(section)s` must be an object."
+msgstr ""
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Row %(index)s in `%(section)s` is missing required key `id`."
+msgstr ""
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Duplicate id `%(id)s` in `%(section)s`."
+msgstr ""
+
+#: importexport/services/importservice.py
+#, python-format
+msgid ""
+"Missing required parent reference `%(parent_key)s` in section `%(section)s`."
+msgstr ""
+
+#: importexport/services/importservice.py
+#, python-format
+msgid ""
+"Unresolved `%(parent_key)s` reference `%(id)s` in section `%(section)s`."
+msgstr ""
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Field `%(field)s` must be a list."
+msgstr ""
+
+#: importexport/services/importservice.py
+msgid "Each note must be an object."
+msgstr ""
+
+#: importexport/services/importservice.py
+msgid "Import payload must be a JSON object."
+msgstr ""
+
+#: importexport/services/legacyimportparity.py
+msgid "Provide either 'resources' or 'materials' on a homework row, not both."
+msgstr ""
+
+#: importexport/services/legacyimportparity.py
+msgid "Provide either 'resources' or 'materials' on a note, not both."
+msgstr ""
+
+#: importexport/services/legacyimportparity.py
+#, python-format
+msgid "Provide either '%(new)s' or '%(old)s', not both."
+msgstr ""
+
+#: importexport/views/apis/exportviews.py
+#, python-format
+msgid "Must be one of: %(calendars)s."
+msgstr ""
+
+#: importexport/views/apis/importviews.py
+msgid "Upload exactly one file per request."
+msgstr ""
+
+#: importexport/views/apis/importviews.py
+#, python-format
+msgid "Invalid JSON structure: %(file)s."
+msgstr ""
+
+#: importexport/views/apis/importviews.py
+#, python-format
+msgid "Invalid JSON in file: %(file)s."
+msgstr ""
+
+#: importexport/views/apis/importviews.py
+#, python-format
+msgid "Invalid iCalendar in file: %(file)s."
+msgstr ""
+
+#: importexport/views/apis/importviews.py
+msgid ""
+"The example schedule has already been imported. Please clear it before "
+"importing it again."
+msgstr ""
+
+#: planner/serializers/attachmentserializer.py
+msgid "This file type is not allowed."
+msgstr ""
+
+#: planner/serializers/attachmentserializer.py
+msgid "One of `course`, `event`, `homework`, or `resource` must be given."
+msgstr ""
+
+#: planner/serializers/attachmentserializer.py
+msgid "Only one of `course`, `event`, `homework`, or `resource` may be given."
+msgstr ""
+
+#: planner/serializers/categoryserializer.py
+msgid ""
+"The cumulative weights of all categories associated with a class cannot "
+"exceed 100%."
+msgstr ""
+
+#: planner/serializers/coursegroupserializer.py
+msgid ""
+"Doesn't match 'grade_scale'. Send one or the other, or values that match the "
+"preset."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid ""
+"A schedule cannot be both a day cycle ('cycle_length') and a week-based "
+"rotation ('is_week_based')."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid ""
+"'anchor_date', 'cycle_slots', and 'week_offset' are only valid on a rotating "
+"schedule."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid ""
+"'template' doesn't match the rotation fields. Send one or the other, or "
+"fields that match the template."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "'anchor_date' is required for a week-based rotation."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "'week_offset' must be 0 (Week A) or 1 (Week B)."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+#, python-format
+msgid "'cycle_length' must be between 2 and %(max)s."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "'anchor_date' is required for a cycle schedule."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "'cycle_slots' must be a non-empty list for a cycle schedule."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+#, python-format
+msgid ""
+"Each cycle slot's 'indices' must be a non-empty list of integers in [1, "
+"%(cycle_length)s]."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "A cycle-day index cannot appear in more than one slot."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "Each cycle slot needs 'start_time' and 'end_time' as 'HH:MM:SS'."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "A cycle slot's 'start_time' must be before its 'end_time'."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+#, python-format
+msgid "The 'start_time' of '%(day)s' must be before 'end_time'"
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+#, python-format
+msgid ""
+"Class times can't start or end at midnight. Pick other times for %(day)s."
+msgstr ""
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "A schedule must meet on at least one day."
+msgstr ""
+
+#: planner/serializers/courseserializer.py
+#, python-format
+msgid ""
+"Doesn't fit the group's grade scale: a class's preset can only award grades "
+"the group's scale does. Compatible presets: %(presets)s."
+msgstr ""
+
+#: planner/serializers/courseserializer.py
+msgid ""
+"Doesn't fit the group's grade scale: a class's preset can only award grades "
+"the group's scale does. The group has no grade scale."
+msgstr ""
+
+#: planner/serializers/homeworkserializer.py
+msgid ""
+"A repeating Homework isn't completed or graded itself; complete or grade an "
+"occurrence with `scope=this`."
+msgstr ""
+
+#: planner/serializers/homeworkserializer.py
+msgid "The 'category' must belong to the same class."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+#, python-format
+msgid "This note is %(percent)s%% of the max note size."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+msgid ""
+"A note can only be linked to one type of entity (homework, event, resource, "
+"or course)."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+msgid "A note can only be linked to one homework assignment."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+msgid "A note can only be linked to one event."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+msgid "A note can only be linked to one resource."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+msgid "A note can only be linked to one class."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+msgid "This homework assignment already has a linked note."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+msgid "This event already has a linked note."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+msgid "This resource already has a linked note."
+msgstr ""
+
+#: planner/serializers/noteserializer.py
+msgid "This class already has a linked note."
+msgstr ""
+
+#: planner/serializers/reminderserializer.py
+msgid "One of `event`, `homework`, or `course` must be given."
+msgstr ""
+
+#: planner/serializers/reminderserializer.py
+msgid "Only one of `event`, `homework`, or `course` may be given."
+msgstr ""
+
+#: planner/serializers/reminderserializer.py
+msgid "A reminder cannot be `dismissed` unless it has been `sent`."
+msgstr ""
+
+#: planner/serializers/reminderserializer.py
+msgid "This class already has the same reminder."
+msgstr ""
+
+#: planner/serializers/reminderserializer.py
+msgid "This repeating assignment already has the same reminder."
+msgstr ""
+
+#: planner/serializers/reminderserializer.py
+msgid "This repeating event already has the same reminder."
+msgstr ""
+
+#: planner/services/neededgradeservice.py
+msgid "One of 'desired_grade' or 'desired_gpa' must be given."
+msgstr ""
+
+#: planner/services/neededgradeservice.py
+msgid "Only one of 'desired_grade' or 'desired_gpa' may be given."
+msgstr ""
+
+#: planner/services/neededgradeservice.py
+msgid "Enter a valid grade between 0 and 100."
+msgstr ""
+
+#: planner/services/neededgradeservice.py
+msgid "Enter a valid GPA."
+msgstr ""
+
+#: planner/services/neededgradeservice.py
+msgid "Select a category that is down to its last ungraded assignment."
+msgstr ""
+
+#: planner/services/neededgradeservice.py
+msgid "Select an ungraded assignment in this class."
+msgstr ""
+
+#: planner/services/neededgradeservice.py
+msgid "Set a grade scale on the class's group to plan for a GPA."
+msgstr ""
+
+#: planner/services/neededgradeservice.py
+msgid "Add credits to this class to plan for a GPA."
+msgstr ""
+
+#: planner/services/recurrenceservice.py
+msgid "It has no dates by the class's last day."
+msgstr ""
+
+#: planner/services/recurrenceservice.py
+#, python-format
+msgid "It repeats more than %(count)s time."
+msgid_plural "It repeats more than %(count)s times."
+msgstr[0] ""
+msgstr[1] ""
 
 #: planner/services/reminderservice.py
 #, python-format
@@ -374,4 +1282,35 @@ msgstr ""
 
 #: planner/templates/email/reminder.txt
 msgid "Open in Helium:"
+msgstr ""
+
+#: planner/views/apis/attachmentviews.py
+msgid "An unknown error occurred."
+msgstr ""
+
+#: planner/views/apis/categoryviews.py
+msgid "The 'Uncategorized' category cannot be deleted"
+msgstr ""
+
+#: planner/views/apis/graderesourceviews.py
+msgid ""
+"'course', 'target', 'desired_grade', and 'desired_gpa' must be given as "
+"numbers"
+msgstr ""
+
+#: planner/views/base.py
+#, python-format
+msgid "`scope` must be `%(this)s` or `%(all)s`."
+msgstr ""
+
+#: planner/views/base.py
+msgid "`occurrence_start` is required with this `scope`."
+msgstr ""
+
+#: planner/views/base.py
+msgid "Both 'from' and 'to' must be provided together."
+msgstr ""
+
+#: planner/views/base.py
+msgid "Change `recurrence_rule` or `exception_dates` with `scope=all`."
 msgstr ""

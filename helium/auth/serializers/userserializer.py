@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
 from django.db import IntegrityError, transaction
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema_field
 from knox.models import AuthToken
 from rest_framework import serializers
@@ -15,16 +16,13 @@ from helium.auth.serializers.useroauthproviderserializer import UserOAuthProvide
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.tasks import send_verification_email
-from helium.auth.utils.userutils import admin_allowed_email_error, generate_verification_code, \
-    generate_unique_username_from_email, is_admin_allowed_email
+from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
+    is_admin_allowed_email
 from helium.common import enums, errorcodes
+from helium.common.errormessages import EMAIL_IN_USE_MESSAGE, REGISTRATION_RETRY_MESSAGE, admin_allowed_email_error
 from helium.common.utils import taskutils
 
 logger = logging.getLogger(__name__)
-
-EMAIL_IN_USE_MESSAGE = "That email is already in use. Try signing in instead."
-
-REGISTRATION_RETRY_MESSAGE = "Please wait a moment and try again."
 
 CONNECTED_APP_SETTINGS_ALLOWLIST = ('time_zone',)
 
@@ -99,14 +97,14 @@ class UserSerializer(serializers.ModelSerializer):
         if 'password' in attrs and self.instance:
             if self.instance.has_usable_password() and 'old_password' not in attrs:
                 raise serializers.ValidationError({
-                    'old_password': 'Current password is required when changing your password.'
+                    'old_password': gettext('Current password is required when changing your password.')
                 }, code=errorcodes.OLD_PASSWORD_REQUIRED)
 
         # If changing email, require old_password for security
         if 'email' in attrs and self.instance and self.instance.email != attrs.get('email'):
             if 'old_password' not in attrs:
                 raise serializers.ValidationError({
-                    'old_password': 'Current password is required when changing your email.'
+                    'old_password': gettext('Current password is required when changing your email.')
                 }, code=errorcodes.OLD_PASSWORD_REQUIRED)
 
         return attrs
@@ -138,8 +136,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_old_password(self, old_password):
         if self.instance and not self.instance.check_password(old_password):
-            raise serializers.ValidationError("The current password was entered incorrectly and did not match.",
-                                              code=errorcodes.OLD_PASSWORD_INCORRECT)
+            raise serializers.ValidationError(gettext('The current password was entered incorrectly and did not '
+                                                      'match.'), code=errorcodes.OLD_PASSWORD_INCORRECT)
 
         return old_password
 

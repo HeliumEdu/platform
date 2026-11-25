@@ -6,7 +6,9 @@ from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
+from django.utils.translation import gettext
 from rest_framework.exceptions import ErrorDetail, ValidationError
+from rest_framework.settings import api_settings
 
 from helium.common import errorcodes
 from helium.common.utils import metricutils, taskutils
@@ -55,8 +57,16 @@ def _row_validation_error(section, row_id, errors):
     for field, field_errors in errors.items():
         for error in (field_errors if isinstance(field_errors, (list, tuple)) else [field_errors]):
             code = error.code if isinstance(error, ErrorDetail) else errorcodes.IMPORT_ROW_INVALID
-            messages.append(ErrorDetail(f'{section} id {row_id}, {field}: {error}', code=code))
-            row_errors.append({'section': section, 'id': row_id, 'field': field, 'message': str(error)})
+            if field == api_settings.NON_FIELD_ERRORS_KEY:
+                row_field = None
+                message = gettext('%(section)s id %(id)s: %(error)s') % {
+                    'section': section, 'id': row_id, 'error': error}
+            else:
+                row_field = field
+                message = gettext('%(section)s id %(id)s, %(field)s: %(error)s') % {
+                    'section': section, 'id': row_id, 'field': field, 'error': error}
+            messages.append(ErrorDetail(message, code=code))
+            row_errors.append({'section': section, 'id': row_id, 'field': row_field, 'message': str(error)})
 
     return ImportRowValidationError({section: messages}, row_errors)
 
@@ -100,7 +110,8 @@ def _coerce_id(value, section, key='id'):
     try:
         return int(value)
     except (TypeError, ValueError):
-        raise ValidationError({section: f"Invalid `{key}` value: {value!r} is not a valid id."},
+        raise ValidationError({section: gettext('Invalid `%(key)s` value: %(value)s is not a valid id.') % {
+            'key': key, 'value': repr(value)}},
                               code=errorcodes.IMPORT_ID_INVALID)
 
 
@@ -112,22 +123,25 @@ def _validate_section_ids(data):
     for section in _SECTIONS_WITH_IDS:
         rows = data.get(section, []) or []
         if not isinstance(rows, list):
-            raise ValidationError({section: f"Section `{section}` must be a list."},
+            raise ValidationError({section: gettext('Section `%(section)s` must be a list.') % {'section': section}},
                                   code=errorcodes.IMPORT_SECTION_NOT_LIST)
 
         seen = set()
         for index, row in enumerate(rows):
             if not isinstance(row, dict):
-                raise ValidationError({section: f"Row {index} in `{section}` must be an object."},
+                raise ValidationError({section: gettext('Row %(index)s in `%(section)s` must be an object.') % {
+                    'index': index, 'section': section}},
                                       code=errorcodes.IMPORT_ROW_NOT_OBJECT)
 
             if 'id' not in row:
-                raise ValidationError({section: f"Row {index} in `{section}` is missing required key `id`."},
+                raise ValidationError({section: gettext('Row %(index)s in `%(section)s` is missing required key '
+                                                        '`id`.') % {'index': index, 'section': section}},
                                       code=errorcodes.IMPORT_ROW_MISSING_ID)
 
             coerced = _coerce_id(row['id'], section)
             if coerced in seen:
-                raise ValidationError({section: f"Duplicate id `{coerced}` in `{section}`."},
+                raise ValidationError({section: gettext('Duplicate id `%(id)s` in `%(section)s`.') % {
+                    'id': coerced, 'section': section}},
                                       code=errorcodes.IMPORT_DUPLICATE_ID)
             seen.add(coerced)
             row['id'] = coerced
@@ -141,14 +155,16 @@ def _resolve_parent(remap, raw_id, section, parent_key):
     """
     if raw_id is None:
         raise ValidationError(
-            {section: f"Missing required parent reference `{parent_key}` in section `{section}`."},
+            {section: gettext('Missing required parent reference `%(parent_key)s` in section `%(section)s`.') % {
+                'parent_key': parent_key, 'section': section}},
             code=errorcodes.IMPORT_PARENT_MISSING)
 
     coerced = _coerce_id(raw_id, section, key=parent_key)
     resolved = remap.get(coerced)
     if resolved is None:
         raise ValidationError(
-            {section: f"Unresolved `{parent_key}` reference `{coerced}` in section `{section}`."},
+            {section: gettext('Unresolved `%(parent_key)s` reference `%(id)s` in section `%(section)s`.') % {
+                'parent_key': parent_key, 'id': coerced, 'section': section}},
             code=errorcodes.UNRESOLVED_REFERENCE)
     return resolved
 
@@ -298,7 +314,8 @@ def _import_resources(resources, resource_group_remap, course_remap, user):
 
             courses = resource.get('courses') or []
             if not isinstance(courses, list):
-                raise ValidationError({'resources': "Field `courses` must be a list."},
+                raise ValidationError({'resources': gettext('Field `%(field)s` must be a list.') % {
+                    'field': 'courses'}},
                                       code=errorcodes.IMPORT_FIELD_NOT_LIST)
             for i, course in enumerate(courses):
                 courses[i] = _resolve_parent(course_remap, course, 'resources', 'courses')
@@ -364,7 +381,8 @@ def _import_homework(homework, course_remap, category_remap, resource_remap, use
 
             resources = h.get('resources') or []
             if not isinstance(resources, list):
-                raise ValidationError({'homework': "Field `resources` must be a list."},
+                raise ValidationError({'homework': gettext('Field `%(field)s` must be a list.') % {
+                    'field': 'resources'}},
                                       code=errorcodes.IMPORT_FIELD_NOT_LIST)
             for i, resource in enumerate(resources):
                 resources[i] = _resolve_parent(resource_remap, resource, 'homework', 'resources')
@@ -442,7 +460,8 @@ def import_notes(notes, user, homework_remap, event_remap, resource_remap, cours
     for note_data in notes:
         with errors.row(note_data['id']):
             if not isinstance(note_data, dict):
-                raise ValidationError({'notes': "Each note must be an object."}, code=errorcodes.IMPORT_ROW_NOT_OBJECT)
+                raise ValidationError({'notes': gettext('Each note must be an object.')},
+                                      code=errorcodes.IMPORT_ROW_NOT_OBJECT)
 
             payload = {
                 'title': note_data.get('title', ''),
@@ -521,7 +540,8 @@ def import_user(request, data, dry_run=False, course_group_id=None):
              section, then by the id in the file).
     """
     if not isinstance(data, dict):
-        raise ValidationError("Import payload must be a JSON object.", code=errorcodes.IMPORT_PAYLOAD_NOT_OBJECT)
+        raise ValidationError(gettext('Import payload must be a JSON object.'),
+                              code=errorcodes.IMPORT_PAYLOAD_NOT_OBJECT)
 
     legacyimportparity.upgrade_legacy_import(data)
 
@@ -595,5 +615,6 @@ def import_user(request, data, dry_run=False, course_group_id=None):
 
 def _verify_course_group_is_users(course_group_id, user):
     if not CourseGroup.objects.for_user(user.pk).filter(pk=course_group_id).exists():
-        raise ValidationError({'course_group': f"Unresolved `course_group` reference `{course_group_id}`."},
+        raise ValidationError({'course_group': gettext('Unresolved `course_group` reference `%(id)s`.') % {
+            'id': course_group_id}},
                               code=errorcodes.UNRESOLVED_REFERENCE)

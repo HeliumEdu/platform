@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.utils import timezone
+from django.utils.translation import gettext
 from rest_framework.exceptions import ValidationError
 
 from helium.common import enums, errorcodes
@@ -104,7 +105,7 @@ def import_example_schedule(user):
                 example_schedule_first_imported_at=user.example_schedule_first_imported_at)
     except ValueError:
         raise ValidationError({
-            'details': 'Invalid JSON.'
+            'details': gettext('Invalid JSON.')
         }, code=errorcodes.EXAMPLE_SCHEDULE_INVALID)
 
 
