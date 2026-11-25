@@ -1,6 +1,8 @@
 import datetime
 import json
 import os
+import shutil
+import tempfile
 from unittest.mock import PropertyMock, patch
 
 from django.db import connection
@@ -59,6 +61,47 @@ class TestCaseImportService(TestCase):
         self.assertEqual([e for e in expected if e[2] != 'Uncategorized'], actual)
         self.assertTrue(all(h.category.course_id == h.course_id
                             for h in Homework.objects.for_user(user.pk).select_related('category')))
+
+    def test_example_schedule_path_falls_back_to_english(self):
+        # WHEN
+        path = examplescheduleimportservice.example_schedule_path('es')
+
+        # THEN
+        self.assertEqual(os.path.basename(path), 'example_schedule.json')
+
+    def test_example_schedule_for_the_default_language_is_english(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+
+        # WHEN
+        path = examplescheduleimportservice.example_schedule_path(user.settings.language)
+
+        # THEN
+        self.assertEqual(user.settings.language, 'en')
+        self.assertEqual(os.path.basename(path), 'example_schedule.json')
+
+    def test_import_example_schedule_uses_the_users_language(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        user.settings.language = 'es'
+        user.settings.save()
+        english = examplescheduleimportservice.example_schedule_path('en')
+        with open(english, encoding='utf-8') as f:
+            data = json.load(f)
+        data['course_groups'][0]['title'] = 'Semestre de otoño'
+        resources = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, resources)
+        shutil.copy(english, resources)
+        with open(os.path.join(resources, 'example_schedule.es.json'), 'w', encoding='utf-8') as f:
+            json.dump(data, f)
+
+        # WHEN
+        with patch.object(examplescheduleimportservice, '_RESOURCES', resources):
+            import_example_schedule(user)
+
+        # THEN
+        self.assertEqual(list(CourseGroup.objects.for_user(user.pk).values_list('title', flat=True)),
+                         ['Semestre de otoño'])
 
     def test_bulk_import_example_schedule_keeps_schedule_exceptions(self):
         # GIVEN

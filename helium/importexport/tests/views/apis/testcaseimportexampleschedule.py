@@ -42,7 +42,7 @@ class TestCaseImportExampleSchedule(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(),
+        self.assertEqual([error['message'] for error in response.json()],
                          ['The example schedule has already been imported. Please clear it before importing it '
                           'again.'])
         self.assertEqual(_row_counts(user), counts_after_first_import)

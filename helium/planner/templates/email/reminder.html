@@ -1,4 +1,5 @@
 {% extends "email/base.html" %}
+{% load i18n %}
 
 {% block greeting %}{{ subject }}{% endblock %}
 
@@ -10,26 +11,26 @@
 </tr>
 <tr>
     <td style="padding: 20px 0 20px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; border-top: 1px solid #cccccc;">
-        <p><strong>When:</strong> {{ normalized_datetime }}</p>
+        <p><strong>{% translate "When:" %}</strong> {{ normalized_datetime }}</p>
         {% if reminder.homework %}
-        <p><strong>Info:</strong>
-            {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{{ calendar_item.category.title }} for {% endif %}{% if calendar_item.course.website %}<a target="_blank" href="{{ calendar_item.course.website }}">{% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}
+        <p><strong>{% translate "Info:" %}</strong>
+            {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{% blocktranslate with category=calendar_item.category.title %}{{ category }} for {% endblocktranslate %}{% endif %}{% if calendar_item.course.website %}<a target="_blank" href="{{ calendar_item.course.website }}">{% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}
         </p>
-        {% if calendar_item.course.room and not calendar_item.course.is_online %}<p><strong>Location:</strong> {{ calendar_item.course.room }}</p>{% endif %}
+        {% if calendar_item.course.room and not calendar_item.course.is_online %}<p><strong>{% translate "Location:" %}</strong> {{ calendar_item.course.room }}</p>{% endif %}
         {% endif %}
         {% if reminder.course %}
-        <p><strong>Info:</strong>
+        <p><strong>{% translate "Info:" %}</strong>
             {% if calendar_item.website %}<a target="_blank" href="{{ calendar_item.website }}">{% endif %}{{ calendar_item.title }}{% if calendar_item.website %}</a>{% endif %}
         </p>
-        {% if calendar_item.room and not calendar_item.is_online %}<p><strong>Location:</strong> {{ calendar_item.room }}</p>{% endif %}
-        {% if calendar_item.teacher_name %}<p><strong>Teacher:</strong>
+        {% if calendar_item.room and not calendar_item.is_online %}<p><strong>{% translate "Location:" %}</strong> {{ calendar_item.room }}</p>{% endif %}
+        {% if calendar_item.teacher_name %}<p><strong>{% translate "Teacher:" %}</strong>
             {% if calendar_item.teacher_email %}<a href="mailto:{{ calendar_item.teacher_email }}">{% endif %}{{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %}</a>{% endif %}
         </p>{% endif %}
         {% endif %}
-        {% if note_url %}<p><strong>Note:</strong> <a target="_blank" href="{{ note_url }}">📝 Open</a></p>{% endif %}
+        {% if note_url %}<p><strong>{% translate "Note:" %}</strong> <a target="_blank" href="{{ note_url }}">📝 {% translate "Open" %}</a></p>{% endif %}
         {% if reminder.homework or reminder.event %}
         {% if calendar_item.resources and calendar_item.resources.count > 0 %}
-        <h4>Resources</h4>
+        <h4>{% translate "Resources" %}</h4>
         <ul>
             {% for resource in calendar_item.resources.all %}
             <li>
@@ -41,7 +42,7 @@
         </ul>
         {% endif %}
         {% if calendar_item.attachments.count > 0 %}
-        <h4>Attachments <a target="_blank" href="{{ attachments_url }}" style="font-weight: normal;">📎 Open</a></h4>
+        <h4>{% translate "Attachments" %} <a target="_blank" href="{{ attachments_url }}" style="font-weight: normal;">📎 {% translate "Open" %}</a></h4>
         <ul>
             {% for attachment in calendar_item.attachments.all %}
             <li>{{ attachment.title }}</li>
@@ -55,7 +56,7 @@
     <td style="padding: 0 0 20px 0; text-align: center;">
         <a href="{{ open_url }}" target="_blank"
            style="display: inline-block; padding: 12px 24px; background-color: #438eb9; color: #ffffff; text-decoration: none; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; border-radius: 4px;">
-            Open in Helium
+            {% translate "Open in Helium" %}
         </a>
     </td>
 </tr>

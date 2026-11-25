@@ -5,7 +5,8 @@ from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.db import transaction
 from django.db.models import OuterRef, Q, Subquery
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import ngettext_lazy
 
 from helium.common import enums
 from helium.common.services import pushservice
@@ -15,6 +16,27 @@ from helium.planner.models import Event, Homework, Reminder
 from helium.planner.serializers.pushserializer import PushReminderSerializer
 
 logger = logging.getLogger(__name__)
+
+
+_SUBJECTS = {
+    ('homework', enums.MINUTES): ngettext_lazy('%(title)s in %(course)s in %(count)s minute',
+                                               '%(title)s in %(course)s in %(count)s minutes', 'count'),
+    ('homework', enums.HOURS): ngettext_lazy('%(title)s in %(course)s in %(count)s hour',
+                                             '%(title)s in %(course)s in %(count)s hours', 'count'),
+    ('homework', enums.DAYS): ngettext_lazy('%(title)s in %(course)s in %(count)s day',
+                                            '%(title)s in %(course)s in %(count)s days', 'count'),
+    ('homework', enums.WEEKS): ngettext_lazy('%(title)s in %(course)s in %(count)s week',
+                                             '%(title)s in %(course)s in %(count)s weeks', 'count'),
+    ('event', enums.MINUTES): ngettext_lazy('%(title)s in %(count)s minute', '%(title)s in %(count)s minutes', 'count'),
+    ('event', enums.HOURS): ngettext_lazy('%(title)s in %(count)s hour', '%(title)s in %(count)s hours', 'count'),
+    ('event', enums.DAYS): ngettext_lazy('%(title)s in %(count)s day', '%(title)s in %(count)s days', 'count'),
+    ('event', enums.WEEKS): ngettext_lazy('%(title)s in %(count)s week', '%(title)s in %(count)s weeks', 'count'),
+    ('course', enums.MINUTES): ngettext_lazy('%(course)s in %(count)s minute', '%(course)s in %(count)s minutes',
+                                             'count'),
+    ('course', enums.HOURS): ngettext_lazy('%(course)s in %(count)s hour', '%(course)s in %(count)s hours', 'count'),
+    ('course', enums.DAYS): ngettext_lazy('%(course)s in %(count)s day', '%(course)s in %(count)s days', 'count'),
+    ('course', enums.WEEKS): ngettext_lazy('%(course)s in %(count)s week', '%(course)s in %(count)s weeks', 'count'),
+}
 
 
 def _push_body(reminder):
@@ -34,11 +56,14 @@ def _push_body(reminder):
     return f'{reminder.message} · {datetimeutils.format_short_time(local_time, reminder.get_user().settings)}'
 
 
-def _offset_label(reminder):
-    unit = enums.REMINDER_OFFSET_TYPE_CHOICES[reminder.offset_type][1]
-    if reminder.offset == 1:
-        unit = unit.rstrip('s')
-    return f'{reminder.offset} {unit}'
+def _subject_parts(reminder):
+    if reminder.homework:
+        return 'homework', {'title': reminder.homework.title, 'course': reminder.homework.course.title}
+    if reminder.event:
+        return 'event', {'title': reminder.event.title}
+    if reminder.course:
+        return 'course', {'course': reminder.course.title}
+    return None, None
 
 
 _ITEM_USER_SETTINGS = ('homework__course__course_group__user__settings', 'event__user__settings')
@@ -83,18 +108,16 @@ def _create_next_item_reminder(reminder):
 
 
 def get_subject(reminder):
-    offset = _offset_label(reminder)
-    if reminder.homework:
-        calendar_item = reminder.homework
-        subject = f'{calendar_item.title} in {calendar_item.course.title} in {offset}'
-    elif reminder.event:
-        subject = f'{reminder.event.title} in {offset}'
-    elif reminder.course:
-        subject = f'{reminder.course.title} in {offset}'
-    else:
+    """
+    The reminder's subject, in the active language.
+
+    :return: e.g. "Essay 1 in Writing 101 in 30 minutes", or None for a reminder with no item.
+    """
+    kind, titles = _subject_parts(reminder)
+    if kind is None:
         return None
 
-    return subject
+    return _SUBJECTS[(kind, reminder.offset_type)] % {**titles, 'count': reminder.offset}
 
 
 _SERIES_FIELDS = ('course', 'user', 'type', 'offset', 'offset_type')
@@ -421,7 +444,8 @@ def _email_send_args(reminder, user):
             f'Reminder {reminder.pk} was not processed, as the account appears to be inactive for user {user.pk}')
         return None
 
-    subject = get_subject(reminder)
+    with translation.override(user.settings.language):
+        subject = get_subject(reminder)
     if not subject:
         logger.warning(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned.')
         return None
@@ -441,7 +465,8 @@ def _email_send_args(reminder, user):
 
 def _push_send_args(reminder, user):
     """Everything fallible about a push send, resolved before the reminder is claimed."""
-    subject = get_subject(reminder)
+    with translation.override(user.settings.language):
+        subject = get_subject(reminder)
     if not subject:
         logger.info(f'Reminder {reminder.pk} was not processed, as it appears to be orphaned')
         return None

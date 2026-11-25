@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-migrations migrate-dev refresh-timezones sync-shared-constants sync-assets check-migrations test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish promote start-frontend stop-frontend test-with-frontend
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-messages build-migrations migrate-dev refresh-timezones sync-shared-constants sync-assets check-migrations test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish promote start-frontend stop-frontend test-with-frontend
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -62,6 +62,16 @@ build-docs: install-dev
 			--output helium/common/templates/redoc-static.html \
 			--template helium/common/templates/redoc-static.hbs; \
 		ANALYTICS_ENABLED="$(ANALYTICS_ENABLED)" python bin/inject-analytics.py helium/common/templates/redoc-static.html; \
+	)
+
+build-messages: install-dev
+	@( \
+		set -e; \
+		source $(PLATFORM_VENV)/bin/activate; \
+		cd helium; \
+		ENVIRONMENT=local python ../manage.py makemessages -l en --add-location file --no-obsolete \
+			--ignore 'auth/backends.py' --ignore '*/templates/admin' --ignore '*/templates/two_factor' --ignore 'tests'; \
+		ENVIRONMENT=local python ../manage.py compilemessages; \
 	)
 
 build-migrations: install-dev

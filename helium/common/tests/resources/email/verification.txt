@@ -1,0 +1,12 @@
+
+
+Hey!
+
+You're almost there. Your verification code is: 123456.
+
+Paste the link below into your browser to verify this email address with Helium.
+
+https://app.heliumedu.com/verify?email=test%2B1%40example.com&code=123456
+
+Regards,
+The Helium Team

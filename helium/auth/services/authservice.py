@@ -11,10 +11,12 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.translation import gettext, gettext_lazy
 from firebase_admin import auth as firebase_auth
 from firebase_admin.exceptions import FirebaseError
 from rest_framework import status
 from rest_framework.exceptions import APIException, ValidationError, NotFound, AuthenticationFailed
+from rest_framework.fields import get_error_detail
 from rest_framework.response import Response
 
 from helium.auth.models import UserOAuthProvider, UserSettings
@@ -25,7 +27,9 @@ from helium.auth.tasks import clear_email_suppression, send_analytics_event, sen
     send_registration_email, send_verification_email
 from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
     mark_user_active
-from helium.common import enums
+from helium.common import enums, errorcodes
+from helium.common.errormessages import RESET_LINK_INVALID_MESSAGE, VERIFICATION_CODE_INVALID_MESSAGE, \
+    not_found_message, oauth_sign_in_failed_message
 from helium.common.utils import gradeutils, metricutils, taskutils
 from helium.common.utils.commonutils import redact_email
 from helium.importexport.services import examplescheduleguardservice
@@ -42,8 +46,8 @@ class OAuthProviderUnlinkFailedError(APIException):
     Raised when Firebase can't unlink a provider, so it stays linked on both sides rather than only one.
     """
     status_code = status.HTTP_502_BAD_GATEWAY
-    default_detail = "That sign-in method couldn't be removed right now. Try again in a moment."
-    default_code = 'oauth_provider_unlink_failed'
+    default_detail = gettext_lazy("That sign-in method couldn't be removed right now. Try again in a moment.")
+    default_code = errorcodes.OAUTH_PROVIDER_UNLINK_FAILED
 
 
 def forgot_password(request):
@@ -58,7 +62,7 @@ def forgot_password(request):
     UserModel = get_user_model()
 
     if 'email' not in request.data:
-        raise ValidationError("'email' is required")
+        raise ValidationError(gettext("'email' is required"), code=errorcodes.REQUIRED)
 
     email = request.data['email']
 
@@ -107,24 +111,25 @@ def confirm_password_reset(request):
     new_password = request.data.get('password')
 
     if not uid or not token or not new_password:
-        raise ValidationError("'uid', 'token', and 'password' are required")
+        raise ValidationError(gettext("'uid', 'token', and 'password' are required"), code=errorcodes.REQUIRED)
 
     try:
         user_pk = force_str(urlsafe_base64_decode(uid))
         user = UserModel.objects.can_login().get(pk=user_pk)
     except (TypeError, ValueError, OverflowError, UserModel.DoesNotExist):
-        raise NotFound('No User matches the given query.')
+        raise NotFound(RESET_LINK_INVALID_MESSAGE)
 
     if not user.has_usable_password():
-        raise ValidationError('Password reset is not available for this account.')
+        raise ValidationError(gettext('Password reset is not available for this account.'),
+                              code=errorcodes.PASSWORD_RESET_UNAVAILABLE)
 
     if not PasswordResetTokenGenerator().check_token(user, token):
-        raise ValidationError('This reset link is invalid or has expired. Please request a new one.')
+        raise ValidationError(RESET_LINK_INVALID_MESSAGE, code=errorcodes.PASSWORD_RESET_LINK_INVALID)
 
     try:
         password_validation.validate_password(password=new_password, user=user)
     except django_exceptions.ValidationError as e:
-        raise ValidationError({'password': list(e.messages)})
+        raise ValidationError({'password': get_error_detail(e)})
 
     user.set_password(new_password)
     # Completing a password reset proves ownership of the account's email address, so it satisfies
@@ -160,7 +165,7 @@ def verify_email(request):
     code = request.GET.get('code')
 
     if not identifier or not code:
-        raise ValidationError("'email' and 'code' must be given as query parameters")
+        raise ValidationError(gettext("'email' and 'code' must be given as query parameters"), code=errorcodes.REQUIRED)
 
     try:
         user = UserModel.objects.can_login().get(
@@ -197,7 +202,7 @@ def verify_email(request):
 
         return Response(issue_session_tokens(user), status=status.HTTP_202_ACCEPTED)
     except UserModel.DoesNotExist:
-        raise NotFound('No User matches the given query.')
+        raise NotFound(VERIFICATION_CODE_INVALID_MESSAGE)
 
 
 def resend_verification_email(request):
@@ -211,7 +216,7 @@ def resend_verification_email(request):
 
     identifier = request.GET.get('email')
     if not identifier:
-        raise ValidationError("'email' must be given as a query parameter")
+        raise ValidationError(gettext("'email' must be given as a query parameter"), code=errorcodes.REQUIRED)
 
     try:
         user = UserModel.objects.can_login().get(
@@ -293,15 +298,16 @@ def oauth_login(request):
     UserModel = get_user_model()
 
     if 'id_token' not in request.data:
-        raise ValidationError("'id_token' is required")
+        raise ValidationError(gettext("'id_token' is required"), code=errorcodes.REQUIRED)
 
     if 'provider' not in request.data:
-        raise ValidationError("'provider' is required")
+        raise ValidationError(gettext("'provider' is required"), code=errorcodes.REQUIRED)
 
     provider = request.data['provider'].lower()
     supported_providers = [choice[0] for choice in UserOAuthProvider.PROVIDER_CHOICES]
     if provider not in supported_providers:
-        raise ValidationError(f"'provider' must be one of: {', '.join(supported_providers)}")
+        raise ValidationError(gettext("'provider' must be one of: %(providers)s") % {
+            'providers': ', '.join(supported_providers)}, code=errorcodes.OAUTH_PROVIDER_UNSUPPORTED)
 
     provider_name = provider.capitalize()
 
@@ -316,15 +322,18 @@ def oauth_login(request):
         sign_in_provider = decoded_token.get('firebase', {}).get('sign_in_provider')
         if _FIREBASE_SIGN_IN_PROVIDERS.get(sign_in_provider) != provider:
             logger.warning(f'{provider_name} Sign-In token was issued for sign-in provider {sign_in_provider}')
-            raise AuthenticationFailed(f'Invalid {provider_name} Sign-In token')
+            raise AuthenticationFailed(oauth_sign_in_failed_message(provider_name),
+                                       code=errorcodes.OAUTH_TOKEN_INVALID)
 
         if not email:
-            raise AuthenticationFailed(f"Email not provided by {provider_name} account")
+            raise AuthenticationFailed(gettext("%(provider)s didn't share this account's email address.") % {
+                'provider': provider_name}, code=errorcodes.OAUTH_EMAIL_MISSING)
 
         # Microsoft does not set email_verified for external (non-Microsoft) email
         # addresses in personal accounts, so such an email only signs in to an existing account already linked to it.
         if not email_verified and provider != 'microsoft':
-            raise AuthenticationFailed(f"Email not verified by {provider_name}")
+            raise AuthenticationFailed(gettext("%(provider)s hasn't verified this account's email address.") % {
+                'provider': provider_name}, code=errorcodes.OAUTH_EMAIL_UNVERIFIED)
 
         provider_uid = decoded_token.get('uid')
         provider_key = provider_name.lower()
@@ -354,16 +363,18 @@ def oauth_login(request):
                 f'Manual investigation required.'
             )
             raise AuthenticationFailed(
-                f'{provider_name} Sign-In failed due to an account conflict. '
-                f'Please contact support for assistance.'
+                gettext('Sign in with %(provider)s failed because of an account conflict. Contact support for '
+                        'help.') % {'provider': provider_name},
+                code=errorcodes.OAUTH_ACCOUNT_CONFLICT
             )
 
         if (not email_verified and user and not existing_oauth
                 and not user.oauth_providers.filter(provider_user_id=provider_uid).exists()):
             logger.info(f'{provider_name} Sign-In refused: unverified email matches user {user.id}, '
                         f'which has no link to this Firebase user')
-            raise ValidationError('That email is already registered with a different sign-in method. '
-                                  'Sign in that way instead.')
+            raise ValidationError(gettext('That email is already registered with a different sign-in method. '
+                                          'Sign in that way instead.'),
+                                  code=errorcodes.EMAIL_REGISTERED_WITH_OTHER_METHOD)
 
         is_new_user = False
         if existing_oauth:
@@ -418,6 +429,7 @@ def oauth_login(request):
             user = serializer.create_from_oauth({
                 'username': username,
                 'email': email,
+                'settings': UserSerializer.sign_up_settings(request.data),
             })
 
             taskutils.safe_apply_async(clear_email_suppression,
@@ -460,16 +472,16 @@ def oauth_login(request):
 
     except firebase_auth.ExpiredIdTokenError:
         logger.warning('Expired Firebase ID token')
-        raise AuthenticationFailed(f'{provider_name} Sign-In token has expired')
+        raise AuthenticationFailed(oauth_sign_in_failed_message(provider_name), code=errorcodes.OAUTH_TOKEN_EXPIRED)
     except firebase_auth.InvalidIdTokenError as e:
         logger.warning(f'Invalid Firebase ID token: {str(e)}')
-        raise AuthenticationFailed(f'Invalid {provider_name} Sign-In token')
+        raise AuthenticationFailed(oauth_sign_in_failed_message(provider_name), code=errorcodes.OAUTH_TOKEN_INVALID)
     except (ValidationError, AuthenticationFailed):
         # Re-raise validation and authentication errors
         raise
     except Exception as e:
         logger.error(f'{provider_name} Sign-In error: {str(e)}', exc_info=True)
-        raise AuthenticationFailed(f'{provider_name} Sign-In authentication failed')
+        raise AuthenticationFailed(oauth_sign_in_failed_message(provider_name), code=errorcodes.OAUTH_SIGN_IN_FAILED)
 
 
 def sync_oauth_providers(request):
@@ -480,16 +492,17 @@ def sync_oauth_providers(request):
     :return: a 204 Response
     """
     if 'id_token' not in request.data:
-        raise ValidationError("'id_token' is required")
+        raise ValidationError(gettext("'id_token' is required"), code=errorcodes.REQUIRED)
 
     try:
         firebase_uid = firebase_auth.verify_id_token(request.data['id_token'])['uid']
     except (ValueError, firebase_auth.InvalidIdTokenError) as e:
         logger.warning(f'Invalid Firebase ID token: {str(e)}')
-        raise ValidationError('Invalid Firebase ID token')
+        raise ValidationError(gettext('Invalid Firebase ID token'), code=errorcodes.FIREBASE_TOKEN_INVALID)
 
     if not request.user.oauth_providers.filter(provider_user_id=firebase_uid).exists():
-        raise ValidationError('That sign-in is not linked to this account.')
+        raise ValidationError(gettext('That sign-in is not linked to this account.'),
+                              code=errorcodes.OAUTH_PROVIDER_NOT_LINKED)
 
     _sync_oauth_providers(request.user, firebase_uid)
 
@@ -507,11 +520,12 @@ def remove_oauth_provider(user, provider):
     """
     oauth_provider = user.oauth_providers.filter(provider=provider).first()
     if not oauth_provider:
-        raise NotFound('No OAuth provider matches the given query.')
+        raise NotFound(not_found_message(UserOAuthProvider))
 
     if not user.has_usable_password() and not user.oauth_providers.exclude(pk=oauth_provider.pk).exists():
-        raise ValidationError({'non_field_errors': ["This is the only way to sign in to this account, so it can't be "
-                                                    "removed."]})
+        raise ValidationError({'non_field_errors': [gettext("This is the only way to sign in to this account, so it "
+                                                            "can't be removed.")]},
+                              code=errorcodes.OAUTH_PROVIDER_LAST_SIGN_IN)
 
     firebase_provider = f'{provider}.com'
     try:

@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from rest_framework import status
 
 from helium.auth.models import UserSettings
@@ -168,6 +168,52 @@ class TestCaseAuthenticationViews(TestCase):
         self.assertEqual(response.data['settings']['setup_state'], enums.SETUP_PENDING)
         mock_import_schedule.apply_async.assert_not_called()
 
+    @patch('helium.auth.tasks.commonutils.send_multipart_email')
+    def test_registration_saves_the_language_before_the_verification_email(self, mock_send):
+        # GIVEN
+        sent_languages = []
+        mock_send.side_effect = lambda *args, **kwargs: sent_languages.append(translation.get_language())
+        data = {'email': 'lang@test.com', 'password': 'test_pass_1!', 'time_zone': 'America/Chicago',
+                'language': 'es'}
+
+        # WHEN
+        with userhelper.given_languages_supported('en', 'es'):
+            response = self.client.post(reverse('auth_user_resource_register'), json.dumps(data),
+                                        content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user_settings = UserSettings.objects.get(user__email='lang@test.com')
+        self.assertEqual(user_settings.language, 'es')
+        self.assertEqual(sent_languages, ['es'])
+
+    def test_registration_without_a_language_defaults_to_english(self):
+        # GIVEN
+        data = {'email': 'nolang@test.com', 'password': 'test_pass_1!', 'time_zone': 'America/Chicago'}
+
+        # WHEN
+        response = self.client.post(reverse('auth_user_resource_register'), json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user_settings = UserSettings.objects.get(user__email='nolang@test.com')
+        self.assertEqual(user_settings.language, 'en')
+
+    def test_registration_with_an_unsupported_language_fails(self):
+        # GIVEN
+        data = {'email': 'badlang@test.com', 'password': 'test_pass_1!', 'time_zone': 'America/Chicago',
+                'language': 'xx'}
+
+        # WHEN
+        response = self.client.post(reverse('auth_user_resource_register'), json.dumps(data),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('language', response.data)
+        self.assertFalse(get_user_model().objects.filter(email='badlang@test.com').exists())
+
     def test_registration_success_without_username(self):
         # WHEN
         data = {
@@ -238,7 +284,7 @@ class TestCaseAuthenticationViews(TestCase):
         )
 
         # THEN
-        self.assertContains(response, "don't recognize that account",
+        self.assertContains(response, 'Check your credentials and try again.',
                             status_code=status.HTTP_401_UNAUTHORIZED)
 
     def test_verification_success(self):
@@ -317,7 +363,7 @@ class TestCaseAuthenticationViews(TestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         user = get_user_model().objects.get(email=user.email)
-        self.assertIn("'email' and 'code' must be given", response.data[0])
+        self.assertEqual("'email' and 'code' must be given as query parameters", response.data[0]['message'])
         self.assertFalse(user.is_active)
 
     def test_verification_not_found(self):

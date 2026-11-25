@@ -8,6 +8,8 @@ from django.contrib.auth import get_user_model
 
 from django.db import DatabaseError, IntegrityError, OperationalError, transaction
 from django.db.models import Count, Q
+from django.utils import translation
+from django.utils.translation import gettext
 from firebase_admin import auth as firebase_auth
 from oauth2_provider.models import clear_expired
 from rest_framework_simplejwt.exceptions import TokenError
@@ -17,7 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from conf.celery import app
 from helium.auth.models import UserClientActivity, UserPushToken, UserSettings
 from helium.auth.services import nightlymetricsservice
-from helium.auth.utils.userutils import is_staff_user
+from helium.auth.utils.userutils import dormant_warning_subject, is_staff_user
 from helium.common.periodic import register_periodic
 from helium.common.services import analyticsservice, cumulativeuserservice, metricsampleservice
 from helium.common.utils import commonutils, metricutils, redisutils, taskutils
@@ -51,14 +53,15 @@ def send_verification_email(self, email, verification_code, clear_suppression=Fa
     if clear_suppression:
         clear_ses_suppression_if_exists(email)
 
-    commonutils.send_multipart_email('email/verification',
-                                     {
-                                         'email': email,
-                                         'verification_code': verification_code,
-                                         'verify_url': f"{settings.PROJECT_APP_HOST}/verify",
-                                     },
-                                     'Verify Your Email Address with Helium', [email],
-                                     email_type='verification')
+    with translation.override(UserSettings.objects.language_for_email(email)):
+        commonutils.send_multipart_email('email/verification',
+                                         {
+                                             'email': email,
+                                             'verification_code': verification_code,
+                                             'verify_url': f"{settings.PROJECT_APP_HOST}/verify",
+                                         },
+                                         gettext('Verify Your Email Address with Helium'), [email],
+                                         email_type='verification')
 
     logger.debug(f"Verification email sent to {redact_email(email)}")
 
@@ -98,12 +101,13 @@ def send_registration_email(self, email):
         metricutils.task_stop(metrics, value=0)
         return
 
-    commonutils.send_multipart_email('email/register',
-                                     {
-                                         'login_url': f"{settings.PROJECT_APP_HOST}/signin",
-                                     },
-                                     'Welcome to Helium', [email],
-                                     email_type='registration')
+    with translation.override(UserSettings.objects.language_for_email(email)):
+        commonutils.send_multipart_email('email/register',
+                                         {
+                                             'login_url': f"{settings.PROJECT_APP_HOST}/signin",
+                                         },
+                                         gettext('Welcome to Helium'), [email],
+                                         email_type='registration')
 
     logger.debug(f"Registration email sent to {redact_email(email)}")
 
@@ -122,13 +126,14 @@ def send_password_reset_email(self, email, reset_url):
 
     clear_ses_suppression_if_exists(email)
 
-    commonutils.send_multipart_email('email/forgot',
-                                     {
-                                         'reset_url': reset_url,
-                                         'support_url': settings.SUPPORT_URL,
-                                     },
-                                     'Reset Your Helium Password', [email],
-                                     email_type='password_reset')
+    with translation.override(UserSettings.objects.language_for_email(email)):
+        commonutils.send_multipart_email('email/forgot',
+                                         {
+                                             'reset_url': reset_url,
+                                             'support_url': settings.SUPPORT_URL,
+                                         },
+                                         gettext('Reset Your Helium Password'), [email],
+                                         email_type='password_reset')
 
     logger.debug(f"Password reset email sent to {redact_email(email)}")
 
@@ -460,31 +465,26 @@ def send_dormant_user_warning_email(self, user_id):
 
     days_remaining = settings.DORMANT_USER_WARNING_DAYS[warning_number - 1]
     is_final_warning = warning_number == 4
-    subject_map = {
-        1: f'Your Account Will Be Deleted in {days_remaining} Days',
-        2: f'Reminder: {days_remaining} Days Until Account Deletion',
-        3: f'Reminder: Only {days_remaining} Days Left',
-        4: 'Final Notice: Account Deletion Tomorrow',
-    }
-    subject = subject_map[warning_number]
 
     try:
-        commonutils.send_multipart_email(
-            'email/dormant_warning',
-            {
-                'subject': subject,
-                'days_remaining': days_remaining,
-                'dormancy_years': settings.DORMANT_USER_THRESHOLD_YEARS,
-                'is_final_warning': is_final_warning,
-                'login_url': f"{settings.PROJECT_APP_HOST}/signin",
-                'export_url': f'{settings.SUPPORT_URL}import-export-and-backup/importing-and-exporting-your-data/',
-                'delete_account_url': f'{settings.SUPPORT_URL}account/deleting-your-account-and-data/',
-                'support_url': settings.SUPPORT_URL,
-            },
-            subject,
-            [user.email],
-            email_type='dormant_warning',
-        )
+        with translation.override(user.settings.language):
+            subject = dormant_warning_subject(warning_number, days_remaining)
+            commonutils.send_multipart_email(
+                'email/dormant_warning',
+                {
+                    'subject': subject,
+                    'days_remaining': days_remaining,
+                    'dormancy_years': settings.DORMANT_USER_THRESHOLD_YEARS,
+                    'is_final_warning': is_final_warning,
+                    'login_url': f"{settings.PROJECT_APP_HOST}/signin",
+                    'export_url': f'{settings.SUPPORT_URL}import-export-and-backup/importing-and-exporting-your-data/',
+                    'delete_account_url': f'{settings.SUPPORT_URL}account/deleting-your-account-and-data/',
+                    'support_url': settings.SUPPORT_URL,
+                },
+                subject,
+                [user.email],
+                email_type='dormant_warning',
+            )
 
         user.deletion_warning_count = warning_number
         user.deletion_warning_sent_at = datetime.now().replace(tzinfo=timezone.utc)

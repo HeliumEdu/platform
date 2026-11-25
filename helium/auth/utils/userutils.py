@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.utils import timezone
+from django.utils.translation import gettext, ngettext
 
 
 def is_admin_allowed_email(email):
@@ -18,14 +19,6 @@ def is_admin_allowed_email(email):
     """
     domain = email.split('@')[-1].lower() if '@' in email else ''
     return domain in settings.ADMIN_ALLOWED_DOMAINS
-
-
-def admin_allowed_email_error():
-    """
-    The message shown when an admin email falls outside ADMIN_ALLOWED_DOMAINS.
-    """
-    return f"Admin email must be within an allowed domain ({', '.join(settings.ADMIN_ALLOWED_DOMAINS)})."
-
 
 
 def mark_user_active(user):
@@ -162,3 +155,16 @@ def generate_unique_username_from_email(email):
         counter += 1
 
     return username
+
+
+def dormant_warning_subject(warning_number, days_remaining):
+    if warning_number == 1:
+        return ngettext('Your Account Will Be Deleted in %(days)s Day', 'Your Account Will Be Deleted in %(days)s Days',
+                        days_remaining) % {'days': days_remaining}
+    if warning_number == 2:
+        return ngettext('Reminder: %(days)s Day Until Account Deletion',
+                        'Reminder: %(days)s Days Until Account Deletion', days_remaining) % {'days': days_remaining}
+    if warning_number == 3:
+        return ngettext('Reminder: Only %(days)s Day Left', 'Reminder: Only %(days)s Days Left',
+                        days_remaining) % {'days': days_remaining}
+    return gettext('Final Notice: Account Deletion Tomorrow')

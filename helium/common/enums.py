@@ -1,3 +1,5 @@
+from django.utils.translation import gettext_lazy
+
 from helium.common.timezones import TIME_ZONE_CHOICES  # noqa: F401
 
 PYTHON_TO_HELIUM_DAY_OF_WEEK = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 0}
@@ -252,7 +254,7 @@ PLANNER_READ = 'planner:read'
 PLANNER_NOTES_READ = 'planner:notes:read'
 PLANNER_IMPORT = 'planner:import'
 OAUTH_SCOPE_CHOICES = (
-    (PLANNER_READ, 'Read your assignments, events, classes, resources, and grades'),
-    (PLANNER_NOTES_READ, 'Read your notes'),
-    (PLANNER_IMPORT, 'Import new terms and classes with their assignments, events, and class schedules'),
+    (PLANNER_READ, gettext_lazy('Read your assignments, events, classes, resources, and grades')),
+    (PLANNER_NOTES_READ, gettext_lazy('Read your notes')),
+    (PLANNER_IMPORT, gettext_lazy('Import new terms and classes with their assignments, events, and class schedules')),
 )

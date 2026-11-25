@@ -1,12 +1,12 @@
-Reset Your Password
+{% load i18n %}{% translate "Reset Your Password" %}
 
-We received a request to reset your Helium password. Use the link below to choose a new password.
+{% translate "We received a request to reset your Helium password. Use the link below to choose a new password." %}
 
 {{ reset_url }}
 
-If you did not request this, you can safely ignore this email.
+{% translate "If you did not request this, you can safely ignore this email." %}
 
-If you have any trouble, contact support at {{ support_url }} and we'll get it sorted out.
+{% blocktranslate %}If you have any trouble, contact support at {{ support_url }} and we'll get it sorted out.{% endblocktranslate %}
 
-Regards,
-The Helium Team
+{% translate "Regards," %}
+{% translate "The Helium Team" %}

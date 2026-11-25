@@ -8,6 +8,7 @@ from django.db.models import Max
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.http import parse_http_date_safe
+from django.utils.translation import gettext, override
 
 from helium.planner.models import Homework, Course, CourseSchedule, CourseGroup, Category, Note, Resource
 
@@ -155,31 +156,31 @@ def _description(*sections):
 def _class_info_line(course, category=None):
     class_info = course.title
     if category and category.title != "Uncategorized":
-        class_info = f"{category.title} for {class_info}"
+        class_info = gettext('%(category)s for %(course)s') % {'category': category.title, 'course': class_info}
     if not course.is_online and course.room:
-        class_info += f" in {course.room}"
-    return f"Class Info: {class_info}"
+        class_info = gettext('%(class_info)s in %(room)s') % {'class_info': class_info, 'room': course.room}
+    return gettext('Class Info: %(class_info)s') % {'class_info': class_info}
 
 
 def _resources_line(resources):
     titles = [resource.title for resource in resources]
-    return f"Resources: {', '.join(titles)}" if titles else ""
+    return gettext('Resources: %(titles)s') % {'titles': ', '.join(titles)} if titles else ""
 
 
 def _note_line(notes_set):
     url = noteutils.note_url(notes_set)
-    return f"\U0001F4DD Note: {url}" if url else ""
+    return "\U0001F4DD " + gettext('Note: %(url)s') % {'url': url} if url else ""
 
 
 def _open_line(url):
-    return f"\U0001F517 Open in Helium: {url}"
+    return "\U0001F517 " + gettext('Open in Helium: %(url)s') % {'url': url}
 
 
 def _create_homework_description(homework, number_format):
     status = []
     if homework.completed:
         grade = gradeutils.format_grade_percent(homework.current_grade, number_format)
-        status = ["Status: Complete", f"Grade: {grade}" if grade else ""]
+        status = [gettext('Status: Complete'), gettext('Grade: %(grade)s') % {'grade': grade} if grade else ""]
 
     return _description(
         [_class_info_line(homework.course, homework.category), _resources_line(homework.resources.all())],
@@ -191,7 +192,7 @@ def _create_homework_description(homework, number_format):
 def _create_course_schedule_description(course):
     return _description(
         [_class_info_line(course), _resources_line(course.resources.all()),
-         f"Class Website: {course.website}" if course.website else ""],
+         gettext('Class Website: %(url)s') % {'url': course.website} if course.website else ""],
         [_note_line(course.notes_set), _open_line(deeplinkutils.class_schedule_url(course))],
     )
 
@@ -230,14 +231,15 @@ def events_feed(user):
     :param user: The user whose Feed it is.
     :return: The Feed, as iCalendar text.
     """
-    return _events_calendar(user).to_ical()
+    with override(user.settings.language):
+        return _events_calendar(user).to_ical()
 
 
 def _events_calendar(user):
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
-        calendar = _create_calendar(f"{settings.PROJECT_NAME} Events")
+        calendar = _create_calendar(gettext('%(project_name)s Events') % {'project_name': settings.PROJECT_NAME})
         generated_at = timezone.now()
 
         for event in user.events.prefetch_related('notes_set'):
@@ -264,14 +266,16 @@ def homework_feed(user):
     :param user: The user whose Feed it is.
     :return: The Feed, as iCalendar text.
     """
-    return _homework_calendar(user).to_ical()
+    with override(user.settings.language):
+        return _homework_calendar(user).to_ical()
 
 
 def _homework_calendar(user):
     timezone.activate(ZoneInfo(user.settings.time_zone))
 
     try:
-        calendar = _create_calendar(f"{settings.PROJECT_NAME} Assignments")
+        calendar = _create_calendar(
+            gettext('%(project_name)s Assignments') % {'project_name': settings.PROJECT_NAME})
         generated_at = timezone.now()
 
         homework_shown = Homework.objects.for_user(user.pk).filter(course__course_group__shown_on_calendar=True)
@@ -304,11 +308,12 @@ def courseschedules_feed(user):
     :param user: The user whose Feed it is.
     :return: The Feed, as iCalendar text.
     """
-    return _courseschedules_calendar(user).to_ical()
+    with override(user.settings.language):
+        return _courseschedules_calendar(user).to_ical()
 
 
 def _courseschedules_calendar(user):
-    calendar = _create_calendar(f"{settings.PROJECT_NAME} Class Schedules")
+    calendar = _create_calendar(gettext('%(project_name)s Class Schedules') % {'project_name': settings.PROJECT_NAME})
 
     courses_shown = Course.objects.for_user(user.pk).filter(course_group__shown_on_calendar=True)
     events_by_course = [
@@ -351,11 +356,12 @@ def all_feed(user):
     :param user: The user whose Feed it is.
     :return: The Feed, as iCalendar text.
     """
-    calendar = _create_calendar(settings.PROJECT_NAME)
-    for feed_name, feed_calendar in (('events', _events_calendar(user)), ('homework', _homework_calendar(user)),
-                                     ('courseschedules', _courseschedules_calendar(user))):
-        for component in feed_calendar.subcomponents:
-            component['UID'] = f"{component['UID']}-{feed_name}"
-            calendar.add_component(component)
+    with override(user.settings.language):
+        calendar = _create_calendar(settings.PROJECT_NAME)
+        for feed_name, feed_calendar in (('events', _events_calendar(user)), ('homework', _homework_calendar(user)),
+                                         ('courseschedules', _courseschedules_calendar(user))):
+            for component in feed_calendar.subcomponents:
+                component['UID'] = f"{component['UID']}-{feed_name}"
+                calendar.add_component(component)
 
-    return calendar.to_ical()
+        return calendar.to_ical()

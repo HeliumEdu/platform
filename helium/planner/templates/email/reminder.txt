@@ -1,22 +1,22 @@
-{{ subject }}
+{% load i18n %}{{ subject }}
 
 {{ reminder.message|safe }}
 
-When: {{ normalized_datetime }}{% if reminder.homework %}
-Info: {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{{ calendar_item.category.title }} for {% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %} ({{ calendar_item.course.website }}){% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}
-Location: {{ calendar_item.course.room }}{% endif %}{% endif %}{% if reminder.course %}
-Info: {{ calendar_item.title }}{% if calendar_item.website %} ({{ calendar_item.website }}){% endif %}{% if calendar_item.room and not calendar_item.is_online %}
-Location: {{ calendar_item.room }}{% endif %}{% if calendar_item.teacher_name %}
-Teacher: {{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %} ({{ calendar_item.teacher_email }}){% endif %}{% endif %}{% endif %}{% if note_url %}
-Note: {{ note_url }}{% endif %}{% if reminder.homework or reminder.event %}{% if calendar_item.resources and calendar_item.resources.count > 0 %}
+{% translate "When:" %} {{ normalized_datetime }}{% if reminder.homework %}
+{% translate "Info:" %} {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{% blocktranslate with category=calendar_item.category.title %}{{ category }} for {% endblocktranslate %}{% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %} ({{ calendar_item.course.website }}){% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}
+{% translate "Location:" %} {{ calendar_item.course.room }}{% endif %}{% endif %}{% if reminder.course %}
+{% translate "Info:" %} {{ calendar_item.title }}{% if calendar_item.website %} ({{ calendar_item.website }}){% endif %}{% if calendar_item.room and not calendar_item.is_online %}
+{% translate "Location:" %} {{ calendar_item.room }}{% endif %}{% if calendar_item.teacher_name %}
+{% translate "Teacher:" %} {{ calendar_item.teacher_name }}{% if calendar_item.teacher_email %} ({{ calendar_item.teacher_email }}){% endif %}{% endif %}{% endif %}{% if note_url %}
+{% translate "Note:" %} {{ note_url }}{% endif %}{% if reminder.homework or reminder.event %}{% if calendar_item.resources and calendar_item.resources.count > 0 %}
 
-Resources:{% for resource in calendar_item.resources.all %}
+{% translate "Resources:" %}{% for resource in calendar_item.resources.all %}
  - {{ resource.title }}{% if resource.website %} ({{ resource.website }}){% endif %}{% endfor %}{% endif %}{% if calendar_item.attachments.count > 0 %}
 
-Attachments: {{ attachments_url }}{% for attachment in calendar_item.attachments.all %}
+{% translate "Attachments:" %} {{ attachments_url }}{% for attachment in calendar_item.attachments.all %}
  - {{ attachment.title }}{% endfor %}{% endif %}{% endif %}
 
-Open in Helium: {{ open_url }}
+{% translate "Open in Helium:" %} {{ open_url }}
 
-Regards,
-The Helium Team
+{% translate "Regards," %}
+{% translate "The Helium Team" %}

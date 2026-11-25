@@ -1,14 +1,16 @@
 import json
+import tempfile
 from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 from helium.auth.tests.helpers import userhelper
+from helium.common.tests.helpers import commonhelper
 
 
 class TestCaseTokenViews(APITestCase):
@@ -252,9 +254,34 @@ class TestCaseTokenViews(APITestCase):
 
         # THEN
         for response in responses:
-            self.assertContains(response, 'don\'t recognize that account',
+            self.assertContains(response, 'Check your credentials and try again.',
                                 status_code=status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(OutstandingToken.objects.count(), 0)
+
+    def test_login_error_is_in_the_requested_language(self):
+        # GIVEN
+        locale_path = self.enterContext(tempfile.TemporaryDirectory())
+        commonhelper.given_a_translation_catalog(locale_path, 'fr', {
+            'Check your credentials and try again.': 'Vérifiez vos identifiants et réessayez.',
+        })
+        self.enterContext(self.settings(LANGUAGES=[('en', 'English'), ('fr', 'French')], LOCALE_PATHS=[locale_path]))
+        self.addCleanup(translation.deactivate)
+
+        # WHEN
+        translated = self.client.post(reverse('auth_token_obtain'),
+                                      json.dumps({'email': 'not-a-user@test.com', 'password': 'test_pass_1!'}),
+                                      content_type='application/json', HTTP_ACCEPT_LANGUAGE='fr-FR,fr;q=0.9')
+        untranslated = self.client.post(reverse('auth_token_obtain'),
+                                        json.dumps({'email': 'not-a-user@test.com', 'password': 'test_pass_1!'}),
+                                        content_type='application/json')
+
+        # THEN
+        self.assertEqual(translated.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(translated.data, {'detail': 'Vérifiez vos identifiants et réessayez.',
+                                           'code': 'credentials_invalid'})
+        self.assertEqual(translated['Content-Language'], 'fr')
+        self.assertEqual(untranslated.data, {'detail': 'Check your credentials and try again.',
+                                             'code': 'credentials_invalid'})
 
     def test_authenticated_view_success(self):
         # GIVEN

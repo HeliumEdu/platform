@@ -1,10 +1,12 @@
 import logging
 
 from django.db import transaction
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from helium.common import enums
+from helium.common import enums, errorcodes
+from helium.common.errormessages import EXCEPTION_DATES_OUTSIDE_CLASS_MESSAGE
 from helium.common.serializers.validation import validate_date_range_and_exceptions
 from helium.common.utils import gradeutils
 from helium.common.utils.openapiutils import support_article_url
@@ -122,7 +124,7 @@ class CourseSerializer(serializers.ModelSerializer):
         return value or ''
 
     def validate(self, attrs):
-        validate_date_range_and_exceptions(attrs, self.instance, 'class date range')
+        validate_date_range_and_exceptions(attrs, self.instance, EXCEPTION_DATES_OUTSIDE_CLASS_MESSAGE)
 
         return attrs
 
@@ -134,6 +136,11 @@ def _validate_grade_scale_template(validated_data, group_grade_scale):
 
     compatible = [enums.GRADE_SCALE_TEMPLATES[preset]['label']
                   for preset in gradeutils.compatible_presets(group_grade_scale)]
-    raise serializers.ValidationError({'grade_scale_template': (
-        "Doesn't fit the group's grade scale: a class's preset can only award grades the group's scale does. "
-        + (f"Compatible presets: {', '.join(compatible)}." if compatible else "The group has no grade scale."))})
+    if compatible:
+        message = gettext("Doesn't fit the group's grade scale: a class's preset can only award grades the group's "
+                          'scale does. Compatible presets: %(presets)s.') % {'presets': ', '.join(compatible)}
+    else:
+        message = gettext("Doesn't fit the group's grade scale: a class's preset can only award grades the group's "
+                          'scale does. The group has no grade scale.')
+    raise serializers.ValidationError({'grade_scale_template': message},
+                                      code=errorcodes.GRADE_SCALE_TEMPLATE_INCOMPATIBLE)

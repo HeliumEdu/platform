@@ -11,6 +11,8 @@ from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.utils import get_md5_hash_password
 
 from helium.auth.services import oauthservice
+from helium.common import errorcodes
+from helium.common.errormessages import SIGN_IN_TO_CONTINUE_MESSAGE
 
 
 _AUTH_HEADER_TYPE_BYTES_LOWER = {prefix.lower() for prefix in AUTH_HEADER_TYPE_BYTES}
@@ -54,7 +56,7 @@ class JWTAuthentication(BaseJWTAuthentication):
         if len(parts) != 2:
             raise AuthenticationFailed(
                 _("Authorization header must contain two space-delimited values"),
-                code="bad_authorization_header",
+                code=errorcodes.BAD_AUTHORIZATION_HEADER,
             )
         # Leave Bearer tokens that can't be JWTs (OAuth tokens are opaque) to OAuth2Authentication
         if parts[1].count(b'.') != 2:
@@ -65,24 +67,24 @@ class JWTAuthentication(BaseJWTAuthentication):
         try:
             user_id = validated_token[api_settings.USER_ID_CLAIM]
         except KeyError:
-            raise InvalidToken(_("Token contained no recognizable user identification"))
+            raise InvalidToken(SIGN_IN_TO_CONTINUE_MESSAGE)
 
         try:
             user = (self.user_model.objects
                     .select_related('settings')
                     .get(**{api_settings.USER_ID_FIELD: user_id}))
         except self.user_model.DoesNotExist:
-            raise AuthenticationFailed(_("User not found"), code="user_not_found")
+            raise AuthenticationFailed(SIGN_IN_TO_CONTINUE_MESSAGE, code=errorcodes.USER_NOT_FOUND)
 
         if user.deletion_requested_at is not None:
-            raise AuthenticationFailed(_("User not found"), code="user_not_found")
+            raise AuthenticationFailed(SIGN_IN_TO_CONTINUE_MESSAGE, code=errorcodes.USER_NOT_FOUND)
 
         if api_settings.CHECK_USER_IS_ACTIVE and not user.is_active:
-            raise AuthenticationFailed(_("User is inactive"), code="user_inactive")
+            raise AuthenticationFailed(SIGN_IN_TO_CONTINUE_MESSAGE, code=errorcodes.USER_INACTIVE)
 
         if api_settings.CHECK_REVOKE_TOKEN and user.has_usable_password():
             if validated_token.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password):
-                raise AuthenticationFailed(_("The user's password has been changed."), code="password_changed")
+                raise AuthenticationFailed(SIGN_IN_TO_CONTINUE_MESSAGE, code=errorcodes.PASSWORD_CHANGED)
 
         return user
 
@@ -105,12 +107,13 @@ class OAuth2Authentication(BaseOAuth2Authentication):
 
         user, token = authenticated
         if user.deletion_requested_at is not None:
-            raise AuthenticationFailed(_("User not found"), code="user_not_found")
+            raise AuthenticationFailed(_("User not found"), code=errorcodes.USER_NOT_FOUND)
         if not user.is_active:
-            raise AuthenticationFailed(_("User is inactive"), code="user_inactive")
+            raise AuthenticationFailed(_("User is inactive"), code=errorcodes.USER_INACTIVE)
 
         resolver_match = request._request.resolver_match
         if resolver_match is None or not oauthservice.scope_allows(token, resolver_match.url_name, request.method):
-            raise PermissionDenied(_("The token's scopes don't allow this request."), code="insufficient_scope")
+            raise PermissionDenied(_("The token's scopes don't allow this request."),
+                                   code=errorcodes.INSUFFICIENT_SCOPE)
 
         return user, token

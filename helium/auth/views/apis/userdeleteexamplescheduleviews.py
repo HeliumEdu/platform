@@ -1,5 +1,6 @@
 import logging
 
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -32,7 +33,7 @@ class UserDeleteExampleScheduleView(HeliumAPIView):
         logger.info(f'User {user.pk} deleted the example schedule')
 
         if partial:
-            return Response({'message': 'The example schedule was cleared, except for anything that changed.'},
+            return Response({'message': gettext('The example schedule was cleared, except for anything that changed.')},
                             status=status.HTTP_200_OK)
 
         return Response(status=status.HTTP_204_NO_CONTENT)

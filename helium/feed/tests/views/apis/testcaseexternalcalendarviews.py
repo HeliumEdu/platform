@@ -249,7 +249,7 @@ class TestCaseExternalCalendarViews(APITestCase):
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('matches the given query', response.data['detail'].lower())
+                self.assertRegex(response.data['detail'], commonhelper.NOT_FOUND_MESSAGE_PATTERN)
 
     def test_updated_at_filter(self):
         # GIVEN

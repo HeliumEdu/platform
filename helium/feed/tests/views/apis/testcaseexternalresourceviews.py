@@ -46,7 +46,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_as_events(self, mock_urlopen):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Los_Angeles')
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
         externalcalendarfetchhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample.ical'), mock_urlopen)
 
@@ -101,7 +101,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
     @mock.patch('helium.feed.services.icalexternalcalendarservice.urlopen_secure')
     def test_get_external_calendar_as_events_with_recurring(self, mock_urlopen):
         # GIVEN
-        user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
+        user = userhelper.given_a_user_exists_and_is_authenticated(self.client, time_zone='America/Los_Angeles')
         external_calendar = externalcalendarhelper.given_external_calendar_exists(user)
         externalcalendarfetchhelper.given_urlopen_mock_from_file(os.path.join('resources', 'sample_with_recurring.ics'),
                                                     mock_urlopen)
@@ -312,7 +312,7 @@ class TestCaseExternalCalendarResourceViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("not return a valid calendar", response.data[0])
+        self.assertIn("not return a valid calendar", response.data[0]['message'])
         external_calendar.refresh_from_db()
         self.assertTrue(external_calendar.shown_on_calendar)
         self.assertEqual(external_calendar.consecutive_failures, 1)

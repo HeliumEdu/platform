@@ -1,9 +1,11 @@
 import math
 
 from django.conf import settings
+from django.utils.translation import gettext
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from helium.common import errorcodes
 from helium.common.utils.validators import validate_quill_delta
 from helium.planner.models import Course, Event, Homework, Resource, Note
 from helium.planner.utils.quillutils import delta_size, ensure_quill_delta_terminated
@@ -48,7 +50,8 @@ class NoteSerializer(serializers.ModelSerializer):
         percent = self._percent_past_max_size(value)
         if percent is not None:
             raise ValidationError(
-                f'This note is {percent}% of the max note size.')
+                gettext('This note is %(percent)s%% of the max note size.') % {'percent': percent},
+                code=errorcodes.NOTE_TOO_LARGE)
 
         return value
 
@@ -72,24 +75,25 @@ class NoteSerializer(serializers.ModelSerializer):
 
         if sum([bool(homework), bool(events), bool(resources), bool(courses)]) > 1:
             raise ValidationError(
-                'A note can only be linked to one type of entity (homework, event, resource, or course).'
+                gettext('A note can only be linked to one type of entity (homework, event, resource, or course).'),
+                code=errorcodes.NOTE_MULTIPLE_ENTITY_TYPES
             )
 
         if homework and len(homework) > 1:
             raise ValidationError(
-                'A note can only be linked to one homework assignment.'
+                gettext('A note can only be linked to one homework assignment.'), code=errorcodes.NOTE_MULTIPLE_ENTITIES
             )
         if events and len(events) > 1:
             raise ValidationError(
-                'A note can only be linked to one event.'
+                gettext('A note can only be linked to one event.'), code=errorcodes.NOTE_MULTIPLE_ENTITIES
             )
         if resources and len(resources) > 1:
             raise ValidationError(
-                'A note can only be linked to one resource.'
+                gettext('A note can only be linked to one resource.'), code=errorcodes.NOTE_MULTIPLE_ENTITIES
             )
         if courses and len(courses) > 1:
             raise ValidationError(
-                'A note can only be linked to one class.'
+                gettext('A note can only be linked to one class.'), code=errorcodes.NOTE_MULTIPLE_ENTITIES
             )
 
         # Enforce one-to-one from entity side: entity can only have one linked note
@@ -100,7 +104,7 @@ class NoteSerializer(serializers.ModelSerializer):
                 existing = existing.exclude(pk=exclude_pk)
             if existing.exists():
                 raise ValidationError(
-                    'This homework assignment already has a linked note.'
+                    gettext('This homework assignment already has a linked note.'), code=errorcodes.NOTE_ALREADY_LINKED
                 )
         if events:
             existing = Note.objects.filter(events__in=events)
@@ -108,7 +112,7 @@ class NoteSerializer(serializers.ModelSerializer):
                 existing = existing.exclude(pk=exclude_pk)
             if existing.exists():
                 raise ValidationError(
-                    'This event already has a linked note.'
+                    gettext('This event already has a linked note.'), code=errorcodes.NOTE_ALREADY_LINKED
                 )
         if resources:
             existing = Note.objects.filter(resources__in=resources)
@@ -116,7 +120,7 @@ class NoteSerializer(serializers.ModelSerializer):
                 existing = existing.exclude(pk=exclude_pk)
             if existing.exists():
                 raise ValidationError(
-                    'This resource already has a linked note.'
+                    gettext('This resource already has a linked note.'), code=errorcodes.NOTE_ALREADY_LINKED
                 )
         if courses:
             existing = Note.objects.filter(courses__in=courses)
@@ -124,7 +128,7 @@ class NoteSerializer(serializers.ModelSerializer):
                 existing = existing.exclude(pk=exclude_pk)
             if existing.exists():
                 raise ValidationError(
-                    'This class already has a linked note.'
+                    gettext('This class already has a linked note.'), code=errorcodes.NOTE_ALREADY_LINKED
                 )
 
         return attrs

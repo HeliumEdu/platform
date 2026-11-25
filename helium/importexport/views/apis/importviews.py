@@ -6,6 +6,7 @@ import icalendar
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -15,7 +16,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from helium.auth.models import UserSettings
-from helium.common import enums
+from helium.common import enums, errorcodes
+from helium.common.handlers.exceptions import error_body
 from helium.common.services import uploadfileservice
 from helium.common.views.base import HeliumAPIView, is_dry_run
 from helium.importexport.serializers.importerializer import ImportCreateSerializer, \
@@ -224,8 +226,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         if len(uploads) != 1:
             logger.warning(f'Rejected import request from user {request.user.pk} with {len(uploads)} files.')
             raise ValidationError({
-                'details': 'Upload exactly one file per request.'
-            })
+                'details': gettext('Upload exactly one file per request.')
+            }, code=errorcodes.UPLOAD_FILE_COUNT)
 
         external_calendar_count = 0
         course_groups_count = 0
@@ -247,8 +249,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
 
                 if isinstance(data, list):
                     raise ValidationError({
-                        'details': f'Invalid JSON structure: {upload}.'
-                    })
+                        'details': gettext('Invalid JSON structure: %(file)s.') % {'file': upload}
+                    }, code=errorcodes.IMPORT_JSON_STRUCTURE_INVALID)
 
                 ((external_calendar_count_file, course_groups_count_file, courses_count_file,
                   course_schedules_count_file, categories_count_file, resource_groups_count_file, resources_count_file,
@@ -274,11 +276,12 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             except importservice.ImportRowValidationError as error:
                 if request.headers.get(settings.STRUCTURED_ERRORS_HEADER) != '1':
                     raise
-                return Response({**error.detail, 'row_errors': error.row_errors}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({**error_body(request, error.detail), 'row_errors': error.row_errors},
+                                status=status.HTTP_400_BAD_REQUEST)
             except ValueError:
                 raise ValidationError({
-                    'details': f'Invalid JSON in file: {upload}.'
-                })
+                    'details': gettext('Invalid JSON in file: %(file)s.') % {'file': upload}
+                }, code=errorcodes.IMPORT_JSON_INVALID)
 
         serializer = ImportSerializer({
             'external_calendars': external_calendar_count,
@@ -305,7 +308,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         try:
             return int(course_group)
         except ValueError:
-            raise ValidationError({'course_group': f"Unresolved `course_group` reference `{course_group}`."})
+            raise ValidationError({'course_group': gettext('Unresolved `course_group` reference `%(id)s`.') % {
+                'id': course_group}}, code=errorcodes.UNRESOLVED_REFERENCE)
 
     @extend_schema(
         summary='Import a calendar (.ics) file',
@@ -338,7 +342,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         uploads = request.data.getlist('file[]')
         if len(uploads) != 1:
             logger.warning(f'Rejected .ics import from user {request.user.pk} with {len(uploads)} files.')
-            raise ValidationError({'details': 'Upload exactly one file per request.'})
+            raise ValidationError({'details': gettext('Upload exactly one file per request.')},
+                                  code=errorcodes.UPLOAD_FILE_COUNT)
 
         serializer = ICSImportCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -348,7 +353,8 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         try:
             calendar = icalendar.Calendar.from_ical(uploadfileservice.read(upload))
         except ValueError:
-            raise ValidationError({'details': f'Invalid iCalendar in file: {upload}.'})
+            raise ValidationError({'details': gettext('Invalid iCalendar in file: %(file)s.') % {'file': upload}},
+                                  code=errorcodes.IMPORT_ICS_INVALID)
 
         courses_count, events_count, homework_count = icsimportservice.import_ics(
             request, calendar,
@@ -381,8 +387,9 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             if not (UserSettings.objects
                     .filter(user=request.user, show_getting_started=False)
                     .update(show_getting_started=True, updated_at=timezone.now())):
-                raise ValidationError('The example schedule has already been imported. Please clear it before '
-                                      'importing it again.')
+                raise ValidationError(gettext('The example schedule has already been imported. Please clear it '
+                                              'before importing it again.'),
+                                      code=errorcodes.EXAMPLE_SCHEDULE_ALREADY_IMPORTED)
 
             examplescheduleimportservice.import_example_schedule(request.user)
 

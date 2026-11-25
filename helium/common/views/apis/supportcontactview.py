@@ -1,11 +1,14 @@
 import logging
 
 from django.conf import settings
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from helium.common import errorcodes
+from helium.common.handlers.exceptions import detail_body
 from helium.common.serializers.supportcontactserializer import SupportContactSerializer
 from helium.common.services.jsmservice import (
     JsmAttachmentException,
@@ -85,10 +88,10 @@ class SupportContactView(HeliumAPIView):
                 create_jsm_request(**fields)
         except JsmRequestException:
             return Response(
-                {'detail': (
-                    'We were unable to deliver your message. '
-                    f'Please email {settings.ADMIN_EMAIL_ADDRESS} directly.'
-                )},
+                detail_body(request,
+                            gettext('We were unable to deliver your message. Please email %(email)s directly.') % {
+                                'email': settings.ADMIN_EMAIL_ADDRESS},
+                            errorcodes.SUPPORT_DELIVERY_FAILED),
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 

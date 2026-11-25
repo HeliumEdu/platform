@@ -2,8 +2,11 @@ import logging
 
 from django.db import IntegrityError
 from django.db.models import Sum
+from django.utils.translation import gettext
 from rest_framework import serializers
 
+from helium.common import errorcodes
+from helium.common.errormessages import category_title_duplicate_message
 from helium.common.utils.openapiutils import help_text_with_support_article
 from helium.planner.models.category import Category
 
@@ -62,7 +65,8 @@ class CategorySerializer(serializers.ModelSerializer):
         course_id = self.context['request'].parser_context['kwargs']['course']
 
         if Category.objects.for_course(course_id).exclude(pk=pk).filter(title=title):
-            raise serializers.ValidationError(f"This class already has a category named \"{title}\".")
+            raise serializers.ValidationError(category_title_duplicate_message(title),
+                                              code=errorcodes.CATEGORY_TITLE_DUPLICATE)
 
         return title
 
@@ -70,7 +74,8 @@ class CategorySerializer(serializers.ModelSerializer):
         try:
             return super().create(validated_data)
         except IntegrityError:
-            raise serializers.ValidationError({'title': f'This class already has a category named "{validated_data.get("title")}".'})
+            raise serializers.ValidationError({'title': category_title_duplicate_message(validated_data.get('title'))},
+                                              code=errorcodes.CATEGORY_TITLE_DUPLICATE)
 
     def validate_weight(self, weight):
         """
@@ -88,6 +93,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
         if weight_total + weight > 100:
             raise serializers.ValidationError(
-                "The cumulative weights of all categories associated with a class cannot exceed 100%.")
+                gettext('The cumulative weights of all categories associated with a class cannot exceed 100%.'),
+                code=errorcodes.CATEGORY_WEIGHTS_EXCEED_LIMIT)
 
         return weight

@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.9.17"
+__version__ = "2.9.18"
 
 import json
 import os
@@ -114,6 +114,7 @@ MIDDLEWARE = (
     'helium.common.middleware.muppets.MuppetsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -279,6 +280,10 @@ REFRESH_TOKEN_TTL_DAYS = 14
 # force the user to update. Defaults permissively, config-driven, update in
 # Terraform code (never here) when it needs to be changed.
 MINIMUM_SUPPORTED_VERSION = config('PLATFORM_MINIMUM_SUPPORTED_VERSION', '0.0.0')
+
+# Deprecated: app versions below 3.16.13 read error messages as plain strings, without codes; remove once
+# MINIMUM_SUPPORTED_VERSION reaches 3.16.13.
+LEGACY_ERROR_FORMAT_BEFORE_VERSION = '3.16.13'
 
 if ACCESS_TOKEN_TTL_MINUTES < 3:
     raise ImproperlyConfigured("ACCESS_TOKEN_TTL_MINUTES cannot be less than 3")
@@ -531,6 +536,10 @@ SPECTACULAR_SETTINGS = {
 # Internationalization
 
 LANGUAGE_CODE = 'en-us'
+LANGUAGES = [
+    ('en', 'English'),
+]
+LOCALE_PATHS = [os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', 'helium', 'locale'))]
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_THOUSAND_SEPARATOR = True

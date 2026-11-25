@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+{% load i18n %}<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}<html xmlns="http://www.w3.org/1999/xhtml" lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -14,7 +14,7 @@
                 {% block heading %}
                     <tr>
                         <td style="padding: 40px 0 10px 0; color: #153643; font-size: 28px; font-weight: bold; font-family: Arial, sans-serif;">
-                            <img src="https://www.heliumedu.com/img/helium-logo.png?v=2" alt="Logo" width="300" height="95"
+                            <img src="https://www.heliumedu.com/img/helium-logo.png?v=2" alt="{% translate "Logo" %}" width="300" height="95"
                                  style="display: block; margin-left: auto; margin-right: auto;"/>
                         </td>
                     </tr>{% endblock %}
@@ -31,8 +31,8 @@
                             {% block content %}{% endblock %}
                             <tr>
                                 <td style="padding: 20px 0 30px 0; color: #153643; font-family: Arial, sans-serif; font-size: 16px; line-height: 20px; border-top: 1px solid #cccccc;">
-                                    Regards,<br/>
-                                    <em>The Helium Team</em>
+                                    {% translate "Regards," %}<br/>
+                                    <em>{% translate "The Helium Team" %}</em>
                                 </td>
                             </tr>
                         </table>
@@ -50,7 +50,7 @@
                             </tr>
                             <tr>
                                 <td align="center" style="padding-top: 16px;">
-                                    <a href="https://www.patreon.com/alexdlaird/membership"><img src="https://www.heliumedu.com/img/support-patreon.png?v=2" alt="Support on Patreon" width="205" height="28" style="display: block; margin-left: auto; margin-right: auto;"/></a>
+                                    <a href="https://www.patreon.com/alexdlaird/membership"><img src="https://www.heliumedu.com/img/support-patreon.png?v=2" alt="{% translate "Support on Patreon" %}" width="205" height="28" style="display: block; margin-left: auto; margin-right: auto;"/></a>
                                 </td>
                             </tr>
                         </table>

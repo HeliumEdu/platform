@@ -1,0 +1,8 @@
+Hey!
+
+You've been successfully registered for Helium! To log in and get started, visit the link below.
+
+https://app.heliumedu.com/signin
+
+Thanks,
+The Helium Team

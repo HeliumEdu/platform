@@ -1,8 +1,8 @@
-Hey!
+{% load i18n %}{% translate "Hey!" %}
 
-You've been successfully registered for Helium! To log in and get started, visit the link below.
+{% translate "You've been successfully registered for Helium! To log in and get started, visit the link below." %}
 
 {{ login_url }}
 
-Thanks,
-The Helium Team
+{% translate "Thanks," %}
+{% translate "The Helium Team" %}

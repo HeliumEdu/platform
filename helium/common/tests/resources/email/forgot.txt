@@ -1,0 +1,12 @@
+Reset Your Password
+
+We received a request to reset your Helium password. Use the link below to choose a new password.
+
+https://app.heliumedu.com/reset?uid=abc&amp;token=def
+
+If you did not request this, you can safely ignore this email.
+
+If you have any trouble, contact support at https://www.heliumedu.com/support/ and we'll get it sorted out.
+
+Regards,
+The Helium Team

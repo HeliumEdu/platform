@@ -1,12 +1,12 @@
-{% load l10n %}
+{% load i18n l10n %}
 
-Hey!
+{% translate "Hey!" %}
 
-You're almost there. Your verification code is: {{ verification_code|unlocalize }}.
+{% blocktranslate with code=verification_code|unlocalize %}You're almost there. Your verification code is: {{ code }}.{% endblocktranslate %}
 
-Paste the link below into your browser to verify this email address with Helium.
+{% translate "Paste the link below into your browser to verify this email address with Helium." %}
 
 {{ verify_url }}?email={{ email|urlencode }}&code={{ verification_code|unlocalize }}
 
-Regards,
-The Helium Team
+{% translate "Regards," %}
+{% translate "The Helium Team" %}

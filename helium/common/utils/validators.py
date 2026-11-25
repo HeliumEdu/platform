@@ -7,8 +7,10 @@ from zoneinfo import ZoneInfo
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrulestr
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext, ngettext
 
-from helium.common import enums
+from helium.common import enums, errorcodes
+from helium.common.errormessages import EXCEPTION_DATES_OUT_OF_RANGE_MESSAGE
 from helium.common.utils import commonutils
 
 # Reference dtstart used solely to satisfy rrulestr() during validation. The actual
@@ -33,29 +35,33 @@ def validate_fraction(value):
     """
     split = value.split('/')
     if len(split) != 2:
-        raise ValidationError('Enter a valid fraction of the format \'x/y\'.')
+        raise ValidationError(gettext("Enter a valid fraction of the format 'x/y'."),
+                              code=errorcodes.FRACTION_FORMAT_INVALID)
 
     try:
         n = decimal.Decimal(split[0].strip())
         d = decimal.Decimal(split[1].strip())
     except (ValueError, decimal.InvalidOperation):
-        raise ValidationError('The fraction must contain valid integers.')
+        raise ValidationError(gettext('The fraction must contain valid integers.'),
+                              code=errorcodes.FRACTION_NOT_NUMERIC)
 
     if n > sys.maxsize or d > sys.maxsize:
-        raise ValidationError(f'Values must be less than or equal to {sys.maxsize}.')
+        raise ValidationError(gettext('Values must be less than or equal to %(max)s.') % {'max': sys.maxsize},
+                              code=errorcodes.FRACTION_TOO_LARGE)
 
     if d <= 0:
-        raise ValidationError('The denominator must be greater than zero.')
+        raise ValidationError(gettext('The denominator must be greater than zero.'),
+                              code=errorcodes.FRACTION_DENOMINATOR_NOT_POSITIVE)
 
     if abs(n / d * 100) > 999:
-        raise ValidationError('The grade does not appear to be valid.')
+        raise ValidationError(gettext('The grade does not appear to be valid.'), code=errorcodes.GRADE_OUT_OF_RANGE)
 
     return f'{commonutils.remove_exponent(n.normalize())}/{commonutils.remove_exponent(d.normalize())}'
 
 
 def validate_hex_color(value):
     if not re.match(r'^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$', value):
-        raise ValidationError('The value must be a valid hex color code.')
+        raise ValidationError(gettext('The value must be a valid hex color code.'), code=errorcodes.HEX_COLOR_INVALID)
 
 
 def validate_grade_scale(grade_scale):
@@ -63,18 +69,23 @@ def validate_grade_scale(grade_scale):
         return
     if not _MIN_GRADE_SCALE_BANDS <= len(grade_scale) <= _MAX_GRADE_SCALE_BANDS:
         raise ValidationError(
-            f'A grade scale must have between {_MIN_GRADE_SCALE_BANDS} and {_MAX_GRADE_SCALE_BANDS} bands.')
+            gettext('A grade scale must have between %(min)s and %(max)s bands.') % {
+                'min': _MIN_GRADE_SCALE_BANDS, 'max': _MAX_GRADE_SCALE_BANDS},
+            code=errorcodes.GRADE_SCALE_BAND_COUNT)
     if grade_scale[0]['min_grade'] != 0:
-        raise ValidationError("The first band's 'min_grade' must be 0.")
+        raise ValidationError(gettext("The first band's 'min_grade' must be 0."),
+                              code=errorcodes.GRADE_SCALE_FIRST_BAND_NOT_ZERO)
 
     min_grades = [band['min_grade'] for band in grade_scale]
     if any(lower >= upper for lower, upper in zip(min_grades, min_grades[1:])):
-        raise ValidationError("Each band's 'min_grade' must be greater than the band before it.")
+        raise ValidationError(gettext("Each band's 'min_grade' must be greater than the band before it."),
+                              code=errorcodes.GRADE_SCALE_BANDS_NOT_ASCENDING)
 
     grade_points = [band['grade_point'] for band in grade_scale]
     steps = list(zip(grade_points, grade_points[1:]))
     if not (all(lower <= upper for lower, upper in steps) or all(lower >= upper for lower, upper in steps)):
-        raise ValidationError("The bands' 'grade_point' values must only rise or only fall.")
+        raise ValidationError(gettext("The bands' 'grade_point' values must only rise or only fall."),
+                              code=errorcodes.GRADE_SCALE_POINTS_NOT_MONOTONIC)
 
 
 def validate_quill_delta(value):
@@ -88,12 +99,13 @@ def validate_quill_delta(value):
     if value is None or value == {}:
         return
     if not isinstance(value, dict):
-        raise ValidationError('Quill content must be an object.')
+        raise ValidationError(gettext('Quill content must be an object.'), code=errorcodes.QUILL_CONTENT_NOT_OBJECT)
     if not isinstance(value.get('ops'), list):
-        raise ValidationError('Quill content must have an `ops` list.')
+        raise ValidationError(gettext('Quill content must have an `ops` list.'),
+                              code=errorcodes.QUILL_CONTENT_MISSING_OPS)
     if not all(is_quill_document_op(op) for op in value['ops']):
-        raise ValidationError('Quill content `ops` must each be an `insert` (text or an embed object), with optional '
-                              '`attributes`.')
+        raise ValidationError(gettext('Quill content `ops` must each be an `insert` (text or an embed object), with '
+                                      'optional `attributes`.'), code=errorcodes.QUILL_CONTENT_OPS_INVALID)
 
 
 def is_quill_document_op(op):
@@ -276,33 +288,46 @@ def _validate_sfcalendar_monthly_or_yearly(freq, parts):
     """
     for key in _SFCALENDAR_SINGLE_VALUE_PARTS:
         if ',' in parts.get(key, ''):
-            raise ValidationError(f'Multiple {key} values are not supported for FREQ={freq}.')
+            raise ValidationError(gettext('Multiple %(key)s values are not supported for FREQ=%(freq)s.') % {
+                'key': key, 'freq': freq},
+                                  code=errorcodes.RECURRENCE_RULE_MULTIPLE_VALUES_UNSUPPORTED)
 
     if freq == 'MONTHLY' and 'BYMONTH' in parts:
-        raise ValidationError('BYMONTH is not supported for FREQ=MONTHLY.')
+        raise ValidationError(gettext('BYMONTH is not supported for FREQ=MONTHLY.'),
+                              code=errorcodes.RECURRENCE_RULE_BYMONTH_UNSUPPORTED)
 
     by_day = parts.get('BYDAY')
     if by_day and 'BYMONTHDAY' in parts:
-        raise ValidationError('BYDAY with BYMONTHDAY is not supported.')
+        raise ValidationError(gettext('BYDAY with BYMONTHDAY is not supported.'),
+                              code=errorcodes.RECURRENCE_RULE_BYDAY_WITH_BYMONTHDAY_UNSUPPORTED)
 
     if by_day:
         ordinal = _ORDINAL_WEEKDAY.match(by_day)
         if ordinal and 'BYSETPOS' in parts:
-            raise ValidationError('BYDAY with both an ordinal and BYSETPOS is not supported.')
+            raise ValidationError(gettext('BYDAY with both an ordinal and BYSETPOS is not supported.'),
+                                  code=errorcodes.RECURRENCE_RULE_BYDAY_ORDINAL_WITH_BYSETPOS_UNSUPPORTED)
         if not ordinal and 'BYSETPOS' not in parts:
-            raise ValidationError(f'BYDAY without an ordinal or BYSETPOS is not supported for FREQ={freq}.')
+            raise ValidationError(gettext('BYDAY without an ordinal or BYSETPOS is not supported for '
+                                          'FREQ=%(freq)s.') % {'freq': freq},
+                                  code=errorcodes.RECURRENCE_RULE_BYDAY_WITHOUT_POSITION_UNSUPPORTED)
         position = int(ordinal.group(1)) if ordinal else int(parts['BYSETPOS'])
         if position not in _SFCALENDAR_SET_POSITIONS:
-            raise ValidationError(f'A BYDAY position of {position} is not supported.')
+            raise ValidationError(gettext('A BYDAY position of %(position)s is not supported.') % {
+                'position': position},
+                                  code=errorcodes.RECURRENCE_RULE_BYDAY_POSITION_UNSUPPORTED)
     elif 'BYSETPOS' in parts:
-        raise ValidationError('BYSETPOS without BYDAY is not supported.')
+        raise ValidationError(gettext('BYSETPOS without BYDAY is not supported.'),
+                              code=errorcodes.RECURRENCE_RULE_BYSETPOS_WITHOUT_BYDAY_UNSUPPORTED)
 
     by_month_day = parts.get('BYMONTHDAY')
     if by_month_day and not (1 <= int(by_month_day) <= 31 or int(by_month_day) == -1):
-        raise ValidationError(f'A BYMONTHDAY of {by_month_day} is not supported.')
+        raise ValidationError(gettext('A BYMONTHDAY of %(by_month_day)s is not supported.') % {
+            'by_month_day': by_month_day},
+                              code=errorcodes.RECURRENCE_RULE_BYMONTHDAY_UNSUPPORTED)
 
     if freq == 'YEARLY' and (by_day or by_month_day) and 'BYMONTH' not in parts:
-        raise ValidationError('BYDAY or BYMONTHDAY without BYMONTH is not supported for FREQ=YEARLY.')
+        raise ValidationError(gettext('BYDAY or BYMONTHDAY without BYMONTH is not supported for FREQ=YEARLY.'),
+                              code=errorcodes.RECURRENCE_RULE_YEARLY_WITHOUT_BYMONTH_UNSUPPORTED)
 
 
 def _validation_dtstart_for(parts):
@@ -332,19 +357,25 @@ def validate_recurrence_rule(value):
 
     freq = parts.get('FREQ', '')
     if freq in _UNSUPPORTED_RRULE_FREQS:
-        raise ValidationError(f'FREQ={freq} is not supported.')
+        raise ValidationError(gettext('FREQ=%(freq)s is not supported.') % {'freq': freq},
+                              code=errorcodes.RECURRENCE_RULE_FREQ_UNSUPPORTED)
 
     for key in _UNSUPPORTED_RRULE_PARTS:
         if key in parts:
-            raise ValidationError(f'{key} is not supported.')
+            raise ValidationError(gettext('%(key)s is not supported.') % {'key': key},
+                                  code=errorcodes.RECURRENCE_RULE_PART_UNSUPPORTED)
 
     try:
         rrulestr(value, dtstart=_validation_dtstart_for(parts))
     except (ValueError, TypeError) as ex:
-        raise ValidationError(f'Invalid RRULE: {ex}')
+        raise ValidationError(gettext('Invalid RRULE: %(error)s') % {'error': ex},
+                              code=errorcodes.RECURRENCE_RULE_INVALID)
 
     if not occurs_within_horizon(value, _RRULE_VALIDATION_DTSTART):
-        raise ValidationError(f'Invalid RRULE: it has no dates within {enums.RECURRENCE_HORIZON_YEARS} years.')
+        raise ValidationError(ngettext('Invalid RRULE: it has no dates within %(years)s year.',
+                                       'Invalid RRULE: it has no dates within %(years)s years.',
+                                       enums.RECURRENCE_HORIZON_YEARS) % {'years': enums.RECURRENCE_HORIZON_YEARS},
+                              code=errorcodes.RECURRENCE_RULE_OUTSIDE_HORIZON)
 
     if freq in ('MONTHLY', 'YEARLY'):
         _validate_sfcalendar_monthly_or_yearly(freq, parts)
@@ -372,7 +403,8 @@ def prepare_recurrence_rule(value, local_start):
     return normalized
 
 
-def validate_and_normalize_date_csv(value, start_date=None, end_date=None, range_label='date range'):
+def validate_and_normalize_date_csv(value, start_date=None, end_date=None,
+                                    out_of_range_message=EXCEPTION_DATES_OUT_OF_RANGE_MESSAGE):
     """
     Validate that ``value`` is a CSV of YYYYMMDD-formatted dates.  Optionally checks each date falls within
     [``start_date``, ``end_date``].  Returns a deduplicated, sorted, normalized CSV string.
@@ -380,7 +412,7 @@ def validate_and_normalize_date_csv(value, start_date=None, end_date=None, range
     :param value: raw comma-separated string
     :param start_date: inclusive lower bound (optional)
     :param end_date: inclusive upper bound (optional)
-    :param range_label: human-readable label used in the out-of-range error message
+    :param out_of_range_message: the error message for a date outside the range
     :raises ValidationError: on any invalid token or out-of-range date
     """
     seen = set()
@@ -392,9 +424,10 @@ def validate_and_normalize_date_csv(value, start_date=None, end_date=None, range
         try:
             date = datetime.datetime.strptime(token, '%Y%m%d').date()
         except ValueError:
-            raise ValidationError(f'Invalid date format: {token}')
+            raise ValidationError(gettext('Invalid date format: %(token)s') % {'token': token},
+                                  code=errorcodes.EXCEPTION_DATE_FORMAT_INVALID)
         if start_date and end_date and not (start_date <= date <= end_date):
-            raise ValidationError(f'Exception dates must fall within the {range_label}.')
+            raise ValidationError(out_of_range_message, code=errorcodes.EXCEPTION_DATE_OUT_OF_RANGE)
         if date not in seen:
             seen.add(date)
             deduped.append(date)

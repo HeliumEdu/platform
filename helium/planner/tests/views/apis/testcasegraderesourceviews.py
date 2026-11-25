@@ -282,11 +282,12 @@ class TestCaseGradeResourceViews(APITestCase):
 
         # THEN
         self.assertEqual([status.HTTP_400_BAD_REQUEST] * 4, [response.status_code for response in responses])
-        self.assertEqual('Select a category that is down to its last ungraded assignment.', responses[0].data['target'])
-        self.assertEqual('Select an ungraded assignment in this class.', responses[1].data['target'])
-        self.assertEqual('Enter a valid grade between 0 and 100.', responses[2].data['desired_grade'])
+        self.assertEqual('Select a category that is down to its last ungraded assignment.',
+                         responses[0].data['target']['message'])
+        self.assertEqual('Select an ungraded assignment in this class.', responses[1].data['target']['message'])
+        self.assertEqual('Enter a valid grade between 0 and 100.', responses[2].data['desired_grade']['message'])
         self.assertEqual(["'course', 'target', 'desired_grade', and 'desired_gpa' must be given as numbers"],
-                         responses[3].data)
+                         [error['message'] for error in responses[3].data])
 
     def test_needed_grade_for_a_gpa_solves_for_the_lowest_band_that_reaches_it(self):
         # GIVEN
@@ -394,12 +395,15 @@ class TestCaseGradeResourceViews(APITestCase):
 
         # THEN
         self.assertEqual([status.HTTP_400_BAD_REQUEST] * 6, [response.status_code for response in responses])
-        self.assertEqual('Add credits to this class to plan for a GPA.', responses[0].data['desired_gpa'])
-        self.assertEqual("Set a grade scale on the class's group to plan for a GPA.", responses[1].data['desired_gpa'])
-        self.assertEqual(["Only one of 'desired_grade' or 'desired_gpa' may be given."], responses[2].data)
-        self.assertEqual(["One of 'desired_grade' or 'desired_gpa' must be given."], responses[3].data)
-        self.assertEqual('Enter a valid GPA.', responses[4].data['desired_gpa'])
-        self.assertEqual('Enter a valid GPA.', responses[5].data['desired_gpa'])
+        self.assertEqual('Add credits to this class to plan for a GPA.', responses[0].data['desired_gpa']['message'])
+        self.assertEqual("Set a grade scale on the class's group to plan for a GPA.",
+                         responses[1].data['desired_gpa']['message'])
+        self.assertEqual(["Only one of 'desired_grade' or 'desired_gpa' may be given."],
+                         [error['message'] for error in responses[2].data])
+        self.assertEqual(["One of 'desired_grade' or 'desired_gpa' must be given."],
+                         [error['message'] for error in responses[3].data])
+        self.assertEqual('Enter a valid GPA.', responses[4].data['desired_gpa']['message'])
+        self.assertEqual('Enter a valid GPA.', responses[5].data['desired_gpa']['message'])
 
     def test_needed_grade_for_another_users_class_is_not_found(self):
         # GIVEN

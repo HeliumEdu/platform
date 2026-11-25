@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, IntegrityError, OperationalError
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from conf.celery import app
 from helium.common import enums
@@ -335,18 +335,19 @@ def send_email_reminder(self, email, subject, reminder_id, calendar_item_id, cal
                 open_url = deeplinkutils.event_url(calendar_item)
                 attachments_url = deeplinkutils.event_url(calendar_item, step='attachments')
 
-        commonutils.send_multipart_email('email/reminder',
-                                         {
-                                             'subject': subject,
-                                             'reminder': reminder,
-                                             'calendar_item': calendar_item,
-                                             'normalized_datetime': normalized_datetime,
-                                             'note_url': noteutils.note_url(calendar_item.notes_set),
-                                             'open_url': open_url,
-                                             'attachments_url': attachments_url,
-                                         },
-                                         subject, [email],
-                                         email_type='reminder')
+        with translation.override(user_settings.language):
+            commonutils.send_multipart_email('email/reminder',
+                                             {
+                                                 'subject': subject,
+                                                 'reminder': reminder,
+                                                 'calendar_item': calendar_item,
+                                                 'normalized_datetime': normalized_datetime,
+                                                 'note_url': noteutils.note_url(calendar_item.notes_set),
+                                                 'open_url': open_url,
+                                                 'attachments_url': attachments_url,
+                                             },
+                                             subject, [email],
+                                             email_type='reminder')
 
         metricutils.task_stop(metrics, user=reminder.user)
     except Exception:

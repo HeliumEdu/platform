@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 
 from helium.auth.models.userclientactivity import UserClientActivity
@@ -31,3 +31,8 @@ class UserSettingsManager(models.Manager):
 
     def eligible_for_review_prompt(self):
         return self.get_queryset().eligible_for_review_prompt()
+
+    def language_for_email(self, email):
+        language = (self.get_queryset().filter(Q(user__email=email) | Q(user__email_changing=email))
+                    .values_list('language', flat=True).first())
+        return language or self.model._meta.get_field('language').default

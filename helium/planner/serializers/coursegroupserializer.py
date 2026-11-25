@@ -1,9 +1,11 @@
 import logging
 
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
-from helium.common import enums
+from helium.common import enums, errorcodes
+from helium.common.errormessages import EXCEPTION_DATES_OUTSIDE_GROUP_MESSAGE
 from helium.common.serializers.validation import validate_date_range_and_exceptions
 from helium.common.utils import gradeutils
 from helium.common.utils.openapiutils import support_article_url
@@ -62,7 +64,7 @@ class CourseGroupSerializer(serializers.ModelSerializer):
         return getattr(obj, 'annotated_num_homework_graded', 0)
 
     def validate(self, attrs):
-        validate_date_range_and_exceptions(attrs, self.instance, 'group date range')
+        validate_date_range_and_exceptions(attrs, self.instance, EXCEPTION_DATES_OUTSIDE_GROUP_MESSAGE)
 
         template = attrs.pop('grade_scale_template', None)
         if template is not None:
@@ -70,8 +72,9 @@ class CourseGroupSerializer(serializers.ModelSerializer):
                 attrs['grade_scale'] = gradeutils.preset_grade_scale(template)
             elif gradeutils.preset_for(attrs['grade_scale']) != template:
                 raise serializers.ValidationError(
-                    {'grade_scale_template': "Doesn't match 'grade_scale'. Send one or the other, or values that "
-                                             "match the preset."})
+                    {'grade_scale_template': gettext("Doesn't match 'grade_scale'. Send one or the other, or values "
+                                                     "that match the preset.")},
+                    code=errorcodes.GRADE_SCALE_TEMPLATE_MISMATCH)
 
         return attrs
 

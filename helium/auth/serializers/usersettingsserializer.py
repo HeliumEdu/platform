@@ -1,10 +1,12 @@
 import logging
 
 from django.utils import timezone
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from helium.auth.models import UserSettings
+from helium.common import errorcodes
 from helium.common.utils.validators import validate_hex_color
 
 logger = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ class UserSettingsSerializer(serializers.ModelSerializer):
             'default_reminder_type', 'default_reminder_offset', 'default_reminder_offset_type',
             'calendar_use_category_colors', 'show_planner_tooltips', 'drag_and_drop_on_mobile', 'at_risk_threshold',
             'on_track_tolerance', 'prior_credits', 'prior_gpa', 'show_week_numbers', 'date_format', 'time_format',
-            'number_format', 'receive_emails_from_admin', 'private_slug', 'user', 'prompt_for_review',)
+            'number_format', 'language', 'receive_emails_from_admin', 'private_slug', 'user', 'prompt_for_review',)
         read_only_fields = ('show_getting_started', 'setup_state', 'private_slug', 'user',
                             'prompt_for_review',)
 
@@ -36,7 +38,8 @@ class UserSettingsSerializer(serializers.ModelSerializer):
         prior_credits = attrs.get('prior_credits', self.instance.prior_credits)
         prior_gpa = attrs.get('prior_gpa', self.instance.prior_gpa)
         if prior_credits > 0 and prior_gpa == 0:
-            raise serializers.ValidationError({'prior_gpa': 'Enter the GPA for your prior credits.'})
+            raise serializers.ValidationError({'prior_gpa': gettext('Enter the GPA for your prior credits.')},
+                                              code=errorcodes.PRIOR_GPA_REQUIRED)
 
         return attrs
 

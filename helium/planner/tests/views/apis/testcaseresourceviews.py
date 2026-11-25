@@ -384,7 +384,7 @@ class TestCaseResourceViews(APITestCase):
                 self.assertEqual(len(response.data), 0)
             else:
                 self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-                self.assertIn('matches the given query', response.data['detail'].lower())
+                self.assertRegex(response.data['detail'], commonhelper.NOT_FOUND_MESSAGE_PATTERN)
 
     def test_courses_filter_query(self):
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)

@@ -3,14 +3,14 @@ from unittest.mock import patch, MagicMock
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from firebase_admin import auth as firebase_auth
 from firebase_admin.exceptions import UnavailableError
 
-from helium.auth.models import UserOAuthProvider
+from helium.auth.models import UserOAuthProvider, UserSettings
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
 
@@ -251,7 +251,7 @@ class TestCaseOAuthViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertIn('Invalid', str(response.data))
+        self.assertEqual(response.data['detail'], 'Sign in with Google failed. Please try again.')
 
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
     def test_oauth_login_expired_token(self, mock_verify_token):
@@ -317,7 +317,7 @@ class TestCaseOAuthViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertIn('Email', str(response.data))
+        self.assertEqual(response.data['detail'], "Google didn't share this account's email address.")
 
     @patch('helium.auth.services.authservice.import_example_schedule')
     @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
@@ -840,3 +840,142 @@ class TestCaseOAuthViews(APITestCase):
         self.assertEqual(list(UserOAuthProvider.objects.filter(user=existing_user).values_list('provider', flat=True)),
                          ['google'])
         self.assertTrue(UserOAuthProvider.objects.filter(user=other_user, provider='microsoft').exists())
+
+    def _given_new_google_user(self, mock_verify_token, email):
+        mock_verify_token.return_value = {
+            'firebase': {'sign_in_provider': 'google.com'},
+            'uid': f'uid-{email}',
+            'email': email,
+            'email_verified': True
+        }
+
+    @patch('helium.auth.tasks.commonutils.send_multipart_email')
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_saves_the_language_of_a_new_user_before_the_welcome_email(self, mock_verify_token,
+                                                                                   mock_send):
+        # GIVEN
+        self._given_new_google_user(mock_verify_token, 'lang@gmail.com')
+        sent_languages = []
+        mock_send.side_effect = lambda *args, **kwargs: sent_languages.append(translation.get_language())
+
+        # WHEN
+        with userhelper.given_languages_supported('en', 'es'):
+            response = self.client.post(reverse('auth_token_oauth'),
+                                        json.dumps({'id_token': 'token', 'provider': 'google', 'language': 'es'}),
+                                        content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_settings = UserSettings.objects.get(user__email='lang@gmail.com')
+        self.assertEqual(user_settings.language, 'es')
+        self.assertEqual(sent_languages, ['es'])
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_without_a_language_defaults_to_english(self, mock_verify_token):
+        # GIVEN
+        self._given_new_google_user(mock_verify_token, 'nolang@gmail.com')
+
+        # WHEN
+        response = self.client.post(reverse('auth_token_oauth'),
+                                    json.dumps({'id_token': 'token', 'provider': 'google'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(UserSettings.objects.get(user__email='nolang@gmail.com').language, 'en')
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_leaves_an_existing_users_language(self, mock_verify_token):
+        # GIVEN
+        user = userhelper.given_a_user_exists(email='existing@gmail.com')
+        user.settings.language = 'de'
+        user.settings.save()
+        self._given_new_google_user(mock_verify_token, 'existing@gmail.com')
+
+        # WHEN
+        with userhelper.given_languages_supported('en', 'es'):
+            response = self.client.post(reverse('auth_token_oauth'),
+                                        json.dumps({'id_token': 'token', 'provider': 'google', 'language': 'es'}),
+                                        content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.settings.refresh_from_db()
+        self.assertEqual(user.settings.language, 'de')
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_with_an_unsupported_language_fails(self, mock_verify_token):
+        # GIVEN
+        self._given_new_google_user(mock_verify_token, 'badlang@gmail.com')
+
+        # WHEN
+        response = self.client.post(reverse('auth_token_oauth'),
+                                    json.dumps({'id_token': 'token', 'provider': 'google', 'language': 'xx'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('language', response.data)
+        self.assertFalse(get_user_model().objects.filter(email='badlang@gmail.com').exists())
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_of_an_existing_user_ignores_an_unsupported_language(self, mock_verify_token):
+        # GIVEN
+        user = userhelper.given_a_user_exists(email='existing@gmail.com')
+        self._given_new_google_user(mock_verify_token, 'existing@gmail.com')
+
+        # WHEN
+        response = self.client.post(reverse('auth_token_oauth'),
+                                    json.dumps({'id_token': 'token', 'provider': 'google', 'language': 'xx'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.settings.refresh_from_db()
+        self.assertEqual(user.settings.language, 'en')
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_saves_the_time_zone_of_a_new_user(self, mock_verify_token):
+        # GIVEN
+        self._given_new_google_user(mock_verify_token, 'zone@gmail.com')
+
+        # WHEN
+        response = self.client.post(reverse('auth_token_oauth'),
+                                    json.dumps({'id_token': 'token', 'provider': 'google',
+                                                'time_zone': 'Europe/Amsterdam'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(UserSettings.objects.get(user__email='zone@gmail.com').time_zone, 'Europe/Amsterdam')
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_with_an_unsupported_time_zone_fails(self, mock_verify_token):
+        # GIVEN
+        self._given_new_google_user(mock_verify_token, 'badzone@gmail.com')
+
+        # WHEN
+        response = self.client.post(reverse('auth_token_oauth'),
+                                    json.dumps({'id_token': 'token', 'provider': 'google', 'time_zone': 'Mars/Base'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('time_zone', response.data)
+        self.assertFalse(get_user_model().objects.filter(email='badzone@gmail.com').exists())
+
+    @patch('helium.auth.services.authservice.firebase_auth.verify_id_token')
+    def test_oauth_login_of_an_existing_user_ignores_an_unsupported_time_zone(self, mock_verify_token):
+        # GIVEN
+        user = userhelper.given_a_user_exists(email='existingzone@gmail.com', time_zone='America/Chicago')
+        self._given_new_google_user(mock_verify_token, 'existingzone@gmail.com')
+
+        # WHEN
+        response = self.client.post(reverse('auth_token_oauth'),
+                                    json.dumps({'id_token': 'token', 'provider': 'google', 'time_zone': 'Mars/Base'}),
+                                    content_type='application/json')
+
+        # THEN
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.settings.refresh_from_db()
+        self.assertEqual(user.settings.time_zone, 'America/Chicago')

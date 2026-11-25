@@ -6,11 +6,9 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import ViewSet, GenericViewSet
 
-from helium.auth.models import UserSettings
 from helium.auth.serializers.tokenserializer import TokenResponseFieldsMixin
 from helium.auth.serializers.userserializer import UserSerializer, UserCreateSerializer, UserForgotSerializer, \
     UserForgotConfirmSerializer
-from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services import authservice
 from helium.common.throttles import AccountThrottle, AccountTotalThrottle, AnonThrottle, EmailThrottle
 from helium.common.views.base import HeliumAPIView
@@ -44,17 +42,12 @@ class UserRegisterResourceView(GenericViewSet, HeliumAPIView, CreateModelMixin):
         """
         response = self.create(request, *args, **kwargs)
 
-        if 'time_zone' in request.data:
-            user_settings = UserSettings.objects.get(user_id=response.data['id'])
-            serializer = UserSettingsSerializer(user_settings, data={'time_zone': request.data['time_zone']}, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-            response.data['settings'] = serializer.data
-
         logger.info(f"User {response.data['id']} created")
 
         return response
+
+    def perform_create(self, serializer):
+        serializer.save(settings=UserSerializer.sign_up_settings(self.request.data))
 
 
 @extend_schema(

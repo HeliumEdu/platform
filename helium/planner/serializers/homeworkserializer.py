@@ -1,9 +1,10 @@
 import logging
 
 from django.db import models as django_models
+from django.utils.translation import gettext
 from rest_framework import serializers
 
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.common.serializers.fields import ExceptionDatesField, TzAwareDateTimeField
 from helium.common.serializers.validation import validate_start_before_end
 from helium.common.utils.openapiutils import help_text_with_support_article
@@ -85,8 +86,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
         grade = attrs.get('current_grade', getattr(self.instance, 'current_grade', enums.UNGRADED))
         if rule and (completed or grade != enums.UNGRADED):
             raise serializers.ValidationError(
-                "A repeating Homework isn't completed or graded itself; complete or grade an occurrence with "
-                "`scope=this`.")
+                gettext("A repeating Homework isn't completed or graded itself; complete or grade an occurrence "
+                        'with `scope=this`.'), code=errorcodes.REPEATING_HOMEWORK_NOT_COMPLETABLE)
 
         return attrs
 
@@ -116,7 +117,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
             course_id = url_kwargs.get('course') or (attrs['course'].pk if attrs.get('course') else None)
 
         if course_id is not None and category.course_id != int(course_id):
-            raise serializers.ValidationError({'category': "The 'category' must belong to the same class."})
+            raise serializers.ValidationError({'category': gettext("The 'category' must belong to the same class.")},
+                                              code=errorcodes.CATEGORY_NOT_IN_CLASS)
 
     def update(self, instance, validated_data):
         recurrenceservice.prepare_write(validated_data, instance.get_user(), instance)

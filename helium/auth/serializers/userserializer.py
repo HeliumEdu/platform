@@ -4,9 +4,11 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation
 from django.core import exceptions
 from django.db import IntegrityError, transaction
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema_field
 from knox.models import AuthToken
 from rest_framework import serializers
+from rest_framework.fields import get_error_detail
 
 from helium.auth.backends import OAuth2Authentication
 from helium.auth.models import UserSettings
@@ -14,16 +16,13 @@ from helium.auth.serializers.useroauthproviderserializer import UserOAuthProvide
 from helium.auth.serializers.usersettingsserializer import UserSettingsSerializer
 from helium.auth.services.pushtokenservice import revoke_push_tokens
 from helium.auth.tasks import send_verification_email
-from helium.auth.utils.userutils import admin_allowed_email_error, generate_verification_code, \
-    generate_unique_username_from_email, is_admin_allowed_email
-from helium.common import enums
+from helium.auth.utils.userutils import generate_verification_code, generate_unique_username_from_email, \
+    is_admin_allowed_email
+from helium.common import enums, errorcodes
+from helium.common.errormessages import EMAIL_IN_USE_MESSAGE, REGISTRATION_RETRY_MESSAGE, admin_allowed_email_error
 from helium.common.utils import taskutils
 
 logger = logging.getLogger(__name__)
-
-EMAIL_IN_USE_MESSAGE = "That email is already in use. Try signing in instead."
-
-REGISTRATION_RETRY_MESSAGE = "Please wait a moment and try again."
 
 CONNECTED_APP_SETTINGS_ALLOWLIST = ('time_zone',)
 
@@ -98,15 +97,15 @@ class UserSerializer(serializers.ModelSerializer):
         if 'password' in attrs and self.instance:
             if self.instance.has_usable_password() and 'old_password' not in attrs:
                 raise serializers.ValidationError({
-                    'old_password': 'Current password is required when changing your password.'
-                })
+                    'old_password': gettext('Current password is required when changing your password.')
+                }, code=errorcodes.OLD_PASSWORD_REQUIRED)
 
         # If changing email, require old_password for security
         if 'email' in attrs and self.instance and self.instance.email != attrs.get('email'):
             if 'old_password' not in attrs:
                 raise serializers.ValidationError({
-                    'old_password': 'Current password is required when changing your email.'
-                })
+                    'old_password': gettext('Current password is required when changing your email.')
+                }, code=errorcodes.OLD_PASSWORD_REQUIRED)
 
         return attrs
 
@@ -120,23 +119,25 @@ class UserSerializer(serializers.ModelSerializer):
 
         if self.instance and self.instance.is_superuser and self.instance.email != email:
             if not is_admin_allowed_email(email):
-                raise serializers.ValidationError(admin_allowed_email_error())
+                raise serializers.ValidationError(admin_allowed_email_error(),
+                                                  code=errorcodes.ADMIN_EMAIL_DOMAIN_NOT_ALLOWED)
 
         if not self.instance:
             # A user pending deletion keeps their email reserved until the cascade finishes, so the
             # address is taken without an account the registrant could sign in to.
             if UserModel.objects.can_login().email_used(None, email):
-                raise serializers.ValidationError(EMAIL_IN_USE_MESSAGE)
+                raise serializers.ValidationError(EMAIL_IN_USE_MESSAGE, code=errorcodes.EMAIL_IN_USE)
             elif UserModel.objects.email_used(None, email):
-                raise serializers.ValidationError(REGISTRATION_RETRY_MESSAGE)
+                raise serializers.ValidationError(REGISTRATION_RETRY_MESSAGE, code=errorcodes.REGISTRATION_RETRY)
         elif self.instance.email != email and UserModel.objects.email_used(self.instance.pk, email):
-            raise serializers.ValidationError(EMAIL_IN_USE_MESSAGE)
+            raise serializers.ValidationError(EMAIL_IN_USE_MESSAGE, code=errorcodes.EMAIL_IN_USE)
 
         return email
 
     def validate_old_password(self, old_password):
         if self.instance and not self.instance.check_password(old_password):
-            raise serializers.ValidationError("The current password was entered incorrectly and did not match.")
+            raise serializers.ValidationError(gettext('The current password was entered incorrectly and did not '
+                                                      'match.'), code=errorcodes.OLD_PASSWORD_INCORRECT)
 
         return old_password
 
@@ -145,7 +146,7 @@ class UserSerializer(serializers.ModelSerializer):
         try:
             password_validation.validate_password(password=password, user=UserModel)
         except exceptions.ValidationError as e:
-            raise serializers.ValidationError(list(e.messages))
+            raise serializers.ValidationError(get_error_detail(e))
 
         return password
 
@@ -183,17 +184,28 @@ class UserSerializer(serializers.ModelSerializer):
 
         return instance
 
+    @staticmethod
+    def sign_up_settings(data):
+        """
+        The settings a sign-up request reports for the new account.
+        """
+        return {field: data[field] for field in ('time_zone', 'language') if field in data}
+
     def create(self, validated_data):
         password = validated_data.pop('password')
+        user_settings = validated_data.pop('settings', {})
         validated_data['username'] = generate_unique_username_from_email(validated_data.get('email'))
-        try:
-            with transaction.atomic():
-                instance = super().create(validated_data)
-        except IntegrityError:
-            raise serializers.ValidationError(EMAIL_IN_USE_MESSAGE)
+        with transaction.atomic():
+            try:
+                with transaction.atomic():
+                    instance = super().create(validated_data)
+            except IntegrityError:
+                raise serializers.ValidationError(EMAIL_IN_USE_MESSAGE, code=errorcodes.EMAIL_IN_USE)
 
-        instance.set_password(password)
-        instance.save()
+            instance.set_password(password)
+            instance.save()
+
+            self._save_settings(instance, user_settings)
 
         taskutils.safe_apply_async(send_verification_email,
             args=(instance.email, instance.verification_code),
@@ -205,20 +217,31 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
     def create_from_oauth(self, validated_data):
+        user_settings = validated_data.pop('settings', {})
         # OAuth users can bypass email verification
         validated_data['is_active'] = True
 
-        try:
-            with transaction.atomic():
-                instance = super().create(validated_data)
-        except IntegrityError:
-            raise serializers.ValidationError(REGISTRATION_RETRY_MESSAGE)
+        with transaction.atomic():
+            try:
+                with transaction.atomic():
+                    instance = super().create(validated_data)
+            except IntegrityError:
+                raise serializers.ValidationError(REGISTRATION_RETRY_MESSAGE, code=errorcodes.REGISTRATION_RETRY)
 
-        # OAuth users bypass local passwords
-        instance.set_unusable_password()
-        instance.save()
+            # OAuth users bypass local passwords
+            instance.set_unusable_password()
+            instance.save()
+
+            self._save_settings(instance, user_settings)
 
         return instance
+
+    @staticmethod
+    def _save_settings(instance, user_settings):
+        if user_settings:
+            settings_serializer = UserSettingsSerializer(instance.settings, data=user_settings, partial=True)
+            settings_serializer.is_valid(raise_exception=True)
+            settings_serializer.save()
 
 
 class UserCreateSerializer(serializers.Serializer):
@@ -228,6 +251,9 @@ class UserCreateSerializer(serializers.Serializer):
 
     time_zone = serializers.ChoiceField(choices=enums.TIME_ZONE_CHOICES,
                                         help_text=UserSettings._meta.get_field('time_zone').help_text)
+
+    language = serializers.ChoiceField(choices=settings.LANGUAGES, required=False,
+                                       help_text=UserSettings._meta.get_field('language').help_text)
 
 
 class UserForgotSerializer(serializers.Serializer):

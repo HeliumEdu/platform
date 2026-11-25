@@ -9,9 +9,10 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.utils import timezone
+from django.utils.translation import gettext
 from rest_framework.exceptions import ValidationError
 
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.common.utils import gradeutils, metricutils
 from helium.feed.models import ExternalCalendar
 from helium.planner.models import CourseGroup, Course, CourseSchedule, Homework, Event, Category, Reminder, \
@@ -24,6 +25,8 @@ from helium.importexport.services.scheduleshiftservice import shift_schedule_to_
 logger = logging.getLogger(__name__)
 
 _SUPPRESSED_SIGNALS = frozenset({Course, CourseSchedule, Category, Homework, Event})
+
+_RESOURCES = os.path.join(os.path.dirname(__file__), '..', 'resources')
 
 
 @contextmanager
@@ -48,8 +51,17 @@ def suppress_post_save_signals():
         post_save.sender_receivers_cache.clear()
 
 
+def example_schedule_path(language):
+    """
+    The example schedule written in the given language: ``example_schedule.<language>.json``, falling back to the
+    English ``example_schedule.json``.
+    """
+    translated = os.path.join(_RESOURCES, f'example_schedule.{language}.json')
+    return translated if os.path.exists(translated) else os.path.join(_RESOURCES, 'example_schedule.json')
+
+
 def import_example_schedule(user):
-    with open(os.path.join(os.path.dirname(__file__), '..', 'resources', 'example_schedule.json'), 'rb') as f:
+    with open(example_schedule_path(user.settings.language), 'rb') as f:
         json_str = f.read().decode('utf-8')
 
     try:
@@ -93,8 +105,8 @@ def import_example_schedule(user):
                 example_schedule_first_imported_at=user.example_schedule_first_imported_at)
     except ValueError:
         raise ValidationError({
-            'details': 'Invalid JSON.'
-        })
+            'details': gettext('Invalid JSON.')
+        }, code=errorcodes.EXAMPLE_SCHEDULE_INVALID)
 
 
 @transaction.atomic

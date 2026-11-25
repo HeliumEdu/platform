@@ -342,7 +342,7 @@ class TestCaseFeedViews(TestCase):
 
     def test_courseschedules_feed(self):
         # GIVEN
-        user1 = userhelper.given_a_user_exists()
+        user1 = userhelper.given_a_user_exists(time_zone='America/Los_Angeles')
         user1.settings.enable_private_slug()
         user2 = userhelper.given_a_user_exists(username='user2', email='test2@email.com')
         user2.settings.enable_private_slug()

@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.test import TestCase
 from kombu.exceptions import OperationalError
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
@@ -138,7 +138,7 @@ class TestCaseReminderService(TestCase):
     @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminder_renders_regional_time_format(self, mock_send_notifications):
         # GIVEN
-        user = userhelper.given_a_user_exists()
+        user = userhelper.given_a_user_exists(time_zone='America/Los_Angeles')
         user.settings.time_format = enums.TWENTY_FOUR_HOUR
         user.settings.save()
         userhelper.given_user_push_token_exists(user)
@@ -496,6 +496,78 @@ class TestCaseReminderService(TestCase):
 
         # THEN
         self.assertIsNone(subject)
+
+    def test_get_subject_renders_each_kind_and_unit_as_english(self):
+        # GIVEN
+        user = userhelper.given_a_user_exists()
+        course = coursehelper.given_course_exists(coursegrouphelper.given_course_group_exists(user), title='Biology')
+        homework = homeworkhelper.given_homework_exists(course, title='Lab report')
+        event = eventhelper.given_event_exists(user, title='Study group')
+        cases = (
+            ({'homework': homework}, 30, enums.MINUTES, 'Lab report in Biology in 30 minutes'),
+            ({'homework': homework}, 1, enums.HOURS, 'Lab report in Biology in 1 hour'),
+            ({'event': event}, 1, enums.DAYS, 'Study group in 1 day'),
+            ({'event': event}, 0, enums.WEEKS, 'Study group in 0 weeks'),
+            ({'course': course}, 1, enums.MINUTES, 'Biology in 1 minute'),
+            ({'course': course}, 2, enums.WEEKS, 'Biology in 2 weeks'),
+        )
+        for parent, offset, offset_type, expected in cases:
+            with self.subTest(expected=expected):
+                reminder = reminderhelper.given_reminder_exists(user, offset=offset, offset_type=offset_type, **parent)
+
+                # WHEN
+                subject = reminderservice.get_subject(reminder)
+
+                # THEN
+                self.assertEqual(subject, expected)
+
+    @mock.patch('helium.common.tasks.send_notifications')
+    def test_process_push_reminder_renders_the_subject_in_the_users_language(self, mock_send_notifications):
+        # GIVEN
+        mock_send_notifications.return_value = []
+        user = userhelper.given_a_user_exists()
+        user.settings.language = 'es'
+        user.settings.save()
+        userhelper.given_user_push_token_exists(user)
+        event = eventhelper.given_event_exists(user, title='Study group')
+        reminder = reminderhelper.given_reminder_exists(user, event=event, type=enums.PUSH)
+        subject_languages = []
+        get_subject = reminderservice.get_subject
+
+        def record_language(subject_reminder):
+            subject_languages.append(translation.get_language())
+            return get_subject(subject_reminder)
+
+        # WHEN
+        with mock.patch('helium.planner.services.reminderservice.get_subject', side_effect=record_language):
+            reminderservice.process_push_reminder(reminder.pk)
+
+        # THEN
+        self.assertEqual(subject_languages, ['es'])
+        self.assertEqual(mock_send_notifications.call_args.args[1], 'Study group in 15 minutes')
+
+    @mock.patch('helium.common.tasks.send_notifications')
+    def test_process_push_reminder_with_the_default_language_renders_english(self, mock_send_notifications):
+        # GIVEN
+        mock_send_notifications.return_value = []
+        user = userhelper.given_a_user_exists()
+        userhelper.given_user_push_token_exists(user)
+        event = eventhelper.given_event_exists(user, title='Study group')
+        reminder = reminderhelper.given_reminder_exists(user, event=event, type=enums.PUSH)
+        subject_languages = []
+        get_subject = reminderservice.get_subject
+
+        def record_language(subject_reminder):
+            subject_languages.append(translation.get_language())
+            return get_subject(subject_reminder)
+
+        # WHEN
+        with mock.patch('helium.planner.services.reminderservice.get_subject', side_effect=record_language):
+            reminderservice.process_push_reminder(reminder.pk)
+
+        # THEN
+        self.assertEqual(subject_languages, ['en'])
+        self.assertEqual(mock_send_notifications.call_args.args[1], 'Study group in 15 minutes')
 
     def test_create_next_repeating_reminder_non_repeating(self):
         # GIVEN

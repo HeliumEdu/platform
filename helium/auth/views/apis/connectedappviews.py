@@ -11,6 +11,7 @@ from helium.auth.backends import JWTAuthentication
 from helium.auth.serializers.connectedappserializer import ConnectedAppSerializer
 from helium.auth.services import oauthservice
 from helium.auth.services.tokenservice import revoke_oauth_tokens
+from helium.common.errormessages import not_found_message
 from helium.common.views.base import HeliumAPIView
 
 logger = logging.getLogger(__name__)
@@ -59,7 +60,7 @@ class UserConnectedAppApiDetailView(HeliumAPIView):
         unused authorization codes.
         """
         if not any(app['id'] == pk for app in oauthservice.connected_apps(request.user)):
-            raise NotFound('No connected app matches the given query.')
+            raise NotFound(not_found_message(get_application_model()))
 
         revoke_oauth_tokens(request.user, get_application_model().objects.get(pk=pk))
         logger.info(f'Connected app {pk} revoked for user {request.user.pk}')

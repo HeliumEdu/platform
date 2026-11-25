@@ -14,7 +14,7 @@ from helium.common.utils.validators import validate_hex_color
 class UserSettings(BaseModel):
     time_zone = models.CharField(help_text='The user\'s IANA time zone, used for rendering and recurring '
                                            'schedule calculations.',
-                                 default='America/Los_Angeles', max_length=255, choices=enums.TIME_ZONE_CHOICES)
+                                 default='UTC', max_length=255, choices=enums.TIME_ZONE_CHOICES)
 
     default_view = models.PositiveIntegerField(help_text='The view shown by default when opening the Planner.',
                                                choices=enums.VIEW_CHOICES, default=enums.MONTH)
@@ -117,6 +117,9 @@ class UserSettings(BaseModel):
 
     time_format = models.PositiveIntegerField(help_text='The clock on which times are shown.',
                                               choices=enums.TIME_FORMAT_CHOICES, default=enums.TWELVE_HOUR)
+
+    language = models.CharField(help_text='The user\'s language code, used for rendering text.',
+                                default='en', db_default='en', max_length=16, choices=settings.LANGUAGES)
 
     number_format = models.PositiveIntegerField(help_text='The decimal separator shown in grades and other numbers.',
                                                 choices=enums.NUMBER_FORMAT_CHOICES, default=enums.POINT)

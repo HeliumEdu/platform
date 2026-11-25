@@ -4,7 +4,11 @@ from typing import List
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
 from django.template.defaultfilters import filesizeformat
+from django.utils.translation import gettext
 from rest_framework import serializers
+
+from helium.common import errorcodes
+from helium.common.errormessages import attachment_type_not_allowed_message
 
 
 class SupportContactSerializer(serializers.Serializer):
@@ -36,15 +40,18 @@ class SupportContactSerializer(serializers.Serializer):
         for f in attachments:
             if f.size > settings.MAX_UPLOAD_SIZE:
                 raise serializers.ValidationError(
-                    f'Attachment "{f.name}" exceeds the max upload size of '
-                    f'{filesizeformat(settings.MAX_UPLOAD_SIZE)}.'
+                    gettext('Attachment "%(name)s" exceeds the max upload size of %(size)s.') % {
+                        'name': f.name, 'size': filesizeformat(settings.MAX_UPLOAD_SIZE)},
+                    code=errorcodes.ATTACHMENT_TOO_LARGE
                 )
 
             ext = os.path.splitext(f.name)[1].lower()
             if ext in settings.BLOCKED_ATTACHMENT_EXTENSIONS:
-                raise serializers.ValidationError(f'Attachment "{f.name}" file type is not allowed.')
+                raise serializers.ValidationError(attachment_type_not_allowed_message(f.name),
+                                                  code=errorcodes.ATTACHMENT_TYPE_NOT_ALLOWED)
 
             if getattr(f, 'content_type', None) in settings.BLOCKED_ATTACHMENT_MIME_TYPES:
-                raise serializers.ValidationError(f'Attachment "{f.name}" file type is not allowed.')
+                raise serializers.ValidationError(attachment_type_not_allowed_message(f.name),
+                                                  code=errorcodes.ATTACHMENT_TYPE_NOT_ALLOWED)
 
         return attachments

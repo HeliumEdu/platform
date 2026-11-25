@@ -1,0 +1,13 @@
+Biology in 1 hour
+
+Class soon
+
+When: Fri, Sep 4 at 9:00 AM to 10:15 AM
+Info: Biology (https://example.com/bio)
+Location: Lab 3
+Teacher: Dr. Smith (smith@example.com)
+
+Open in Helium: https://app.heliumedu.com/classes/1
+
+Regards,
+The Helium Team

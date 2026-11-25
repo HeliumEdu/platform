@@ -138,7 +138,7 @@ class TestCaseCourseGroupViews(APITestCase):
 
         # THEN
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('must be before', response.data['non_field_errors'][0])
+        self.assertIn('must be before', response.data['non_field_errors'][0]['message'])
 
     def test_delete_coursegroup_by_id(self):
         # GIVEN

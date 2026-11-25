@@ -1,0 +1,14 @@
+Final Notice: Account Deletion Tomorrow
+
+This is your final notice. Your Helium account will be permanently deleted tomorrow due to 2+ years of inactivity.
+
+When your account is deleted, all data stored in Helium will also be deleted and cannot be recovered, including your classes, assignments, grades, notes, and attachments.
+
+To keep your free account, simply log in at https://app.heliumedu.com/signin. That's all it takes.
+
+If you'd like to delete your account, but also want a copy of your data, see our guide on exporting your data (https://www.heliumedu.com/support/import-export-and-backup/importing-and-exporting-your-data/), and our guide on deleting your account manually (https://www.heliumedu.com/support/account/deleting-your-account-and-data/).
+
+Questions? Contact support at https://www.heliumedu.com/support/.
+
+Thanks,
+The Helium Team

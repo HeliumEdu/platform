@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated, NotFound, ValidationError
@@ -14,6 +15,7 @@ from helium.auth.backends import JWTAuthentication
 from helium.auth.serializers.userserializer import UserSerializer
 from helium.auth.services.tokenservice import issue_session_tokens, revoke_auth_tokens, revoke_oauth_tokens
 from helium.auth.tasks import delete_user
+from helium.common import errorcodes
 from helium.common.permissions import IsOwner
 from helium.common.utils import taskutils
 from helium.common.throttles import AccountThrottle, AccountTotalThrottle, AnonThrottle
@@ -111,10 +113,11 @@ class UserDeleteResourceView(HeliumAPIView):
         # Only require password verification if user has a usable password
         if user.has_usable_password():
             if 'password' not in request.data:
-                raise ValidationError({'password': ['This field is required.']})
+                raise ValidationError({'password': [gettext('This field is required.')]}, code=errorcodes.REQUIRED)
 
             if not user.check_password(request.data['password']):
-                raise ValidationError({'password': ['The password is incorrect.']})
+                raise ValidationError({'password': [gettext('The password is incorrect.')]},
+                                      code=errorcodes.PASSWORD_INCORRECT)
 
         logger.info(f'User {user.pk} will be deleted')
 
@@ -145,19 +148,19 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
         can only be used to delete users that never finished setting up their account.
         """
         if 'email' not in request.data:
-            raise ValidationError({'email': ['This field is required.']})
+            raise ValidationError({'email': ['This field is required.']}, code=errorcodes.REQUIRED)
 
         if 'password' not in request.data:
-            raise ValidationError({'password': ['This field is required.']})
+            raise ValidationError({'password': ['This field is required.']}, code=errorcodes.REQUIRED)
 
         user = self.get_object()
 
         if user.is_active:
             raise ValidationError({'non_field_errors': ['This endpoint can only be used to clean up user accounts that '
-                                                  'were never activated.']})
+                                                  'were never activated.']}, code=errorcodes.USER_ALREADY_ACTIVE)
 
         if not user.check_password(request.data['password']):
-            raise AuthenticationFailed({'password': ['The password is incorrect.']})
+            raise AuthenticationFailed({'password': ['The password is incorrect.']}, code=errorcodes.PASSWORD_INCORRECT)
 
         logger.info(f'User {user.pk} will be deleted')
 

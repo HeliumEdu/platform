@@ -7,9 +7,10 @@ for old files is deleting this module and its one call in `importservice`.
 """
 import logging
 
+from django.utils.translation import gettext
 from rest_framework.exceptions import ValidationError
 
-from helium.common import enums
+from helium.common import enums, errorcodes
 from helium.planner.serializers.noteserializer import NoteSerializer
 from helium.planner.utils.quillutils import html_to_quill
 
@@ -47,17 +48,18 @@ def upgrade_legacy_import(data):
     errors = {}
     for row in _rows(data, 'resources'):
         _rename_key(row, 'material_group', 'resource_group')
-    for section, singular in (('homework', 'homework row'), ('notes', 'note')):
+    for section, conflict_message in (
+            ('homework', gettext("Provide either 'resources' or 'materials' on a homework row, not both.")),
+            ('notes', gettext("Provide either 'resources' or 'materials' on a note, not both."))):
         for row in _rows(data, section):
             if 'materials' in row and 'resources' in row:
-                errors.setdefault(section, []).append(
-                    f"Provide either 'resources' or 'materials' on a {singular}, not both.")
+                errors.setdefault(section, []).append(conflict_message)
             _rename_key(row, 'materials', 'resources')
     _upgrade_reminders(data)
     _move_text_to_notes(data, errors)
 
     if errors:
-        raise ValidationError(errors)
+        raise ValidationError(errors, code=errorcodes.IMPORT_LEGACY_INVALID)
 
     return data
 
@@ -78,7 +80,9 @@ def _rename_sections(data):
         if old not in data:
             continue
         if new in data:
-            raise ValidationError(f"Provide either '{new}' or '{old}', not both.")
+            raise ValidationError(gettext("Provide either '%(new)s' or '%(old)s', not both.") % {
+                'new': new, 'old': old},
+                                  code=errorcodes.IMPORT_LEGACY_KEY_CONFLICT)
         data[new] = data.pop(old)
 
 
@@ -119,7 +123,9 @@ def _move_text_to_notes(data, errors):
                 NoteSerializer().validate_content(content)
             except ValidationError as error:
                 errors.setdefault(section, []).extend(
-                    f"{section} id {row.get('id')}, {text_field}: {message}" for message in error.detail)
+                    gettext('%(section)s id %(id)s, %(field)s: %(error)s') % {
+                        'section': section, 'id': row.get('id'), 'field': text_field, 'error': message}
+                    for message in error.detail)
                 continue
             notes.append({'id': next_note_id, 'title': '', 'content': content, link_field: [row.get('id')]})
             next_note_id += 1
