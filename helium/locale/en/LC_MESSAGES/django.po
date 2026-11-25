@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-25 17:08+0000\n"
+"POT-Creation-Date: 2026-11-26 02:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,6 +51,7 @@ msgid ""
 "That sign-in method couldn't be removed right now. Try again in a moment."
 msgstr ""
 
+# 'email' is an API field name; keep it in English.
 #: auth/services/authservice.py
 msgid "'email' is required"
 msgstr ""
@@ -75,10 +76,12 @@ msgstr ""
 msgid "'id_token' is required"
 msgstr ""
 
+# 'provider' is an API field name; keep it in English.
 #: auth/services/authservice.py
 msgid "'provider' is required"
 msgstr ""
 
+# 'provider' is an API field name; keep it in English.
 #: auth/services/authservice.py
 #, python-format
 msgid "'provider' must be one of: %(providers)s"
@@ -367,10 +370,12 @@ msgstr ""
 msgid "The password is incorrect."
 msgstr ""
 
+# A permission on the consent screen for a connected app: it lets the app view this data.
 #: common/enums.py
 msgid "Read your assignments, events, classes, resources, and grades"
 msgstr ""
 
+# A permission on the consent screen for a connected app: it lets the app view this data.
 #: common/enums.py
 msgid "Read your notes"
 msgstr ""
@@ -521,6 +526,7 @@ msgstr ""
 msgid "Attachment \"%(name)s\" exceeds the max upload size of %(size)s."
 msgstr ""
 
+# 'start' and 'end' are API field names; keep them in English.
 #: common/serializers/validation.py
 msgid "The 'start' must be before the 'end'"
 msgstr ""
@@ -566,6 +572,7 @@ msgstr ""
 msgid "Logo"
 msgstr ""
 
+# Image text for a link to donate to Helium on Patreon.
 #: common/templates/email/base.html
 msgid "Support on Patreon"
 msgstr ""
@@ -704,11 +711,14 @@ msgstr ""
 msgid "The If-Match header must be the updated_at of the item being changed."
 msgstr ""
 
-#: feed/services/feedservice.py
+# An assignment's category (such as Homework) and its class title.
+#: feed/services/feedservice.py planner/templates/email/reminder.html
+#: planner/templates/email/reminder.txt
 #, python-format
 msgid "%(category)s for %(course)s"
 msgstr ""
 
+# A class (and category) followed by its room.
 #: feed/services/feedservice.py
 #, python-format
 msgid "%(class_info)s in %(room)s"
@@ -719,11 +729,13 @@ msgstr ""
 msgid "Class Info: %(class_info)s"
 msgstr ""
 
+# Resources is the Helium feature for books and materials.
 #: feed/services/feedservice.py
 #, python-format
 msgid "Resources: %(titles)s"
 msgstr ""
 
+# A link to the item's note in the Notebook, not a remark.
 #: feed/services/feedservice.py
 #, python-format
 msgid "Note: %(url)s"
@@ -734,6 +746,7 @@ msgstr ""
 msgid "Open in Helium: %(url)s"
 msgstr ""
 
+# Complete as in finished: the assignment is done.
 #: feed/services/feedservice.py
 msgid "Status: Complete"
 msgstr ""
@@ -748,16 +761,19 @@ msgstr ""
 msgid "Class Website: %(url)s"
 msgstr ""
 
+# The name of a calendar feed; project_name is Helium.
 #: feed/services/feedservice.py
 #, python-format
 msgid "%(project_name)s Events"
 msgstr ""
 
+# The name of a calendar feed; project_name is Helium.
 #: feed/services/feedservice.py
 #, python-format
 msgid "%(project_name)s Assignments"
 msgstr ""
 
+# The name of a calendar feed; project_name is Helium.
 #: feed/services/feedservice.py
 #, python-format
 msgid "%(project_name)s Class Schedules"
@@ -874,10 +890,12 @@ msgstr ""
 msgid "Import payload must be a JSON object."
 msgstr ""
 
+# 'resources' and 'materials' are import file keys; keep them in English.
 #: importexport/services/legacyimportparity.py
 msgid "Provide either 'resources' or 'materials' on a homework row, not both."
 msgstr ""
 
+# 'resources' and 'materials' are import file keys; keep them in English.
 #: importexport/services/legacyimportparity.py
 msgid "Provide either 'resources' or 'materials' on a note, not both."
 msgstr ""
@@ -953,6 +971,7 @@ msgid ""
 "schedule."
 msgstr ""
 
+# 'template' is an API field name; keep it in English.
 #: planner/serializers/coursescheduleserializer.py
 msgid ""
 "'template' doesn't match the rotation fields. Send one or the other, or "
@@ -1033,6 +1052,7 @@ msgid ""
 "occurrence with `scope=this`."
 msgstr ""
 
+# 'category' is an API field name; keep it in English.
 #: planner/serializers/homeworkserializer.py
 msgid "The 'category' must belong to the same class."
 msgstr ""
@@ -1147,6 +1167,7 @@ msgid_plural "It repeats more than %(count)s times."
 msgstr[0] ""
 msgstr[1] ""
 
+# Push reminder title: the assignment, its class, then the time until it's due.
 #: planner/services/reminderservice.py
 #, python-format
 msgid "%(title)s in %(course)s in %(count)s minute"
@@ -1154,6 +1175,7 @@ msgid_plural "%(title)s in %(course)s in %(count)s minutes"
 msgstr[0] ""
 msgstr[1] ""
 
+# Push reminder title: the assignment, its class, then the time until it's due.
 #: planner/services/reminderservice.py
 #, python-format
 msgid "%(title)s in %(course)s in %(count)s hour"
@@ -1161,6 +1183,7 @@ msgid_plural "%(title)s in %(course)s in %(count)s hours"
 msgstr[0] ""
 msgstr[1] ""
 
+# Push reminder title: the assignment, its class, then the time until it's due.
 #: planner/services/reminderservice.py
 #, python-format
 msgid "%(title)s in %(course)s in %(count)s day"
@@ -1168,6 +1191,7 @@ msgid_plural "%(title)s in %(course)s in %(count)s days"
 msgstr[0] ""
 msgstr[1] ""
 
+# Push reminder title: the assignment, its class, then the time until it's due.
 #: planner/services/reminderservice.py
 #, python-format
 msgid "%(title)s in %(course)s in %(count)s week"
@@ -1239,9 +1263,10 @@ msgstr ""
 msgid "Info:"
 msgstr ""
 
-#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+# An assignment's category (such as Homework) and its class title, linked to the class website.
+#: planner/templates/email/reminder.html
 #, python-format
-msgid "%(category)s for "
+msgid "%(category)s for <a target=\"_blank\" href=\"%(url)s\">%(course)s</a>"
 msgstr ""
 
 #: planner/templates/email/reminder.html planner/templates/email/reminder.txt
@@ -1252,14 +1277,17 @@ msgstr ""
 msgid "Teacher:"
 msgstr ""
 
+# A link to the item's note in the Notebook, not a remark.
 #: planner/templates/email/reminder.html planner/templates/email/reminder.txt
 msgid "Note:"
 msgstr ""
 
+# A link that opens the item's note or attachments.
 #: planner/templates/email/reminder.html
 msgid "Open"
 msgstr ""
 
+# Resources is the Helium feature for books and materials.
 #: planner/templates/email/reminder.html
 msgid "Resources"
 msgstr ""
@@ -1272,6 +1300,7 @@ msgstr ""
 msgid "Open in Helium"
 msgstr ""
 
+# Resources is the Helium feature for books and materials.
 #: planner/templates/email/reminder.txt
 msgid "Resources:"
 msgstr ""
@@ -1288,6 +1317,7 @@ msgstr ""
 msgid "An unknown error occurred."
 msgstr ""
 
+# 'Uncategorized' is the stored name of the built-in category; keep it in English.
 #: planner/views/apis/categoryviews.py
 msgid "The 'Uncategorized' category cannot be deleted"
 msgstr ""
@@ -1307,6 +1337,7 @@ msgstr ""
 msgid "`occurrence_start` is required with this `scope`."
 msgstr ""
 
+# 'from' and 'to' are API query parameters; keep them in English.
 #: planner/views/base.py
 msgid "Both 'from' and 'to' must be provided together."
 msgstr ""

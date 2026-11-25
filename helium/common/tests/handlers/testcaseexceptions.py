@@ -112,7 +112,7 @@ class TestCaseExceptions(TestCase):
         exc = ValidationError({'title': ['This field is required.'], 'nested': {'start': ['Bad.']}}, code='required')
 
         # WHEN
-        response = helium_exception_handler(exc, _context(client_version='3.16.13'))
+        response = helium_exception_handler(exc, _context(client_version='3.16.14'))
 
         # THEN
         self.assertEqual(response.data, {
