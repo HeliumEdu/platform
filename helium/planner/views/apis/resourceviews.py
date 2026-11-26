@@ -42,7 +42,7 @@ class UserResourcesApiListView(HeliumAPIView, ListModelMixin):
                 name='courses',
                 type=int,
                 many=True,
-                description='Restrict the result to resources linked to any of the given class IDs. Repeat '
+                description='Restrict the result to resources linked to any of the given course IDs. Repeat '
                             'the parameter to pass multiple IDs: `?courses=1&courses=2`.',
             ),
         ],

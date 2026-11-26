@@ -33,7 +33,7 @@ class HomeworkFilter(django_filters.FilterSet):
     )
     shown_on_calendar = django_filters.BooleanFilter(
         method='filter_shown_on_calendar',
-        help_text="Restrict to homework whose parent class group is visible on the user's calendar.",
+        help_text="Restrict to homework whose parent course group is visible on the user's calendar.",
     )
     overdue = django_filters.BooleanFilter(
         method='filter_overdue',
@@ -86,7 +86,7 @@ class CourseGroupFilter(django_filters.FilterSet):
 class CourseFilter(django_filters.FilterSet):
     shown_on_calendar = django_filters.BooleanFilter(
         method='filter_shown_on_calendar',
-        help_text="Restrict to classes whose parent class group is visible on the user's calendar.",
+        help_text="Restrict to courses whose parent course group is visible on the user's calendar.",
     )
 
     class Meta:
@@ -106,7 +106,7 @@ class CourseFilter(django_filters.FilterSet):
 class CategoryFilter(django_filters.FilterSet):
     shown_on_calendar = django_filters.BooleanFilter(
         method='filter_shown_on_calendar',
-        help_text="Restrict to categories whose parent class group is visible on the user's calendar.",
+        help_text="Restrict to categories whose parent course group is visible on the user's calendar.",
     )
 
     class Meta:
@@ -170,7 +170,7 @@ class ResourceFilter(django_filters.FilterSet):
 class CourseScheduleFilter(django_filters.FilterSet):
     shown_on_calendar = django_filters.BooleanFilter(
         method='filter_shown_on_calendar',
-        help_text="Restrict to schedules whose parent class group is visible on the user's calendar.",
+        help_text="Restrict to schedules whose parent course group is visible on the user's calendar.",
     )
 
     class Meta:

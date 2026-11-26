@@ -87,8 +87,8 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
         examples=[
             OpenApiExample(
                 'in_person_course',
-                summary='In-person class meeting in a physical room',
-                description='A standard in-person class with a room and weekly meeting times.',
+                summary='In-person course meeting in a physical room',
+                description='A standard in-person course with a room and weekly meeting times.',
                 value={
                     'title': 'BIO 151',
                     'room': 'Bagley Hall 131',
@@ -106,8 +106,8 @@ class CourseGroupCoursesApiListView(HeliumAPIView, ListModelMixin, CreateModelMi
             ),
             OpenApiExample(
                 'online_course',
-                summary='Online class',
-                description='An online class with no physical room. Set `is_online` to `true`; `room` may be left blank.',
+                summary='Online course',
+                description='An online course with no physical room. Set `is_online` to `true`; `room` may be left blank.',
                 value={
                     'title': 'PSYC 3301',
                     'room': '',

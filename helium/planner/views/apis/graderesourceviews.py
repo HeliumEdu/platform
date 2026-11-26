@@ -57,27 +57,28 @@ class NeededGradeApiResourceView(HeliumAPIView):
             OpenApiParameter(name='course', type=int, required=True, description='The Course ID.'),
             OpenApiParameter(
                 name='target', type=int, required=True,
-                description='For a class with weighted grading, the ID of a category that is down to its last '
-                            'ungraded assignment. Otherwise, the ID of an ungraded assignment in the class.'),
+                description='For a course with weighted grading, the ID of a category that is down to its last '
+                            'ungraded homework. Otherwise, the ID of an ungraded homework in the course.'),
             OpenApiParameter(name='desired_grade', type=float, required=False,
-                             description='The overall class grade to reach, from 0 to 100. Give this or '
+                             description='The overall course grade to reach, from 0 to 100. Give this or '
                                          '`desired_gpa`.'),
             OpenApiParameter(name='desired_gpa', type=float, required=False,
-                             description='The term GPA to reach, on the class\'s `grade_scale`. Give this or '
-                                         '`desired_grade`. Needs the class to have credits and a grade scale.'),
+                             description='The course group GPA to reach, on the course\'s `grade_scale`. Give this or '
+                                         '`desired_grade`. Needs the course to have credits and a grade scale.'),
         ],
     )
     def get(self, request, *args, **kwargs):
         """
-        Return the score needed to bring a class's overall grade to `desired_grade`, or its term GPA to `desired_gpa`.
+        Return the score needed to bring a course's overall grade to `desired_grade`, or its course group's GPA to
+        `desired_gpa`.
         It's worked out from the same grades `GET /planner/grades/` returns. With `desired_gpa`, the GPA is rounded to
         two places.
 
-        For a class with weighted grading, the result is the score needed on the category's last ungraded assignment
-        (or the category average, when that assignment isn't in the class's ungraded work). For a class graded by
-        points, it's the score needed on the chosen assignment. Either way, the class's other ungraded work is assumed
-        to score as the class does now: in a class with weighted grading, each other category at its average, or at
-        the class's grade while nothing in it is graded; otherwise, at the class's grade.
+        For a course with weighted grading, the result is the score needed on the category's last ungraded homework
+        (or the category average, when that homework isn't in the course's ungraded work). For a course graded by
+        points, it's the score needed on the chosen homework. Either way, the course's other ungraded work is assumed
+        to score as the course does now: in a course with weighted grading, each other category at its average, or at
+        the course's grade while nothing in it is graded; otherwise, at the course's grade.
         """
         try:
             course_id = int(request.query_params['course'])

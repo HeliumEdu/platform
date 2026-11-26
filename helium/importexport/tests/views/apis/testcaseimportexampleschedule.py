@@ -200,7 +200,7 @@ class TestCaseImportExampleScheduleViews(APITestCase):
         self.assertEqual(CourseGroup.objects.count(), 1)
         self.assertEqual(Course.objects.count(), 3)
         self.assertEqual(CourseSchedule.objects.count(), 3)
-        self.assertEqual(Category.objects.count(), 15)
+        self.assertEqual(Category.objects.count(), 18)
         self.assertEqual(ResourceGroup.objects.count(), 3)
         self.assertEqual(Resource.objects.count(), 5)
         self.assertEqual(Homework.objects.count(), 53)
@@ -311,7 +311,7 @@ class TestCaseImportExampleScheduleViews(APITestCase):
         self.assertEqual(CourseGroup.objects.count(), 1)
         self.assertEqual(Course.objects.count(), 3)
         self.assertEqual(CourseSchedule.objects.count(), 3)
-        self.assertEqual(Category.objects.count(), 15)
+        self.assertEqual(Category.objects.count(), 18)
         self.assertEqual(ResourceGroup.objects.count(), 3)
         self.assertEqual(Resource.objects.count(), 5)
         self.assertEqual(Homework.objects.count(), 53)
@@ -390,11 +390,11 @@ class TestCaseImportExampleScheduleViews(APITestCase):
         self.assertEqual(psych_schedule.mon_start_time, datetime.time(13, 0))
         self.assertEqual(psych_schedule.mon_end_time, datetime.time(13, 50))
 
-        # --- Categories (4 + 5 + 6 = 15) ---
+        # --- Categories (4 + 5 + 6, plus each class's Uncategorized = 18) ---
         cw_categories = Category.objects.filter(course=creative_writing).order_by('title')
-        self.assertEqual(cw_categories.count(), 4)
+        self.assertEqual(cw_categories.count(), 5)
         cw_cat_titles = list(cw_categories.values_list('title', flat=True))
-        self.assertEqual(cw_cat_titles, ['Essay 📝', 'Final Portfolio 📚', 'Reading 📖', 'Short Stories 🪶'])
+        self.assertEqual(cw_cat_titles, ['Essay 📝', 'Final Portfolio 📚', 'Reading 📖', 'Short Stories 🪶', 'Uncategorized'])
 
         essay_cat = cw_categories.get(title='Essay 📝')
         self.assertEqual(float(essay_cat.weight), 40.0)
@@ -409,9 +409,10 @@ class TestCaseImportExampleScheduleViews(APITestCase):
         self.assertEqual(float(reading_cat.grade_by_weight), 0.0)
 
         prog_categories = Category.objects.filter(course=programming).order_by('title')
-        self.assertEqual(prog_categories.count(), 5)
+        self.assertEqual(prog_categories.count(), 6)
         prog_cat_titles = list(prog_categories.values_list('title', flat=True))
-        self.assertEqual(prog_cat_titles, ['Final Exam 📈', 'Homework 👨🏽‍💻', 'Midterm 📊', 'Project 🔨', 'Quiz 💡'])
+        self.assertEqual(prog_cat_titles, ['Final Exam 📈', 'Homework 👨🏽‍💻', 'Midterm 📊', 'Project 🔨', 'Quiz 💡',
+                                           'Uncategorized'])
 
         midterm_cat = prog_categories.get(title='Midterm 📊')
         self.assertEqual(float(midterm_cat.weight), 15.0)
@@ -426,10 +427,10 @@ class TestCaseImportExampleScheduleViews(APITestCase):
         self.assertAlmostEqual(quiz_cat.trend, 0.011699999999999875)
 
         psych_categories = Category.objects.filter(course=psychology).order_by('title')
-        self.assertEqual(psych_categories.count(), 6)
+        self.assertEqual(psych_categories.count(), 7)
         psych_cat_titles = list(psych_categories.values_list('title', flat=True))
         self.assertEqual(psych_cat_titles, ['Capstone Case Study 🧩', 'Case Study 🔎', 'Final Exam 📈', 'Midterm 📊',
-                                            'Quiz 💡', 'Reading 📖'])
+                                            'Quiz 💡', 'Reading 📖', 'Uncategorized'])
 
         # Verify cumulative weights per course don't exceed 100
         for course in courses:

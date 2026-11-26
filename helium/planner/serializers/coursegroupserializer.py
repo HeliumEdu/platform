@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema_serializer(description=(
-    'A group of classes within a given timeframe (typically a semester or quarter). `overall_grade` is a flat '
-    f"average of member classes. See {support_article_url('classes/setting-up-and-managing-classes')}. For "
-    'full-term imports, see also "Bulk import" in the API description.'
+    'A group of courses within a given timeframe (typically a semester or quarter). `overall_grade` is a flat '
+    f"average of member courses. See {support_article_url('classes/setting-up-and-managing-classes')}. For "
+    'full course group imports, see also "Bulk import" in the API description.'
 ))
 class CourseGroupSerializer(serializers.ModelSerializer):
 
@@ -28,7 +28,7 @@ class CourseGroupSerializer(serializers.ModelSerializer):
     num_homework_graded = serializers.SerializerMethodField()
     grade_scale = GradeScaleField(
         required=False,
-        help_text='The bands that map a class grade to a grade point: none for no grade scale, or 2 to 20 in '
+        help_text='The bands that map a course grade to a grade point: none for no grade scale, or 2 to 20 in '
                   'ascending `min_grade` order from `0`, whose `grade_point` values only rise or only fall. When '
                   'omitted on create, it is filled from `grade_scale_template`, else copied from the most recent '
                   'group outside the example schedule, else empty.')

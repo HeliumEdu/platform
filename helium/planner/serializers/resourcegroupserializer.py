@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @extend_schema_serializer(component_name='ResourceGroup', description=(
-    'A bucket of resources, organized free-form (by term, by kind, all in one). See '
+    'A bucket of resources, organized free-form (by course group, by kind, all in one). See '
     f"{support_article_url('notebook/using-resources-to-track-study-materials')}"
 ))
 class ResourceGroupSerializer(serializers.ModelSerializer):

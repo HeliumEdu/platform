@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 class GradeScaleBandSerializer(serializers.Serializer):
     min_grade = serializers.DecimalField(
         max_digits=5, decimal_places=2, min_value=0, max_value=100, coerce_to_string=False,
-        help_text='The lowest class grade percentage in this band.')
+        help_text='The lowest course grade percentage in this band.')
     grade_point = serializers.DecimalField(
         max_digits=5, decimal_places=2, min_value=0, max_value=100, coerce_to_string=False,
-        help_text='The grade point a class grade in this band earns.')
+        help_text='The grade point a course grade in this band earns.')
     label = serializers.CharField(
         max_length=10, allow_blank=True, required=False, default='',
         help_text='A display name for the band, e.g. `"A-"`; may be blank.')

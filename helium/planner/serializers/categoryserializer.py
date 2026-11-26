@@ -54,12 +54,15 @@ class CategorySerializer(serializers.ModelSerializer):
 
     def validate_title(self, title):
         """
-        Ensure the title is unique within the course.
+        Ensure the title is unique within the course, and that the course's `Uncategorized` category keeps its name.
 
         :param title: the title to be validated
         """
         if self.instance:
             pk = self.instance.pk
+            if self.instance.title == 'Uncategorized' and title != 'Uncategorized':
+                raise serializers.ValidationError(gettext("The 'Uncategorized' category cannot be renamed"),
+                                                  code=errorcodes.UNCATEGORIZED_NOT_RENAMABLE)
         else:
             pk = None
         course_id = self.context['request'].parser_context['kwargs']['course']
@@ -80,10 +83,16 @@ class CategorySerializer(serializers.ModelSerializer):
     def validate_weight(self, weight):
         """
         Validate the weight of the incoming Category, ensuring it doesn't cause the parent course's cumulative
-        weights to exceed 100.
+        weights to exceed 100. The course's `Uncategorized` category can keep a weight it already has, or clear it to
+        `0`, but not take a new one.
 
         :param weight: the weight to be validated
         """
+        if (self.instance and self.instance.title == 'Uncategorized'
+                and weight != 0 and weight != self.instance.weight):
+            raise serializers.ValidationError(gettext("The 'Uncategorized' category cannot be given a weight"),
+                                              code=errorcodes.UNCATEGORIZED_WEIGHT_LOCKED)
+
         course_id = self.context['request'].parser_context['kwargs']['course']
 
         qs = Category.objects.for_course(course_id)

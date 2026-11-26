@@ -11,9 +11,9 @@ from helium.planner.models.basecalendar import BaseCalendar
 class Homework(BaseCalendar):
     current_grade = models.CharField(
         help_text=(
-            'Fraction of points earned, `"earned/possible"` (e.g. `"25/30"`). `"-1/100"` marks the assignment '
-            'ungraded. A category\'s grade is its assignments\' total earned over total possible, so an assignment with '
-            'more possible points counts for more; `Category.weight` then weights each category in the class grade. '
+            'Fraction of points earned, `"earned/possible"` (e.g. `"25/30"`). `"-1/100"` marks the homework '
+            'ungraded. A category\'s grade is its homework\'s total earned over total possible, so a homework with '
+            'more possible points counts for more; `Category.weight` then weights each category in the course grade. '
             'Pairs with `completed=true` to count toward grade calc.'
         ),
         max_length=255, validators=[validate_fraction])
@@ -36,7 +36,7 @@ class Homework(BaseCalendar):
 
     category = models.ForeignKey('Category', help_text='The category to associate this homework with. If omitted '
                                                        'or null, the homework is placed in the course\'s '
-                                                       '`Uncategorized` category (auto-created on first use).',
+                                                       '`Uncategorized` category, which every course has.',
                                  related_name='homework', blank=True, null=True, default=None,
                                  on_delete=models.SET_NULL)
 

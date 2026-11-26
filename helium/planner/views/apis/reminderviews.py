@@ -88,7 +88,7 @@ class RemindersApiListView(HeliumAPIView, CreateModelMixin, ListModelMixin):
         Exactly one of `event`, `homework`, or `course` must be given — that's the parent the reminder
         fires against. Reminders on a `course`, or on a `homework` or `event` with a `recurrence_rule`, are repeating:
         only one active reminder is kept per (parent, `type`, `offset`, `offset_type`) combination, and the
-        server rolls it forward to the next class or occurrence as each one fires.
+        server rolls it forward to the next course meeting or occurrence as each one fires.
         """
         if 'event' in request.data:
             permissions.check_event_permission(request.user.pk, request.data['event'])

@@ -262,6 +262,10 @@ def _import_categories(categories, request, course_remap):
             course_id = _resolve_parent(course_remap, category.get('course'), 'categories', 'course')
             request.parser_context['kwargs']['course'] = course_id
 
+            if category.get('title') == 'Uncategorized':
+                category_remap[category['id']] = _merge_uncategorized(category, request, course_id)
+                continue
+
             serializer = CategorySerializer(data=category, context={'request': request})
 
             if serializer.is_valid():
@@ -276,10 +280,15 @@ def _import_categories(categories, request, course_remap):
     return category_remap
 
 
-def _ensure_courses_have_categories(course_remap):
-    for course_id in course_remap.values():
-        if not Category.objects.filter(course_id=course_id).exists():
-            Category.objects.get_uncategorized(course_id)
+def _merge_uncategorized(category, request, course_id):
+    uncategorized = Category.objects.get_uncategorized(course_id)
+    if 'color' in category:
+        serializer = CategorySerializer(uncategorized, data={'color': category['color']}, partial=True,
+                                        context={'request': request})
+        if not serializer.is_valid():
+            raise _row_validation_error('categories', category['id'], serializer.errors)
+        serializer.save()
+    return uncategorized.pk
 
 
 def _import_resource_groups(resource_groups, user):
@@ -565,8 +574,6 @@ def import_user(request, data, dry_run=False, course_group_id=None):
 
     categories = data.get('categories', [])
     category_remap = _import_categories(categories, request, course_remap) if categories else {}
-
-    _ensure_courses_have_categories(course_remap)
 
     resource_groups = data.get('resource_groups', [])
     resource_group_remap = _import_resource_groups(resource_groups, request.user) if resource_groups else {}

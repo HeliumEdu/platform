@@ -18,7 +18,7 @@ class Course(BaseModel):
                             max_length=255, blank=True, default='')
 
     credits = models.DecimalField(
-        help_text='A decimal corresponding to credit hours, weighting the class in its group\'s `gpa`. If unknown or '
+        help_text='A decimal corresponding to credit hours, weighting the course in its group\'s `gpa`. If unknown or '
                   'the syllabus doesn\'t specify, use `"0.00"`.',
         max_digits=4, decimal_places=2,
         validators=[MinValueValidator(0), MaxValueValidator(99)])
@@ -36,12 +36,12 @@ class Course(BaseModel):
     current_grade = models.DecimalField(max_digits=7, default=enums.NO_GRADE, decimal_places=4)
 
     grade_point = models.DecimalField(
-        help_text="The grade point `current_grade` earns on the class's grade scale (`grade_scale_template`, else "
+        help_text="The grade point `current_grade` earns on the course's grade scale (`grade_scale_template`, else "
                   "the group's `grade_scale`), or `-1` when ungraded or the group has no grade scale.",
         max_digits=5, default=enums.NO_GRADE, decimal_places=2)
 
     grade_scale_template = models.PositiveSmallIntegerField(
-        help_text="A preset grade scale for this class, when its syllabus grades differently from its group: one whose "
+        help_text="A preset grade scale for this course, when its syllabus grades differently from its group: one whose "
                   "grades (grade point and label) the group's `grade_scale` also awards. Null to use the group's "
                   "`grade_scale`.",
         choices=enums.COURSE_GRADE_SCALE_TEMPLATE_CHOICES, default=None, blank=True, null=True)

@@ -10,7 +10,7 @@ from helium.common.errormessages import EXCEPTION_DATES_OUTSIDE_CLASS_MESSAGE
 from helium.common.serializers.validation import validate_date_range_and_exceptions
 from helium.common.utils import gradeutils
 from helium.common.utils.openapiutils import support_article_url
-from helium.planner.models import Course, CourseGroup
+from helium.planner.models import Category, Course, CourseGroup
 from helium.planner.serializers.coursescheduleserializer import CourseScheduleSerializer
 from helium.planner.services import categoryservice
 
@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 
 class CourseSerializer(serializers.ModelSerializer):
     """
-    A single class within a class group. A Course may have more than one
+    A single course within a course group. A Course may have more than one
     CourseSchedule (e.g. a lecture plus a lab), each of which supports
     per-day start/end times. See "Importing a schedule from a syllabus" in
-    the API description for when sections of the same class should be
+    the API description for when sections of the same course should be
     modeled as separate Courses.
 
     Each schedule's `recurrence_groups` carries the pre-computed, renderable
@@ -70,6 +70,7 @@ class CourseSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             course = super().create(validated_data)
 
+            Category.objects.get_uncategorized(course.id)
             if template is not None:
                 categoryservice.seed_categories(course.id, template)
 
@@ -112,7 +113,7 @@ class CourseSerializer(serializers.ModelSerializer):
         help_text=(
             '`true` = weighted grading (any category has `weight > 0`); '
             '`false` = points-based grading (a simple `earned/possible` average across '
-            'all assignments). Both are valid grading modes. See '
+            'all homework). Both are valid grading modes. See '
             f"{support_article_url('grades-and-progress/setting-up-weighted-grading-assignment-categories')}"
         )))
     def get_has_weighted_grading(self, obj) -> bool:

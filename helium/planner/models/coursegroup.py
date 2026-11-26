@@ -26,7 +26,7 @@ class CourseGroup(BaseModel):
     trend = models.FloatField(default=None, blank=True, null=True)
 
     grade_scale = models.JSONField(
-        help_text='The bands that map a class grade to a grade point, or empty for no grade scale.',
+        help_text='The bands that map a course grade to a grade point, or empty for no grade scale.',
         default=default_grade_scale)
 
     grade_scale_template = models.PositiveSmallIntegerField(
@@ -34,15 +34,15 @@ class CourseGroup(BaseModel):
         choices=enums.GRADE_SCALE_TEMPLATE_CHOICES, default=enums.GRADE_SCALE_NONE, blank=True, null=True)
 
     gpa = models.DecimalField(
-        help_text="The credit-weighted mean of the classes' `grade_point`, or `-1` with no grade scale or no graded "
-                  "class with credits.",
+        help_text="The credit-weighted mean of the courses' `grade_point`, or `-1` with no grade scale or no graded "
+                  "course with credits.",
         max_digits=7, default=enums.NO_GRADE, decimal_places=4)
 
     example_schedule = models.BooleanField(help_text='Whether it is part of the example schedule.',
                                            default=False)
 
     exceptions = models.TextField(
-        help_text='Comma-separated dates (YYYYMMDD) when no classes occur (holidays, breaks).',
+        help_text='Comma-separated dates (YYYYMMDD) when no courses meet (holidays, breaks).',
         blank=True, default='')
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='course_groups', on_delete=models.CASCADE)

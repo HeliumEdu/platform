@@ -146,7 +146,7 @@ class HomeworkFeedView(FeedView):
     )
     def get(self, request, private_slug):
         """
-        Return the Assignments Feed (`text/calendar`) for the given private slug: every assignment in a class group
+        Return the Assignments Feed (`text/calendar`) for the given private slug: every homework in a course group
         with `shown_on_calendar` set.
         Intended for subscription in calendar applications (Google Calendar, Apple Calendar, etc.) —
         the response is plain iCalendar text, not JSON.
@@ -186,7 +186,7 @@ class CourseSchedulesFeedView(FeedView):
     )
     def get(self, request, private_slug):
         """
-        Return the Class Schedules Feed (`text/calendar`) for the given private slug: every class meeting in a class
+        Return the Class Schedules Feed (`text/calendar`) for the given private slug: every course meeting in a course
         group with `shown_on_calendar` set. Intended for subscription in calendar applications (Google Calendar, Apple
         Calendar, etc.) — the response is plain iCalendar text, not JSON.
 
