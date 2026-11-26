@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.9.19"
+__version__ = "2.9.20"
 
 import json
 import os
@@ -398,14 +398,14 @@ SPECTACULAR_SETTINGS = {
         "`America/Los_Angeles`); every `start` / `end` you send needs an offset consistent with "
         "that zone.\n\n"
         "### Bulk import via `/importexport/import/`\n\n"
-        "Import a whole term in one atomic call: upload a single JSON file shaped like the `Export` "
+        "Import a whole course group in one atomic call: upload a single JSON file shaped like the `Export` "
         "component schema (what `GET /importexport/export/` returns) as the multipart field `file[]` to "
         "`POST /importexport/import/`. Relationships are integer `id`s within the file. `?dry_run=true` "
         "checks a file without saving anything; a real import returns the `ids` it assigned. See the "
         "`bulk_syllabus_import` example on that operation for a trimmed payload.\n\n"
-        "`POST /importexport/import/ics/` adds a `.ics` calendar (e.g. a professor's assignment "
-        "schedule) to one class, or as Events. A calendar has no categories, weights, schedules, or "
-        "credits, so build the term with the JSON import above, then add the calendar to its class.\n\n"
+        "`POST /importexport/import/ics/` adds a `.ics` calendar (e.g. a professor's homework "
+        "schedule) to one course, or as Events. A calendar has no categories, weights, schedules, or "
+        "credits, so build the course group with the JSON import above, then add the calendar to its course.\n\n"
         "A `CourseSchedule` defaults to weekly (`days_of_week` + per-day times), but can be a day-based "
         "cycle (A/B day, N-day: `cycle_length` / `anchor_date` / `cycle_slots`) or a week-based rotation "
         "(Week A/B: `is_week_based` / `week_offset`), and a `template` expands a named preset into those "
@@ -414,29 +414,29 @@ SPECTACULAR_SETTINGS = {
         "parts. See the "
         "[create-schedule endpoint](#tag/planner.courseschedule/operation/planner_coursegroups_courses_courseschedules_create) "
         "for the full field set and templates.\n\n"
-        "Set the term's grade scale from the syllabus with `grade_scale_template` (a preset) or "
-        "`grade_scale` (custom bands) on the CourseGroup; when both are omitted, a new term copies the "
-        "scale of the student's most recent term, or has none if it's their first. A class whose syllabus "
+        "Set the course group's grade scale from the syllabus with `grade_scale_template` (a preset) or "
+        "`grade_scale` (custom bands) on the CourseGroup; when both are omitted, a new course group copies the "
+        "scale of the student's most recent course group, or has none if it's their first. A course whose syllabus "
         "grades differently can set its own `grade_scale_template`, from the presets compatible with its "
-        "term's scale.\n\n"
+        "course group's scale.\n\n"
         "### Incremental edits via REST\n\n"
         "POST in this order so each create succeeds:\n\n"
-        "1. `POST /planner/coursegroups/` — the term (semester / quarter), with its grade scale and its "
+        "1. `POST /planner/coursegroups/` — the course group (semester / quarter), with its grade scale and its "
         "holidays and breaks in `exceptions` (`YYYYMMDD` CSV).\n"
-        "2. `POST /planner/coursegroups/{course_group}/courses/` — each class within the term. "
+        "2. `POST /planner/coursegroups/{course_group}/courses/` — each course within the course group. "
         "Use `\"0.00\"` for `credits` when the syllabus is silent, rather than guessing. "
-        "Put days only this class doesn't meet in its own `exceptions`; the term's apply to every class.\n"
+        "Put days only this course doesn't meet in its own `exceptions`; the course group's apply to every course.\n"
         "3. (Optional) `POST /planner/coursegroups/{course_group}/courses/{course}/courseschedules/` — "
-        "the class's meeting times (see the schedule overview above).\n"
+        "the course's meeting times (see the schedule overview above).\n"
         "4. (Optional) `POST /planner/coursegroups/{course_group}/courses/{course}/categories/` — graded "
-        "categories such as Homework, Exams. Sum of `weight` across a class's categories must stay <= 100. "
+        "categories such as Homework, Exams. Sum of `weight` across a course's categories must stay <= 100. "
         "Set `weight=0` on every category for syllabi using total points rather than weighted "
         "percentages; `current_grade` fractions then carry the points and `Course.has_weighted_grading` "
-        "reports `false` in that mode. An `Uncategorized` category is auto-created on demand if you "
-        "create homework without one.\n"
-        "5. `POST /planner/coursegroups/{course_group}/courses/{course}/homework/` — individual assignments. "
+        "reports `false` in that mode. Homework created without a category goes in the course's `Uncategorized` "
+        "category.\n"
+        "5. `POST /planner/coursegroups/{course_group}/courses/{course}/homework/` — individual homework. "
         "Set `current_grade` to `\"-1/100\"` for ungraded items.\n"
-        "6. (Optional) `POST /planner/events/` — non-class calendar items (study sessions, office hours). "
+        "6. (Optional) `POST /planner/events/` — non-course calendar items (study sessions, office hours). "
         "Events have no Course dependency.\n"
         "7. (Optional) `POST /planner/reminders/` — push/email reminders attached to exactly one parent "
         "(`event`, `homework`, or `course`).\n"
@@ -445,11 +445,11 @@ SPECTACULAR_SETTINGS = {
         "### Common pitfalls\n\n"
         "A few shapes that are easy to get wrong:\n\n"
         "- **Send both times for every meeting day.** On a day set to `1` in `days_of_week`, a time "
-        "left out keeps its `12:00:00` default, so the class is saved as starting or ending at noon. "
+        "left out keeps its `12:00:00` default, so the course is saved as starting or ending at noon. "
         "Days set to `0` can leave their times out or use `00:00:00`; a meeting day can't use `00:00:00`.\n"
-        "- **No multi-part assignment grouping.** A `\"draft + final\"` or `\"post + reply\"` pair is "
+        "- **No multi-part homework grouping.** A `\"draft + final\"` or `\"post + reply\"` pair is "
         "two independent Homework rows with descriptive titles (`\"Essay 1 — Draft\"`, "
-        "`\"Essay 1 — Final\"`). Helium has no parent/child or group concept for assignments.\n"
+        "`\"Essay 1 — Final\"`). Helium has no parent/child or group concept for homework.\n"
         "- **Idempotency.** Helium does not enforce uniqueness on title for CourseGroups or "
         "Courses — duplicates are valid. Reference an existing entity by its `id`, never its title: "
         "before a re-import, GET `/planner/coursegroups/` (and the nested Course list) and reuse the "
@@ -515,8 +515,8 @@ SPECTACULAR_SETTINGS = {
         {
             'name': 'planner.homework',
             'description': (
-                'Graded calendar items — assignments, quizzes, exams. Tied to a class and '
-                'a category; `current_grade` rolls up into class and class-group grades. '
+                'Graded calendar items — assignments, quizzes, exams. Tied to a course and '
+                'a category; `current_grade` rolls up into course and course group grades. '
                 'Ungraded calendar items live under `Event`. See '
                 f'[this article]({SUPPORT_URL}grades-and-progress/setting-up-weighted-grading-assignment-categories/) for more info on grading.'
             ),
@@ -524,7 +524,7 @@ SPECTACULAR_SETTINGS = {
         {
             'name': 'planner.event',
             'description': (
-                'Ungraded calendar items not tied to a class. Anything graded '
+                'Ungraded calendar items not tied to a course. Anything graded '
                 '(assignments, quizzes, exams) lives under `Homework`. See '
                 f'[this article]({SUPPORT_URL}grades-and-progress/how-helium-calculates-your-grades/).'
             ),

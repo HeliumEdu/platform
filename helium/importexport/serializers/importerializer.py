@@ -25,7 +25,7 @@ class ICSImportCreateSerializer(serializers.Serializer):
     """
     Multipart request body for a one-time `.ics` import. One calendar file (`file[]`) lands in a
     single target: an existing `course`, a new course in a `course_group`, or standalone Events.
-    There is no multi-course bucketing — a calendar spanning several classes must be split by the
+    There is no multi-course bucketing — a calendar spanning several courses must be split by the
     caller (one request per target) or imported via the JSON format, which is natively multi-course.
     """
     file = serializers.ListField(
@@ -35,13 +35,13 @@ class ICSImportCreateSerializer(serializers.Serializer):
     )
     target_type = serializers.ChoiceField(
         choices=icsimportservice.TARGET_TYPE_CHOICES,
-        help_text="`course` (into an existing class), `new_course` (create a class in `course_group`), "
-                  "or `events` (standalone Events, no class).")
+        help_text="`course` (into an existing course), `new_course` (create a course in `course_group`), "
+                  "or `events` (standalone Events, no course).")
     course = serializers.IntegerField(
         required=False, help_text='Existing Course id. Required when `target_type` is `course`.')
     course_group = serializers.IntegerField(
         required=False,
-        help_text='Course Group the new class is created in. Required when `target_type` is `new_course`.')
+        help_text='Course group the new course is created in. Required when `target_type` is `new_course`.')
 
     def validate(self, attrs):
         target_type = attrs.get('target_type')

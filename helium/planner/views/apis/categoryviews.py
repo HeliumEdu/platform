@@ -146,7 +146,7 @@ class CourseGroupCourseCategoriesApiDetailView(PreconditionMixin, HeliumAPIView,
     @extend_schema(summary='Update a Category', parameters=[IF_MATCH_PARAMETER])
     def put(self, request, *args, **kwargs):
         """
-        Update the given category instance.
+        Update the given category instance. The course's `Uncategorized` category cannot be renamed or given a new weight.
         """
         response = self.update(request, *args, **kwargs)
 
@@ -163,8 +163,7 @@ class CourseGroupCourseCategoriesApiDetailView(PreconditionMixin, HeliumAPIView,
         """
         Delete the given category. The course's `Uncategorized` category cannot itself be deleted.
 
-        Any homework previously linked to this category is reassigned to the course's `Uncategorized` category,
-        which is created on the fly if it doesn't already exist.
+        Any homework previously linked to this category is reassigned to the course's `Uncategorized` category.
         """
         category = self.get_object()
 

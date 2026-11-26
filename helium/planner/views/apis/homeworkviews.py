@@ -37,7 +37,7 @@ class UserHomeworkApiListView(HeliumCalendarItemAPIView):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter, HeliumSearchFilter,)
     filterset_class = HomeworkFilter
     search_fields = ('title', 'category__title', 'course__title',)
-    search_description = 'Search by title, category title, and class title.'
+    search_description = 'Search by title, category title, and course title.'
     ordering_fields = ('start', 'title', 'completed', 'priority', 'category__title', 'course__title',)
 
     def get_queryset(self):
@@ -70,7 +70,7 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
     permission_classes = (IsAuthenticated, IsCourseGroupOwner, IsCourseOwner)
     filterset_class = HomeworkFilter
     search_fields = ('title', 'category__title', 'course__title',)
-    search_description = 'Search by title, category title, and class title.'
+    search_description = 'Search by title, category title, and course title.'
 
     def get_queryset(self):
         if self.has_request_user():
@@ -109,9 +109,9 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
         examples=[
             OpenApiExample(
                 'new_ungraded_assignment',
-                summary='Ungraded assignment due later this term',
+                summary='Ungraded homework due later in the course',
                 description=(
-                    'An ungraded assignment. `current_grade` uses the sentinel `-1/100`; the '
+                    'An ungraded homework. `current_grade` uses the sentinel `-1/100`; the '
                     'gradebook ignores rows with that value.'
                 ),
                 value={
@@ -130,9 +130,9 @@ class CourseGroupCourseHomeworkApiListView(HeliumCalendarItemAPIView, CreateMode
             ),
             OpenApiExample(
                 'completed_graded_assignment',
-                summary='Completed assignment with a recorded grade',
+                summary='Completed homework with a recorded grade',
                 description=(
-                    'A completed, graded assignment. `current_grade` uses the `n/d` form (87 out '
+                    'A completed, graded homework. `current_grade` uses the `n/d` form (87 out '
                     'of 100) and `completed` is `true`. The `category` must reference a graded '
                     'category on the same course.'
                 ),

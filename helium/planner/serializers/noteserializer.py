@@ -14,7 +14,7 @@ from helium.planner.utils.quillutils import delta_size, ensure_quill_delta_termi
 class NoteSerializer(serializers.ModelSerializer):
     """
     A user-owned note with optional rich-text `content` ([Quill Delta](https://quilljs.com/docs/delta/) JSON). May be optionally
-    linked to exactly one entity — a single homework assignment, event, resource, or course.
+    linked to exactly one entity — a single homework, event, resource, or course.
     """
 
     class Meta:

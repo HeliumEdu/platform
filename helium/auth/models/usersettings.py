@@ -54,7 +54,7 @@ class UserSettings(BaseModel):
         default=False)
 
     calendar_use_category_colors = models.BooleanField(
-        help_text='Whether calendar items for classes should be shown in category colors instead of class colors.',
+        help_text='Whether calendar items for courses should be shown in category colors instead of course colors.',
         default=False)
 
     show_planner_tooltips = models.BooleanField(
@@ -99,8 +99,8 @@ class UserSettings(BaseModel):
         default=10, validators=[MaxValueValidator(100)])
 
     prior_credits = models.DecimalField(
-        help_text='Credits earned before the user\'s terms in Helium. They count toward `cumulative_gpa` in the '
-                  'grades API, at `prior_gpa`, once a term outside the example schedule has a grade scale.',
+        help_text='Credits earned before the user\'s course groups in Helium. They count toward `cumulative_gpa` in the '
+                  'grades API, at `prior_gpa`, once a course group outside the example schedule has a grade scale.',
         max_digits=5, decimal_places=2, default=0, validators=[MinValueValidator(0)])
 
     prior_gpa = models.DecimalField(

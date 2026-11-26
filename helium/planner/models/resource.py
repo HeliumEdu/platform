@@ -25,7 +25,7 @@ class Resource(BaseModel):
                                        related_name='resources', on_delete=models.CASCADE)
 
     courses = models.ManyToManyField('Course',
-                                     help_text='Classes that share this resource. May be empty.',
+                                     help_text='Courses that share this resource. May be empty.',
                                      related_name='resources', blank=True, default=None)
 
     objects = ResourceManager()

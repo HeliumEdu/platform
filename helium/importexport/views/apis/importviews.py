@@ -57,7 +57,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
             OpenApiExample(
                 'bulk_syllabus_import',
                 media_type='multipart/form-data',
-                summary='Export-shaped JSON for a single-term import (one file per request)',
+                summary='Export-shaped JSON for a single course group import (one file per request)',
                 description=(
                     'The body of the `file[]` multipart field. Exactly one file must be uploaded '
                     'per request; submitting zero or more than one file returns `400`. Matches the '
@@ -213,7 +213,7 @@ class ImportResourceView(ViewSet, HeliumAPIView):
         Each model will be imported in a schema matching that of the documented APIs. The import is all or
         nothing: a rejected import lists every row error in the first section that has any.
 
-        With `course_group`, the file's classes are added to that existing Course Group (a term already in the
+        With `course_group`, the file's courses are added to that existing course group (one already in the
         account) rather than to a new one.
 
         Send the header `X-Helium-Structured-Errors: 1` to also receive a rejected import's row errors as
@@ -327,14 +327,14 @@ class ImportResourceView(ViewSet, HeliumAPIView):
     def import_ics_data(self, request, *args, **kwargs):
         """
         Import a single `.ics` file for the authenticated account into one chosen target: an existing
-        class (`target_type=course`), a new class created in a group (`target_type=new_course`), or
+        course (`target_type=course`), a new course created in a group (`target_type=new_course`), or
         standalone Events (`target_type=events`). Exactly one file must be uploaded in the `file[]`
         field; submitting zero or more than one returns `400`.
 
         An `.ics` carries only dates and titles, so imported items are ungraded and uncategorized,
-        and a file spanning several classes is not auto-split. For a full multi-class import with
+        and a file spanning several courses is not auto-split. For a full multi-course import with
         grades, categories, and schedules, use the JSON bulk import (`POST /importexport/import/`);
-        to keep classes separate here, split the file and send one request per target.
+        to keep courses separate here, split the file and send one request per target.
 
         The file may not exceed the `max_upload_size` (bytes) returned by `GET /info/`.
         """

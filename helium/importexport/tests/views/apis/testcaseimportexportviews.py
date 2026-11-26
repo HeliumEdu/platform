@@ -79,7 +79,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(len(course_groups), 4)
         self.assertEqual(len(courses), 4)
         self.assertEqual(len(course_schedules), 4)
-        self.assertEqual(len(categories), 4)
+        self.assertEqual(len(categories), 6)
         self.assertEqual(len(resource_groups), 2)
         self.assertEqual(len(resources), 2)
         self.assertEqual(len(events), 4)
@@ -152,11 +152,13 @@ class TestCaseImportExportViews(APITestCase):
                                                                                         'sat_start_time': '12:00:00',
                                                                                         'sat_end_time': '12:00:00',
                                                                                         'course': courses[3].pk})
-        categoryhelper.verify_category_matches_data(self, categories[3],
+        test_category = Category.objects.get(course=courses[3], title='📊 Test Category 1')
+        uncategorized = Category.objects.get(course=courses[2], title='Uncategorized')
+        categoryhelper.verify_category_matches_data(self, test_category,
                                                     {'title': '📊 Test Category 1', 'weight': 0.0, 'color': '#4986e7',
                                                      'average_grade': -1.0, 'grade_by_weight': 0.0, 'trend': None,
                                                      'course': courses[3].pk})
-        categoryhelper.verify_category_matches_data(self, categories[1],
+        categoryhelper.verify_category_matches_data(self, uncategorized,
                                                     {'title': 'Uncategorized', 'weight': 0.0, 'color': '#4986e7',
                                                      'average_grade': 66.6667, 'grade_by_weight': 0.0, 'trend': None,
                                                      'course': courses[2].pk})
@@ -193,7 +195,7 @@ class TestCaseImportExportViews(APITestCase):
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65,
                                                      'current_grade': '20/30',
-                                                     'completed': True, 'category': categories[1].pk,
+                                                     'completed': True, 'category': uncategorized.pk,
                                                      'course': courses[2].pk, 'resources': [resources[1].pk]})
         homeworkhelper.verify_homework_matches_data(self, homework[3],
                                                     {'title': '💻 Test Homework', 'all_day': False,
@@ -201,7 +203,7 @@ class TestCaseImportExportViews(APITestCase):
                                                      'start': '2017-05-08T16:00:00Z', 'end': '2017-05-08T18:00:00Z',
                                                      'priority': 65,
                                                      'current_grade': '-1/100',
-                                                     'completed': False, 'category': categories[3].pk,
+                                                     'completed': False, 'category': test_category.pk,
                                                      'course': courses[3].pk, 'resources': []})
         self.assertTrue(homework[2].notes_set.exists())
         homework_note = homework[2].notes_set.first()
@@ -274,7 +276,7 @@ class TestCaseImportExportViews(APITestCase):
         self.assertEqual(categories.count(), 1)
         self.assertEqual(categories.first().title, 'Uncategorized')
 
-    def test_import_course_with_categories_gets_no_uncategorized(self):
+    def test_import_course_gets_uncategorized_alongside_its_categories(self):
         # GIVEN
         userhelper.given_a_user_exists_and_is_authenticated(self.client)
         import_data = {
@@ -299,9 +301,8 @@ class TestCaseImportExportViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         course = Course.objects.get(title='Test Course')
-        categories = Category.objects.filter(course=course)
-        self.assertEqual(categories.count(), 1)
-        self.assertEqual(categories.first().title, 'Homework')
+        self.assertEqual(set(Category.objects.filter(course=course).values_list('title', flat=True)),
+                         {'Homework', 'Uncategorized'})
 
     def test_import_invalid_json(self):
         # GIVEN

@@ -63,7 +63,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
             'recurrence_rule': {
                 'validators': [validate_recurrence_rule],
                 'help_text': 'iCalendar RRULE string (e.g. `FREQ=WEEKLY;BYDAY=MO,WE,FR`) that repeats it from '
-                             '`start`, or null. Without `COUNT` or `UNTIL`, it repeats through the class\'s '
+                             '`start`, or null. Without `COUNT` or `UNTIL`, it repeats through the course\'s '
                              '`end_date`. A repeating Homework isn\'t completed or graded itself; complete each '
                              'occurrence with `scope=this`.',
             },

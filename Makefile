@@ -110,8 +110,12 @@ check: install-dev
 		source $(PLATFORM_VENV)/bin/activate; \
 		ENVIRONMENT=local python manage.py checkmigrations; \
 		cd helium; \
+		catalog=locale/en/LC_MESSAGES/django.po; \
+		saved="$$(mktemp)"; \
+		cp "$$catalog" "$$saved"; \
+		trap 'mv "$$saved" "$$catalog"' EXIT; \
 		ENVIRONMENT=local python ../manage.py makemessages $(MAKEMESSAGES_ARGS); \
-		git diff --exit-code -I '^"POT-Creation-Date: ' -- locale || \
+		diff -I '^"POT-Creation-Date: ' "$$saved" "$$catalog" || \
 			{ echo "helium/locale is out of date: run make build-messages"; exit 1; }; \
 	)
 

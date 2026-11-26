@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-26 02:55+0000\n"
+"POT-Creation-Date: 2026-11-26 17:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -947,6 +947,16 @@ msgstr ""
 msgid "Only one of `course`, `event`, `homework`, or `resource` may be given."
 msgstr ""
 
+# 'Uncategorized' is the built-in category's name; translate it as categoryUncategorizedTitle in the Helium frontend's lib/l10n/app_en.arb.
+#: planner/serializers/categoryserializer.py
+msgid "The 'Uncategorized' category cannot be renamed"
+msgstr ""
+
+# 'Uncategorized' is the built-in category's name; translate it as categoryUncategorizedTitle in the Helium frontend's lib/l10n/app_en.arb.
+#: planner/serializers/categoryserializer.py
+msgid "The 'Uncategorized' category cannot be given a weight"
+msgstr ""
+
 #: planner/serializers/categoryserializer.py
 msgid ""
 "The cumulative weights of all categories associated with a class cannot "
@@ -1317,7 +1327,7 @@ msgstr ""
 msgid "An unknown error occurred."
 msgstr ""
 
-# 'Uncategorized' is the stored name of the built-in category; keep it in English.
+# 'Uncategorized' is the built-in category's name; translate it as categoryUncategorizedTitle in the Helium frontend's lib/l10n/app_en.arb.
 #: planner/views/apis/categoryviews.py
 msgid "The 'Uncategorized' category cannot be deleted"
 msgstr ""

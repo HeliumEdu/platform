@@ -103,6 +103,10 @@ class GradeScaleTemplate {{
 
   static const int custom = -1;
 
+  static const Map<int, List<GradeScaleBandModel>> scales = {{
+{chr(10).join(scales)}
+  }};
+
   static Map<int, String> get labels {{
     final l10n = LocaleNotifier().localizations;
     return {{
@@ -110,11 +114,7 @@ class GradeScaleTemplate {{
     }};
   }}
 
-  static const Map<int, List<GradeScaleBandModel>> scales = {{
-{chr(10).join(scales)}
-  }};
-
-  static String summaryLabel(int template) =>
+  static String labelFor(int template) =>
       template == custom ? LocaleNotifier().localizations.gradeScaleCustom : labels[template]!;
 }}
 """
@@ -133,23 +133,23 @@ class ResourceConstants {{
 
   static const int conditionDigital = {condition.index('Digital')};
 
-  static List<String> get status {{
+  static List<String> get statusLabels {{
     final l10n = LocaleNotifier().localizations;
     return [
 {_dart_localized_list('resourceStatus', status)}
     ];
   }}
 
-  static List<DropDownItem<String>> get statusItems => status.toDropDownItems();
+  static List<DropDownItem<String>> get statusItems => statusLabels.toDropDownItems();
 
-  static List<String> get condition {{
+  static List<String> get conditionLabels {{
     final l10n = LocaleNotifier().localizations;
     return [
 {_dart_localized_list('resourceCondition', condition)}
     ];
   }}
 
-  static List<DropDownItem<String>> get conditionItems => condition.toDropDownItems();
+  static List<DropDownItem<String>> get conditionItems => conditionLabels.toDropDownItems();
 }}
 """
 

@@ -116,14 +116,13 @@ class TestCaseCourseViews(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         course = Course.objects.get(pk=response.data['id'])
         expected = enums.CATEGORY_TEMPLATES[enums.STANDARD]
-        self.assertEqual(Category.objects.filter(course=course).count(), len(expected))
         self.assertEqual(
             set(Category.objects.filter(course=course).values_list('title', flat=True)),
-            {definition['title'] for definition in expected})
+            {definition['title'] for definition in expected} | {'Uncategorized'})
         # Write-only: the template is not echoed back in the response.
         self.assertNotIn('template', response.data)
 
-    def test_create_course_without_template_seeds_no_categories(self):
+    def test_create_course_without_template_provisions_only_uncategorized(self):
         # GIVEN
         user = userhelper.given_a_user_exists_and_is_authenticated(self.client)
         course_group = coursegrouphelper.given_course_group_exists(user)
@@ -144,7 +143,8 @@ class TestCaseCourseViews(APITestCase):
         # THEN
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         course = Course.objects.get(pk=response.data['id'])
-        self.assertEqual(Category.objects.filter(course=course).count(), 0)
+        self.assertEqual(list(Category.objects.filter(course=course).values_list('title', flat=True)),
+                         ['Uncategorized'])
 
     def test_create_course_with_invalid_template_rejected(self):
         # GIVEN
