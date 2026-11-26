@@ -3,12 +3,13 @@ import itertools
 from zoneinfo import ZoneInfo
 
 from django.test import TestCase
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from helium.auth.models import UserSettings
 from helium.common import enums
-from helium.common.utils.datetimeutils import expand_recurrence, format_date, format_date_time, format_short_time, \
-    format_time, local_midnight_as_utc, occurrence_end, shift_exception_dates, shifted_series_bounds
+from helium.common.utils.datetimeutils import expand_recurrence, format_date, format_date_time, \
+    format_date_time_range, format_short_time, format_time, format_weekday, local_midnight_as_utc, occurrence_end, \
+    shift_exception_dates, shifted_series_bounds
 
 
 class TestCaseDateTimeUtils(TestCase):
@@ -46,6 +47,26 @@ class TestCaseDateTimeUtils(TestCase):
         self.assertEqual(format_short_time(self.friday_on_the_hour, self.us_settings), 'Fri, 3 PM')
         self.assertEqual(format_short_time(self.friday_afternoon, self.us_settings), 'Fri, 3:05 PM')
         self.assertEqual(format_short_time(self.friday_on_the_hour, self.european_settings), 'Fri, 15:00')
+
+    def test_format_date_time_range(self):
+        saturday_morning = datetime.datetime(2026, 9, 5, 1, 0)
+        self.assertEqual(format_date_time_range(self.friday_afternoon, self.friday_afternoon.replace(hour=16),
+                                                self.us_settings), 'Fri, Sep 4 at 3:05 PM to 4:05 PM')
+        self.assertEqual(format_date_time_range(self.friday_afternoon, saturday_morning, self.european_settings),
+                         'Fri, 4 Sep at 15:05 to Sat, 5 Sep at 01:00')
+        self.assertEqual(format_date_time_range(self.friday_afternoon, datetime.datetime(2026, 9, 7), self.us_settings,
+                                                all_day=True), 'Fri, Sep 4 to Sun, Sep 6')
+
+    def test_format_names_follow_the_active_language(self):
+        with translation.override('es'):
+            self.assertEqual(format_weekday(self.friday_afternoon), 'vie')
+            self.assertEqual(format_date(self.friday_afternoon, self.us_settings), 'vie, sept 4')
+            self.assertEqual(format_date(self.friday_afternoon, self.european_settings), 'vie, 4 sept')
+            self.assertEqual(format_time(self.friday_afternoon, self.us_settings), '3:05 p.\u202fm.')
+            self.assertEqual(format_time(self.friday_on_the_hour, self.us_settings, omit_zero_minutes=True),
+                             '3 p.\u202fm.')
+            self.assertEqual(format_time(self.friday_afternoon, self.european_settings), '15:05')
+            self.assertEqual(format_short_time(self.friday_afternoon, self.european_settings), 'vie, 15:05')
 
 
 class TestCaseExpandRecurrence(TestCase):

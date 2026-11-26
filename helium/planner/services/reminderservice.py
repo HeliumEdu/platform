@@ -51,7 +51,7 @@ def _push_body(reminder):
         return reminder.message
 
     if all_day:
-        return f'{reminder.message} · {local_time:%a}'
+        return f'{reminder.message} · {datetimeutils.format_weekday(local_time)}'
 
     return f'{reminder.message} · {datetimeutils.format_short_time(local_time, reminder.get_user().settings)}'
 
@@ -479,8 +479,9 @@ def _push_send_args(reminder, user):
             f'Reminder {reminder.pk} was not pushed, as there are no active push tokens for user {user.pk}')
         return None
 
-    return (push_tokens, user.username, subject, _push_body(reminder),
-            PushReminderSerializer(reminder).data)
+    with translation.override(user.settings.language):
+        body = _push_body(reminder)
+    return push_tokens, user.username, subject, body, PushReminderSerializer(reminder).data
 
 
 def process_email_reminder(reminder_id):
