@@ -1,8 +1,10 @@
 import datetime
 
+from babel.dates import format_datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrulestr
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import gettext
 
 from helium.common import enums
 from helium.common.utils.validators import join_recurrence_rule, occurs_within_horizon, parse_recurrence_rule
@@ -223,26 +225,37 @@ def earliest_local_date():
     return (timezone.now() - datetime.timedelta(hours=12)).date()
 
 
-def _twelve_hour(dt):
-    return dt.hour % 12 or 12
+def _format(dt, pattern):
+    locale = translation.to_locale(translation.get_language() or 'en')
+    return format_datetime(dt, pattern, tzinfo=dt.tzinfo, locale=locale)
+
+
+def format_weekday(dt):
+    """
+    Format a datetime as its abbreviated weekday name in the active language.
+
+    :param dt: An aware `datetime` already resolved to the user's timezone.
+    :return: e.g. "Fri".
+    """
+    return _format(dt, 'EEE')
 
 
 def format_date(dt, user_settings):
     """
-    Format a datetime as a weekday and word-month date in the user's day/month order.
+    Format a datetime as a weekday and word-month date in the user's day/month order, named in the active language.
 
     :param dt: An aware `datetime` already resolved to the user's timezone.
     :param user_settings: The `UserSettings` whose `date_format` decides the order.
     :return: e.g. "Fri, Sep 4" (MDY) or "Fri, 4 Sep" (DMY).
     """
     if user_settings.date_format == enums.MDY:
-        return f'{dt:%a}, {dt:%b} {dt.day}'
-    return f'{dt:%a}, {dt.day} {dt:%b}'
+        return _format(dt, 'EEE, MMM d')
+    return _format(dt, 'EEE, d MMM')
 
 
 def format_time(dt, user_settings, omit_zero_minutes=False):
     """
-    Format a datetime's time on the user's 12-hour or 24-hour clock.
+    Format a datetime's time on the user's 12-hour or 24-hour clock, with the active language's AM/PM.
 
     :param dt: An aware `datetime` already resolved to the user's timezone.
     :param user_settings: The `UserSettings` whose `time_format` decides the clock.
@@ -250,10 +263,10 @@ def format_time(dt, user_settings, omit_zero_minutes=False):
     :return: e.g. "3:05 PM", "3 PM" or "15:05".
     """
     if user_settings.time_format == enums.TWENTY_FOUR_HOUR:
-        return f'{dt:%H:%M}'
+        return _format(dt, 'HH:mm')
     if omit_zero_minutes and dt.minute == 0:
-        return f'{_twelve_hour(dt)} {dt:%p}'
-    return f'{_twelve_hour(dt)}:{dt:%M} {dt:%p}'
+        return _format(dt, 'h a')
+    return _format(dt, 'h:mm a')
 
 
 def format_date_time(dt, user_settings):
@@ -264,7 +277,8 @@ def format_date_time(dt, user_settings):
     :param user_settings: The `UserSettings` deciding date order and clock.
     :return: e.g. "Fri, Sep 4 at 3:05 PM" or "Fri, 4 Sep at 15:05".
     """
-    return f'{format_date(dt, user_settings)} at {format_time(dt, user_settings)}'
+    return gettext('%(date)s at %(time)s') % {'date': format_date(dt, user_settings),
+                                              'time': format_time(dt, user_settings)}
 
 
 def format_short_time(dt, user_settings):
@@ -275,7 +289,7 @@ def format_short_time(dt, user_settings):
     :param user_settings: The `UserSettings` whose `time_format` decides the clock.
     :return: e.g. "Tue, 11 AM", "Tue, 11:30 AM" or "Tue, 13:00".
     """
-    return f'{dt:%a}, {format_time(dt, user_settings, omit_zero_minutes=True)}'
+    return f'{format_weekday(dt)}, {format_time(dt, user_settings, omit_zero_minutes=True)}'
 
 
 def format_date_time_range(start, end, user_settings, all_day=False):
@@ -295,9 +309,13 @@ def format_date_time_range(start, end, user_settings, all_day=False):
         last_day = end - datetime.timedelta(days=1)
         if last_day.date() <= start.date():
             return format_date(start, user_settings)
-        return f'{format_date(start, user_settings)} to {format_date(last_day, user_settings)}'
+        return _range(format_date(start, user_settings), format_date(last_day, user_settings))
     if end <= start:
         return format_date_time(start, user_settings)
     if end.date() == start.date():
-        return f'{format_date_time(start, user_settings)} to {format_time(end, user_settings)}'
-    return f'{format_date_time(start, user_settings)} to {format_date_time(end, user_settings)}'
+        return _range(format_date_time(start, user_settings), format_time(end, user_settings))
+    return _range(format_date_time(start, user_settings), format_date_time(end, user_settings))
+
+
+def _range(start, end):
+    return gettext('%(start)s to %(end)s') % {'start': start, 'end': end}

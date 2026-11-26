@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-26 17:32+0000\n"
+"POT-Creation-Date: 2026-11-26 22:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -575,6 +575,18 @@ msgstr ""
 # Image text for a link to donate to Helium on Patreon.
 #: common/templates/email/base.html
 msgid "Support on Patreon"
+msgstr ""
+
+# A reminder's date and time in emails, e.g. "Fri, Sep 4 at 3:05 PM".
+#: common/utils/datetimeutils.py
+#, python-format
+msgid "%(date)s at %(time)s"
+msgstr ""
+
+# A reminder's date or time range in emails, e.g. "Fri, Sep 4 to Sun, Sep 6" or "Fri, Sep 4 at 3:05 PM to 4:00 PM".
+#: common/utils/datetimeutils.py
+#, python-format
+msgid "%(start)s to %(end)s"
 msgstr ""
 
 #: common/utils/validators.py
