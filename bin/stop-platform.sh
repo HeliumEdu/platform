@@ -5,11 +5,8 @@
 # This script stops containers started by start-platform.sh.
 # It uses the same working directory where docker-compose.yml was fetched.
 #
-# Environment variables:
-#   PLATFORM_CLEANUP - Set to "true" to also remove volumes (default: false)
-#
 
-set -e
+set -euo pipefail
 
 WORK_DIR="${TMPDIR:-/tmp}/helium-platform"
 
@@ -23,12 +20,6 @@ fi
 
 cd "$WORK_DIR"
 
-if [ "$PLATFORM_CLEANUP" = "true" ]; then
-    echo "Stopping and removing containers, networks, and volumes ..."
-    docker compose down -v
-    rm -rf "$WORK_DIR"
-else
-    docker compose stop
-fi
+docker compose stop
 
 echo "Platform containers stopped."

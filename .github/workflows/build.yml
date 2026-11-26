@@ -63,6 +63,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Install gettext
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+      - name: Check platform
+        run: make docker-env check
       - name: Test platform
         run: make docker-env test
       - name: Set up Docker Buildx
@@ -106,6 +112,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Install gettext
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+      - name: Check platform
+        run: make docker-env check
       - name: Test platform
         run: make docker-env test
       - name: Set up Docker Buildx

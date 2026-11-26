@@ -16,7 +16,7 @@
 # If local images exist, they are used. Otherwise, images are pulled from ECR Public.
 #
 
-set -e
+set -euo pipefail
 
 PLATFORM="${PLATFORM:-arm64}"
 PLATFORM_BRANCH="${PLATFORM_BRANCH:-main}"
@@ -25,20 +25,16 @@ WORK_DIR="${TMPDIR:-/tmp}/helium-platform"
 
 echo "Starting platform containers ..."
 
-# Create working directory
 mkdir -p "$WORK_DIR"
 cd "$WORK_DIR"
 
-# Fetch docker-compose.yml and .env from GitHub
 echo "Fetching configuration from GitHub (branch: $PLATFORM_BRANCH) ..."
 curl -fsSL "$GITHUB_RAW_URL/docker-compose.yml" -o docker-compose.yml
 curl -fsSL "$GITHUB_RAW_URL/.env.docker.example" -o .env
 
-# Fetch localstack init script
 mkdir -p container
 curl -fsSL "$GITHUB_RAW_URL/container/init-localstack.py" -o container/init-localstack.py
 
-# Determine registry prefix - prefer local images if available
 export PLATFORM
 if [[ -z "${REGISTRY_PREFIX:-}" ]]; then
     LOCAL_API_IMAGE="helium/platform-api:${PLATFORM}-latest"
@@ -55,25 +51,20 @@ fi
 
 echo "Registry prefix: ${REGISTRY_PREFIX:-<local>}"
 
-# Check if we can authenticate with AWS (for CI environments)
 USE_ECR_AUTH=false
 if [[ "$REGISTRY_PREFIX" == *"public.ecr.aws"* ]]; then
-    if command -v aws &> /dev/null && aws sts get-caller-identity &> /dev/null 2>&1; then
+    if command -v aws &> /dev/null && aws sts get-caller-identity &>/dev/null; then
         echo "Logging in to ECR Public to avoid rate limits ..."
         if aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/heliumedu 2>/dev/null; then
             USE_ECR_AUTH=true
             echo "Pulling images from ECR ..."
-            docker pull "${REGISTRY_PREFIX}helium/platform-resource:${PLATFORM}-latest"
-            docker pull "${REGISTRY_PREFIX}helium/platform-api:${PLATFORM}-latest"
-            docker pull "${REGISTRY_PREFIX}helium/platform-worker:${PLATFORM}-latest"
+            docker compose pull resource api worker
         fi
     fi
 fi
 
-# Start containers
 echo "Starting Docker containers ..."
 if [[ "$USE_ECR_AUTH" == "true" ]]; then
-    # Use normal docker-compose (already authenticated)
     docker compose up -d
 else
     # Logout from ECR to prevent credential helper from being invoked
@@ -81,10 +72,9 @@ else
     docker compose up -d --pull missing
 fi
 
-# Wait for API to be ready
 echo "Waiting for platform API to be ready ..."
 for i in $(seq 1 60); do
-    if curl -s http://localhost:8000/status/ > /dev/null 2>&1; then
+    if curl -sf http://localhost:8000/status/ > /dev/null 2>&1; then
         echo "Platform API is ready!"
         exit 0
     fi
@@ -92,5 +82,5 @@ for i in $(seq 1 60); do
     sleep 2
 done
 
-echo "Error: Platform API did not become ready within 120 seconds"
+echo "Error: Platform API did not become ready within 120 seconds" >&2
 exit 1
