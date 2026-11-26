@@ -1,4 +1,4 @@
-.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-messages build-migrations migrate-dev refresh-timezones sync-shared-constants sync-assets check-migrations test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish promote start-frontend stop-frontend test-with-frontend
+.PHONY: all env docker-env venv install install-dev nopyc clean build-dev build-docs build-messages build-migrations migrate-dev refresh-timezones sync-shared-constants sync-assets check test run-devserver build-docker run-docker stop-docker restart-docker smoke-test-docker publish promote start-frontend stop-frontend test-with-frontend
 
 SHELL := /usr/bin/env bash
 PYTHON_BIN := python
@@ -6,9 +6,10 @@ PLATFORM_VENV ?= venv
 TAG_VERSION ?= latest
 PLATFORM ?= arm64
 
-ANALYTICS_ENABLED ?=
-
 FRONTEND_IMAGE ?= public.ecr.aws/heliumedu/helium/frontend-web:$(PLATFORM)-latest
+
+MAKEMESSAGES_ARGS := -l en --add-location file --no-obsolete --ignore 'auth/backends.py' \
+	--ignore '*/templates/admin' --ignore '*/templates/two_factor' --ignore 'tests'
 
 all: build-docker run-docker
 
@@ -61,7 +62,7 @@ build-docs: install-dev
 			--config redocly.yaml \
 			--output helium/common/templates/redoc-static.html \
 			--template helium/common/templates/redoc-static.hbs; \
-		ANALYTICS_ENABLED="$(ANALYTICS_ENABLED)" python bin/inject-analytics.py helium/common/templates/redoc-static.html; \
+		python bin/inject-analytics.py helium/common/templates/redoc-static.html; \
 	)
 
 build-messages: install-dev
@@ -69,8 +70,7 @@ build-messages: install-dev
 		set -e; \
 		source $(PLATFORM_VENV)/bin/activate; \
 		cd helium; \
-		ENVIRONMENT=local python ../manage.py makemessages -l en --add-location file --no-obsolete \
-			--ignore 'auth/backends.py' --ignore '*/templates/admin' --ignore '*/templates/two_factor' --ignore 'tests'; \
+		ENVIRONMENT=local python ../manage.py makemessages $(MAKEMESSAGES_ARGS); \
 		ENVIRONMENT=local python ../manage.py compilemessages; \
 	)
 
@@ -91,7 +91,7 @@ refresh-timezones: install-dev
 	@( \
 		set -e; \
 		source $(PLATFORM_VENV)/bin/activate; \
-		python bin/refresh-timezones.py $(REFRESH_TIMEZONES_ARGS); \
+		python bin/refresh-timezones.py; \
 		ENVIRONMENT=local python manage.py makemigrations; \
 	)
 
@@ -104,13 +104,18 @@ migrate-dev: install-dev
 		ENVIRONMENT=local python manage.py migrate; \
 	)
 
-check-migrations: install-dev
+check: install-dev
 	@( \
+		set -e; \
 		source $(PLATFORM_VENV)/bin/activate; \
 		ENVIRONMENT=local python manage.py checkmigrations; \
+		cd helium; \
+		ENVIRONMENT=local python ../manage.py makemessages $(MAKEMESSAGES_ARGS); \
+		git diff --exit-code -I '^"POT-Creation-Date: ' -- locale || \
+			{ echo "helium/locale is out of date: run make build-messages"; exit 1; }; \
 	)
 
-test: install-dev build-docs check-migrations
+test: install-dev build-docs
 	@( \
 		source $(PLATFORM_VENV)/bin/activate; \
 		coverage run -m pytest && coverage report && coverage html && coverage xml; \

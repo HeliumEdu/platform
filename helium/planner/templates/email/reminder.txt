@@ -3,7 +3,7 @@
 {{ reminder.message|safe }}
 
 {% translate "When:" %} {{ normalized_datetime }}{% if reminder.homework %}
-{% translate "Info:" %} {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{% blocktranslate with category=calendar_item.category.title %}{{ category }} for {% endblocktranslate %}{% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %} ({{ calendar_item.course.website }}){% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}
+{% translate "Info:" %} {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{% blocktranslate with category=calendar_item.category.title course=calendar_item.course.title %}{{ category }} for {{ course }}{% endblocktranslate %}{% else %}{{ calendar_item.course.title }}{% endif %}{% if calendar_item.course.website %} ({{ calendar_item.course.website }}){% endif %}{% if calendar_item.course.room and not calendar_item.course.is_online %}
 {% translate "Location:" %} {{ calendar_item.course.room }}{% endif %}{% endif %}{% if reminder.course %}
 {% translate "Info:" %} {{ calendar_item.title }}{% if calendar_item.website %} ({{ calendar_item.website }}){% endif %}{% if calendar_item.room and not calendar_item.is_online %}
 {% translate "Location:" %} {{ calendar_item.room }}{% endif %}{% if calendar_item.teacher_name %}

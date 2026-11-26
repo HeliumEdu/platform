@@ -25,18 +25,27 @@ The allow-list is canonical-only on purpose: it populates a picker, where listin
 both ``Asia/Calcutta`` and ``Asia/Kolkata`` would be noise. Device APIs, however,
 report whatever the device is set to and do not canonicalize, so the ``aliases``
 map is what lets a reported link name be translated into something the platform
-will accept instead of silently falling back to UTC.
+will accept instead of silently falling back to UTC. Aliases resolve to the first
+selectable zone along their IANA Link chain, since IANA consolidates zones and the
+end of a chain can pass by the zone a user would recognize. Link records are the
+only authoritative alias source: matching UTC offsets maps ``Asia/Saigon`` onto
+``Asia/Bangkok``, and comparing TZif bytes can't break ties between zones that are
+themselves links.
+
+Countries come from ``zone.tab``, which lists every canonical zone with exactly one
+country; ``zone1970.tab`` merges countries that share a zone.
 
 Union-with-existing is what guarantees backwards compatibility: any zone we
 have ever shipped stays in the validation set, even if IANA later drops it as
-a deprecated alias. To prune, edit the source files manually.
+a deprecated alias, and a retired Link still maps devices that report it.
 """
 
-import argparse
 import re
+import sys
 from importlib import resources
 from pathlib import Path
 
+import tzdata
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_PLATFORM_FILE = _REPO_ROOT / "helium" / "common" / "timezones.py"
@@ -47,28 +56,21 @@ _DEFAULT_FRONTEND_ALIAS_FILE = (
     _REPO_ROOT.parent / "frontend" / "lib" / "utils" / "time_zone_aliases.dart"
 )
 
-# Selectable zones that live outside every region, and so outside zone.tab.
 _REGIONLESS_ZONES = {"GMT", "UTC"}
 
-# Matches an IANA tz identifier in single quotes (must contain a '/').
 _TZ_PATTERN = re.compile(r"'([A-Za-z]+(?:/[A-Za-z][A-Za-z0-9_+\-]*)+)'")
+_ALIAS_PATTERN = re.compile(
+    r"'([A-Za-z]+(?:[/-][A-Za-z0-9_+\-]+)*)':\s*'([A-Za-z]+(?:[/-][A-Za-z0-9_+\-]+)*)'"
+)
 
 
 def _extract_zones(path: Path) -> set[str]:
-    if not path.exists():
-        return set()
-    return set(_TZ_PATTERN.findall(path.read_text()))
+    return set(_TZ_PATTERN.findall(path.read_text(encoding="utf-8")))
 
 
 def _read_country_by_zone() -> dict[str, str]:
-    """
-    Return ``{zone: country}`` from the ``zone.tab`` shipped in the installed ``tzdata``.
-
-    ``zone.tab`` lists every canonical zone with exactly one country; ``zone1970.tab``
-    merges countries that share a zone and is deliberately not used.
-    """
     country_by_zone: dict[str, str] = {}
-    zone_tab = (resources.files("tzdata.zoneinfo") / "zone.tab").read_text()
+    zone_tab = (resources.files("tzdata.zoneinfo") / "zone.tab").read_text(encoding="utf-8")
     for raw in zone_tab.splitlines():
         if not raw or raw.startswith("#"):
             continue
@@ -78,31 +80,17 @@ def _read_country_by_zone() -> dict[str, str]:
 
 
 def _read_iana_links() -> dict[str, str]:
-    """
-    Return ``{alias: target}`` from the ``L`` records of ``tzdata.zi`` shipped in the installed ``tzdata``.
-
-    Link records are the only authoritative source. Matching UTC offsets instead maps
-    ``Asia/Saigon`` onto ``Asia/Bangkok``; comparing TZif bytes cannot break ties
-    between zones that are themselves links.
-    """
     links: dict[str, str] = {}
-    zi = (resources.files("tzdata.zoneinfo") / "tzdata.zi").read_text()
+    zi = (resources.files("tzdata.zoneinfo") / "tzdata.zi").read_text(encoding="utf-8")
     for raw in zi.splitlines():
         if not raw.startswith("L "):
             continue
-        # L  <target>  <alias>
         _, target, alias = raw.split()
         links[alias] = target
     return links
 
 
 def _resolve_aliases(links: dict[str, str], selectable: set[str]) -> dict[str, str]:
-    """
-    Map each alias onto the first zone in ``selectable`` along its Link chain.
-
-    Stopping early matters: IANA consolidates zones, so walking a chain to its end
-    can pass right by the zone a user would recognize.
-    """
     resolved: dict[str, str] = {}
     for alias in links:
         if alias in selectable:
@@ -118,18 +106,8 @@ def _resolve_aliases(links: dict[str, str], selectable: set[str]) -> dict[str, s
     return resolved
 
 
-_ALIAS_PATTERN = re.compile(
-    r"'([A-Za-z]+(?:[/-][A-Za-z0-9_+\-]+)*)':\s*'([A-Za-z]+(?:[/-][A-Za-z0-9_+\-]+)*)'"
-)
-
-
 def _extract_alias_pairs(path: Path) -> dict[str, str]:
-    """
-    Alias pairs already emitted to ``path``, unioned in so a retired IANA Link
-    does not send devices still reporting it back to the UTC fallback."""
-    if not path.exists():
-        return {}
-    return dict(_ALIAS_PATTERN.findall(path.read_text()))
+    return dict(_ALIAS_PATTERN.findall(path.read_text(encoding="utf-8")))
 
 
 def _label_for(tz: str) -> str:
@@ -248,9 +226,6 @@ def _render_frontend_aliases(aliases: dict[str, str], iana_release: str) -> str:
 def refresh(
     platform_file: Path, frontend_file: Path, frontend_alias_file: Path
 ) -> tuple[int, int, int]:
-    # Imported lazily so the pure helpers stay testable without tzdata installed.
-    import tzdata
-
     iana_release = tzdata.IANA_VERSION
     links = _read_iana_links()
 
@@ -260,39 +235,27 @@ def refresh(
     union = canonical | on_disk
     zones = sorted(union)
 
-    # Fresh derivation wins on conflict; retired Links carry forward.
     aliases = {**_extract_alias_pairs(frontend_alias_file), **_resolve_aliases(links, union)}
     aliases = {a: c for a, c in aliases.items() if c in union and a not in union}
 
-    platform_file.parent.mkdir(parents=True, exist_ok=True)
-    frontend_file.parent.mkdir(parents=True, exist_ok=True)
-    frontend_alias_file.parent.mkdir(parents=True, exist_ok=True)
-    platform_file.write_text(_render_platform(zones, country_by_zone, iana_release))
-    frontend_file.write_text(_render_frontend(zones, iana_release))
-    frontend_alias_file.write_text(_render_frontend_aliases(aliases, iana_release))
+    platform_file.write_text(_render_platform(zones, country_by_zone, iana_release), encoding="utf-8")
+    frontend_file.write_text(_render_frontend(zones, iana_release), encoding="utf-8")
+    frontend_alias_file.write_text(_render_frontend_aliases(aliases, iana_release), encoding="utf-8")
 
     return len(zones), len(on_disk - canonical), len(aliases)
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--platform-file", type=Path, default=_DEFAULT_PLATFORM_FILE)
-    parser.add_argument("--frontend-file", type=Path, default=_DEFAULT_FRONTEND_FILE)
-    parser.add_argument(
-        "--frontend-alias-file", type=Path, default=_DEFAULT_FRONTEND_ALIAS_FILE
-    )
-    args = parser.parse_args()
-
     total, deprecated_only, alias_count = refresh(
-        args.platform_file, args.frontend_file, args.frontend_alias_file
+        _DEFAULT_PLATFORM_FILE, _DEFAULT_FRONTEND_FILE, _DEFAULT_FRONTEND_ALIAS_FILE
     )
     print(f"Wrote {total} zones ({deprecated_only} preserved as deprecated aliases) "
           f"and {alias_count} alias mappings to:")
-    print(f"  {args.platform_file}")
-    print(f"  {args.frontend_file}")
-    print(f"  {args.frontend_alias_file}")
+    print(f"  {_DEFAULT_PLATFORM_FILE}")
+    print(f"  {_DEFAULT_FRONTEND_FILE}")
+    print(f"  {_DEFAULT_FRONTEND_ALIAS_FILE}")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

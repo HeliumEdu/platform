@@ -2,5 +2,4 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-PROJECT_APP_HOST="${PROJECT_APP_HOST:-http://localhost:8080}" \
-  make -C "${DIR}/.." build-docker run-docker
+make -C "${DIR}/.." build-docker run-docker

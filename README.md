@@ -108,9 +108,10 @@ These and other environment variables can be configured in the `.env` file. This
 third-party services (for example, AWS services like SES) can be set. Do NOT commit real credentials to third-party
 services, even in example files.
 
-Before commits are made, be sure to run tests and check the generated coverage report.
+Before commits are made, be sure to run the checks and tests, and check the generated coverage report.
 
 ```sh
+make check
 make test
 ```
 

@@ -14,7 +14,7 @@
         <p><strong>{% translate "When:" %}</strong> {{ normalized_datetime }}</p>
         {% if reminder.homework %}
         <p><strong>{% translate "Info:" %}</strong>
-            {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{% blocktranslate with category=calendar_item.category.title %}{{ category }} for {% endblocktranslate %}{% endif %}{% if calendar_item.course.website %}<a target="_blank" href="{{ calendar_item.course.website }}">{% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}
+            {% if calendar_item.category.title and calendar_item.category.title != "Uncategorized" %}{% if calendar_item.course.website %}{% blocktranslate with category=calendar_item.category.title course=calendar_item.course.title url=calendar_item.course.website %}{{ category }} for <a target="_blank" href="{{ url }}">{{ course }}</a>{% endblocktranslate %}{% else %}{% blocktranslate with category=calendar_item.category.title course=calendar_item.course.title %}{{ category }} for {{ course }}{% endblocktranslate %}{% endif %}{% else %}{% if calendar_item.course.website %}<a target="_blank" href="{{ calendar_item.course.website }}">{% endif %}{{ calendar_item.course.title }}{% if calendar_item.course.website %}</a>{% endif %}{% endif %}
         </p>
         {% if calendar_item.course.room and not calendar_item.course.is_online %}<p><strong>{% translate "Location:" %}</strong> {{ calendar_item.course.room }}</p>{% endif %}
         {% endif %}

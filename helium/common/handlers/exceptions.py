@@ -14,8 +14,7 @@ _CODED_BODY_KEYS = ('code', 'error')
 
 def wants_legacy_errors(request) -> bool:
     """
-    Deprecated: app versions below 3.16.13 read error messages as plain strings, without codes; remove once
-    MINIMUM_SUPPORTED_VERSION reaches 3.16.13.
+    Deprecated: Remove once all clients and MINIMUM_SUPPORTED_VERSION are at or above 3.16.14.
     """
     return (get_client_version(request) is not None
             and not client_version_gte(request, settings.LEGACY_ERROR_FORMAT_BEFORE_VERSION))
