@@ -1,0 +1,2863 @@
+{
+  "time_zone": "America/Chicago",
+  "external_calendars": [
+    {
+        "id": 1,
+        "title": "Días festivos en Estados Unidos",
+        "url": "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics",
+        "color": "#dc7d50",
+        "shown_on_calendar": true
+    }
+  ],
+  "course_groups": [
+    {
+        "id": 207,
+        "title": "Semestre de otoño",
+        "start_date": "2025-10-06",
+        "end_date": "2025-12-06",
+        "shown_on_calendar": true,
+        "overall_grade": "87.7934",
+        "trend": 0.0010061923076923659,
+        "grade_scale_template": 2,
+        "user": 118,
+        "num_days": 61,
+        "num_days_completed": 37,
+        "num_homework": 53,
+        "num_homework_completed": 35,
+        "num_homework_graded": 25
+    }
+  ],
+  "courses": [
+    {
+        "id": 512,
+        "title": "Escritura creativa ✍️",
+        "room": "ARTS 302",
+        "credits": "3.00",
+        "color": "#bd42a4",
+        "website": "",
+        "is_online": false,
+        "current_grade": "89.3269",
+        "trend": -0.0023276428571428922,
+        "teacher_name": "Dr. Joey Rubik",
+        "teacher_email": "joey.rubik@university.edu",
+        "start_date": "2025-10-06",
+        "end_date": "2025-12-06",
+        "schedules": [
+        {
+          "id": 511,
+          "days_of_week": "0010100",
+          "sun_start_time": "11:00:00",
+          "sun_end_time": "11:50:00",
+          "mon_start_time": "11:00:00",
+          "mon_end_time": "11:50:00",
+          "tue_start_time": "11:00:00",
+          "tue_end_time": "11:50:00",
+          "wed_start_time": "11:00:00",
+          "wed_end_time": "11:50:00",
+          "thu_start_time": "11:00:00",
+          "thu_end_time": "11:50:00",
+          "fri_start_time": "11:00:00",
+          "fri_end_time": "11:50:00",
+          "sat_start_time": "11:00:00",
+          "sat_end_time": "11:50:00",
+          "course": 512
+        }
+        ],
+        "course_group": 207,
+        "num_days": 61,
+        "num_days_completed": 37,
+        "has_weighted_grading": true,
+        "num_homework": 16,
+        "num_homework_completed": 11,
+        "num_homework_graded": 7
+    },
+    {
+        "id": 513,
+        "title": "Fundamentos de programación 💻",
+        "room": "",
+        "credits": "3.00",
+        "color": "#05cc90",
+        "website": "https://automatetheboringstuff.com",
+        "is_online": true,
+        "current_grade": "89.0833",
+        "trend": 0.006485167832167846,
+        "teacher_name": "Dr. Alex Gallagher",
+        "teacher_email": "alex.gallagher@university.edu",
+        "start_date": "2025-10-06",
+        "end_date": "2025-12-06",
+        "schedules": [
+        {
+          "id": 509,
+          "days_of_week": "0101010",
+          "sun_start_time": "11:00:00",
+          "sun_end_time": "11:50:00",
+          "mon_start_time": "11:00:00",
+          "mon_end_time": "11:50:00",
+          "tue_start_time": "11:00:00",
+          "tue_end_time": "11:50:00",
+          "wed_start_time": "11:00:00",
+          "wed_end_time": "11:50:00",
+          "thu_start_time": "11:00:00",
+          "thu_end_time": "11:50:00",
+          "fri_start_time": "11:00:00",
+          "fri_end_time": "11:50:00",
+          "sat_start_time": "11:00:00",
+          "sat_end_time": "11:50:00",
+          "course": 513
+        }
+        ],
+        "course_group": 207,
+        "num_days": 61,
+        "num_days_completed": 37,
+        "has_weighted_grading": true,
+        "num_homework": 20,
+        "num_homework_completed": 14,
+        "num_homework_graded": 12
+    },
+    {
+        "id": 514,
+        "title": "Introducción a la psicología 🧠",
+        "room": "SOC 110",
+        "credits": "4.00",
+        "color": "#3033cf",
+        "website": "",
+        "is_online": false,
+        "current_grade": "84.9700",
+        "trend": 0.01880931428571422,
+        "teacher_name": "Dr. Jess Otter",
+        "teacher_email": "jess.otter@university.edu",
+        "start_date": "2025-10-06",
+        "end_date": "2025-12-06",
+        "schedules": [
+        {
+          "id": 510,
+          "days_of_week": "0101010",
+          "sun_start_time": "13:00:00",
+          "sun_end_time": "13:50:00",
+          "mon_start_time": "13:00:00",
+          "mon_end_time": "13:50:00",
+          "tue_start_time": "13:00:00",
+          "tue_end_time": "13:50:00",
+          "wed_start_time": "13:00:00",
+          "wed_end_time": "13:50:00",
+          "thu_start_time": "13:00:00",
+          "thu_end_time": "13:50:00",
+          "fri_start_time": "13:00:00",
+          "fri_end_time": "13:50:00",
+          "sat_start_time": "13:00:00",
+          "sat_end_time": "13:50:00",
+          "course": 514
+        }
+        ],
+        "course_group": 207,
+        "num_days": 61,
+        "num_days_completed": 37,
+        "has_weighted_grading": true,
+        "num_homework": 17,
+        "num_homework_completed": 10,
+        "num_homework_graded": 6
+    }
+  ],
+  "course_schedules": [
+    {
+        "id": 509,
+        "days_of_week": "0101010",
+        "sun_start_time": "11:00:00",
+        "sun_end_time": "11:50:00",
+        "mon_start_time": "11:00:00",
+        "mon_end_time": "11:50:00",
+        "tue_start_time": "11:00:00",
+        "tue_end_time": "11:50:00",
+        "wed_start_time": "11:00:00",
+        "wed_end_time": "11:50:00",
+        "thu_start_time": "11:00:00",
+        "thu_end_time": "11:50:00",
+        "fri_start_time": "11:00:00",
+        "fri_end_time": "11:50:00",
+        "sat_start_time": "11:00:00",
+        "sat_end_time": "11:50:00",
+        "course": 513
+    },
+    {
+        "id": 510,
+        "days_of_week": "0101010",
+        "sun_start_time": "13:00:00",
+        "sun_end_time": "13:50:00",
+        "mon_start_time": "13:00:00",
+        "mon_end_time": "13:50:00",
+        "tue_start_time": "13:00:00",
+        "tue_end_time": "13:50:00",
+        "wed_start_time": "13:00:00",
+        "wed_end_time": "13:50:00",
+        "thu_start_time": "13:00:00",
+        "thu_end_time": "13:50:00",
+        "fri_start_time": "13:00:00",
+        "fri_end_time": "13:50:00",
+        "sat_start_time": "13:00:00",
+        "sat_end_time": "13:50:00",
+        "course": 514
+    },
+    {
+        "id": 511,
+        "days_of_week": "0010100",
+        "sun_start_time": "11:00:00",
+        "sun_end_time": "11:50:00",
+        "mon_start_time": "11:00:00",
+        "mon_end_time": "11:50:00",
+        "tue_start_time": "11:00:00",
+        "tue_end_time": "11:50:00",
+        "wed_start_time": "11:00:00",
+        "wed_end_time": "11:50:00",
+        "thu_start_time": "11:00:00",
+        "thu_end_time": "11:50:00",
+        "fri_start_time": "11:00:00",
+        "fri_end_time": "11:50:00",
+        "sat_start_time": "11:00:00",
+        "sat_end_time": "11:50:00",
+        "course": 512
+    }
+  ],
+  "categories": [
+    {
+        "id": 2594,
+        "title": "Estudio de caso final 🧩",
+        "weight": "20.00",
+        "average_grade": "-1.0000",
+        "grade_by_weight": "0.0000",
+        "trend": null,
+        "color": "#1f2184",
+        "course": 514,
+        "num_homework": 1,
+        "num_homework_graded": 0
+    },
+    {
+        "id": 2595,
+        "title": "Estudio de caso 🔎",
+        "weight": "25.00",
+        "average_grade": "89.0000",
+        "grade_by_weight": "22.2500",
+        "trend": 0.1100000000000001,
+        "color": "#282aa9",
+        "course": 514,
+        "num_homework": 3,
+        "num_homework_graded": 2
+    },
+    {
+        "id": 2596,
+        "title": "Ensayo 📝",
+        "weight": "40.00",
+        "average_grade": "88.6000",
+        "grade_by_weight": "35.4400",
+        "trend": -0.02230000000000018,
+        "color": "#c964b5",
+        "course": 512,
+        "num_homework": 7,
+        "num_homework_graded": 5
+    },
+    {
+        "id": 2597,
+        "title": "Examen final 📈",
+        "weight": "20.00",
+        "average_grade": "-1.0000",
+        "grade_by_weight": "0.0000",
+        "trend": null,
+        "color": "#024b35",
+        "course": 513,
+        "num_homework": 1,
+        "num_homework_graded": 0
+    },
+    {
+        "id": 2598,
+        "title": "Examen final 📈",
+        "weight": "20.00",
+        "average_grade": "-1.0000",
+        "grade_by_weight": "0.0000",
+        "trend": null,
+        "color": "#0d0e38",
+        "course": 514,
+        "num_homework": 1,
+        "num_homework_graded": 0
+    },
+    {
+        "id": 2599,
+        "title": "Portafolio final 📚",
+        "weight": "30.00",
+        "average_grade": "-1.0000",
+        "grade_by_weight": "0.0000",
+        "trend": null,
+        "color": "#571e4c",
+        "course": 512,
+        "num_homework": 1,
+        "num_homework_graded": 0
+    },
+    {
+        "id": 2600,
+        "title": "Tareas 👨🏽‍💻",
+        "weight": "20.00",
+        "average_grade": "93.7143",
+        "grade_by_weight": "18.7429",
+        "trend": 0.034628571428571606,
+        "color": "#33fabe",
+        "course": 513,
+        "num_homework": 7,
+        "num_homework_graded": 5
+    },
+    {
+        "id": 2601,
+        "title": "Examen parcial 📊",
+        "weight": "15.00",
+        "average_grade": "110.0000",
+        "grade_by_weight": "16.5000",
+        "trend": null,
+        "color": "#037251",
+        "course": 513,
+        "num_homework": 1,
+        "num_homework_graded": 1
+    },
+    {
+        "id": 2602,
+        "title": "Examen parcial 📊",
+        "weight": "15.00",
+        "average_grade": "89.7500",
+        "grade_by_weight": "13.4625",
+        "trend": null,
+        "color": "#16175f",
+        "course": 514,
+        "num_homework": 1,
+        "num_homework_graded": 1
+    },
+    {
+        "id": 2603,
+        "title": "Proyecto 🔨",
+        "weight": "25.00",
+        "average_grade": "70.0000",
+        "grade_by_weight": "17.5000",
+        "trend": null,
+        "color": "#049f71",
+        "course": 513,
+        "num_homework": 3,
+        "num_homework_graded": 1
+    },
+    {
+        "id": 2604,
+        "title": "Cuestionario 💡",
+        "weight": "20.00",
+        "average_grade": "87.6000",
+        "grade_by_weight": "17.5200",
+        "trend": 0.011699999999999875,
+        "color": "#06f9b0",
+        "course": 513,
+        "num_homework": 8,
+        "num_homework_graded": 5
+    },
+    {
+        "id": 2605,
+        "title": "Cuestionario 💡",
+        "weight": "20.00",
+        "average_grade": "80.4167",
+        "grade_by_weight": "16.0833",
+        "trend": 0.02708333333333342,
+        "color": "#5658d7",
+        "course": 514,
+        "num_homework": 5,
+        "num_homework_graded": 3
+    },
+    {
+        "id": 2606,
+        "title": "Lectura 📖",
+        "weight": "0.00",
+        "average_grade": "-1.0000",
+        "grade_by_weight": "0.0000",
+        "trend": null,
+        "color": "#3033cf",
+        "course": 514,
+        "num_homework": 6,
+        "num_homework_graded": 0
+    },
+    {
+        "id": 2607,
+        "title": "Lectura 📖",
+        "weight": "0.00",
+        "average_grade": "-1.0000",
+        "grade_by_weight": "0.0000",
+        "trend": null,
+        "color": "#792a69",
+        "course": 512,
+        "num_homework": 4,
+        "num_homework_graded": 0
+    },
+    {
+        "id": 2608,
+        "title": "Cuentos cortos 🪶",
+        "weight": "30.00",
+        "average_grade": "91.7500",
+        "grade_by_weight": "27.5250",
+        "trend": 0.04249999999999998,
+        "color": "#9b3687",
+        "course": 512,
+        "num_homework": 4,
+        "num_homework_graded": 2
+    },
+    {
+        "id": 2609,
+        "title": "Uncategorized",
+        "weight": "0.00",
+        "average_grade": "-1.0000",
+        "grade_by_weight": "0.0000",
+        "trend": null,
+        "color": "#bd42a4",
+        "course": 512,
+        "num_homework": 0,
+        "num_homework_graded": 0
+    },
+    {
+        "id": 2610,
+        "title": "Uncategorized",
+        "weight": "0.00",
+        "average_grade": "-1.0000",
+        "grade_by_weight": "0.0000",
+        "trend": null,
+        "color": "#05cc90",
+        "course": 513,
+        "num_homework": 0,
+        "num_homework_graded": 0
+    },
+    {
+        "id": 2611,
+        "title": "Uncategorized",
+        "weight": "0.00",
+        "average_grade": "-1.0000",
+        "grade_by_weight": "0.0000",
+        "trend": null,
+        "color": "#3033cf",
+        "course": 514,
+        "num_homework": 0,
+        "num_homework_graded": 0
+    }
+  ],
+  "resource_groups": [
+    {
+        "id": 493,
+        "title": "Herramientas digitales",
+        "shown_on_calendar": true,
+        "user": 118
+    },
+    {
+        "id": 494,
+        "title": "Materiales",
+        "shown_on_calendar": true,
+        "user": 118
+    },
+    {
+        "id": 495,
+        "title": "Libros de texto",
+        "shown_on_calendar": true,
+        "user": 118
+    }
+  ],
+  "resources": [
+    {
+        "id": 931,
+        "title": "Automate the Boring Stuff with Python",
+        "status": 0,
+        "condition": 0,
+        "website": "https://automatetheboringstuff.com",
+        "price": "$28.99",
+        "resource_group": 495,
+        "courses": [
+        513
+        ]
+    },
+    {
+        "id": 932,
+        "title": "Bird by Bird: Some Instructions on Writing and Life",
+        "status": 1,
+        "condition": 0,
+        "website": "https://www.amazon.com/Bird-Some-Instructions-Writing-Life/dp/0385480016",
+        "price": "$16.00",
+        "resource_group": 495,
+        "courses": [
+        512
+        ]
+    },
+    {
+        "id": 933,
+        "title": "Google Workspace (Docs, Drive)",
+        "status": 7,
+        "condition": 8,
+        "website": "https://workspace.google.com/",
+        "price": "Free",
+        "resource_group": 493,
+        "courses": [
+        512,
+        513,
+        514
+        ]
+    },
+    {
+        "id": 934,
+        "title": "Cuaderno 📓",
+        "status": 0,
+        "condition": 0,
+        "website": "",
+        "price": "$5.00",
+        "resource_group": 494,
+        "courses": [
+        512,
+        514
+        ]
+    },
+    {
+        "id": 935,
+        "title": "Psychology, 14th Edition",
+        "status": 0,
+        "condition": 0,
+        "website": "https://www.pearson.com/en-us/subject-catalog/p/psychology/P200000009860",
+        "price": "$45.00",
+        "resource_group": 495,
+        "courses": [
+        514
+        ]
+    }
+  ],
+  "events": [
+    {
+        "id": 1091,
+        "title": "Taller de escritura",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-10-07T20:00:00Z",
+        "end": "2025-10-07T21:30:00Z",
+        "priority": 50,
+        "owner_id": null,
+        "attachments": [],
+        "reminders": [],
+        "user": 118,
+        "calendar_item_type": 0
+    },
+    {
+        "id": 1088,
+        "title": "Reunión de grupo (Programación)",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-10-18T20:00:00Z",
+        "end": "2025-10-18T21:30:00Z",
+        "priority": 50,
+        "owner_id": null,
+        "attachments": [],
+        "reminders": [],
+        "user": 118,
+        "calendar_item_type": 0
+    },
+    {
+        "id": 1092,
+        "title": "Taller de escritura",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-10-21T20:00:00Z",
+        "end": "2025-10-21T21:30:00Z",
+        "priority": 50,
+        "owner_id": null,
+        "attachments": [],
+        "reminders": [],
+        "user": 118,
+        "calendar_item_type": 0
+    },
+    {
+        "id": 1090,
+        "title": "Sesión de estudio (Examen parcial, Programación)",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-10-28T18:00:00Z",
+        "end": "2025-10-28T19:30:00Z",
+        "priority": 60,
+        "owner_id": null,
+        "attachments": [],
+        "reminders": [
+        1311,
+        1320
+        ],
+        "user": 118,
+        "calendar_item_type": 0
+    },
+    {
+        "id": 1094,
+        "title": "Fin de semana de padres",
+        "all_day": true,
+        "show_end_time": true,
+        "start": "2025-10-31T06:00:00Z",
+        "end": "2025-11-03T06:00:00Z",
+        "priority": 50,
+        "owner_id": null,
+        "attachments": [],
+        "reminders": [],
+        "user": 118,
+        "calendar_item_type": 0
+    },
+    {
+        "id": 1089,
+        "title": "Taller de escritura",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-11-04T20:00:00Z",
+        "end": "2025-11-04T21:30:00Z",
+        "priority": 50,
+        "owner_id": null,
+        "attachments": [],
+        "reminders": [],
+        "user": 118,
+        "calendar_item_type": 0
+    },
+    {
+        "id": 1095,
+        "title": "Taller de escritura del portafolio final",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-11-18T20:00:00Z",
+        "end": "2025-11-18T21:30:00Z",
+        "priority": 50,
+        "owner_id": null,
+        "attachments": [],
+        "reminders": [],
+        "user": 118,
+        "calendar_item_type": 0
+    },
+    {
+        "id": 1093,
+        "title": "Sesión de estudio (Examen final, Psicología)",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-11-29T18:00:00Z",
+        "end": "2025-11-29T20:00:00Z",
+        "priority": 60,
+        "owner_id": null,
+        "attachments": [],
+        "reminders": [],
+        "user": 118,
+        "calendar_item_type": 0
+    },
+    {
+        "id": 1096,
+        "title": "Sesión de estudio (Examen final, Programación)",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-12-03T18:00:00Z",
+        "end": "2025-12-03T20:00:00Z",
+        "priority": 60,
+        "owner_id": null,
+        "attachments": [],
+        "reminders": [],
+        "user": 118,
+        "calendar_item_type": 0
+    }
+  ],
+  "homework": [
+    {
+        "id": 7815,
+        "title": "Cuestionario 1",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-06T16:00:00Z",
+        "end": "2025-10-06T16:30:00Z",
+        "priority": 47,
+        "current_grade": "41.5/50",
+        "completed": true,
+        "category": 2604,
+        "resources": [
+        931
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7816,
+        "title": "Cuento corto 1",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-07T16:00:00Z",
+        "end": "2025-10-07T16:30:00Z",
+        "priority": 47,
+        "current_grade": "87.5/100",
+        "completed": true,
+        "category": 2608,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7817,
+        "title": "Ensayo 1",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-09T16:00:00Z",
+        "end": "2025-10-09T16:30:00Z",
+        "priority": 46,
+        "current_grade": "95/100",
+        "completed": true,
+        "category": 2596,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7818,
+        "title": "Tarea 1",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-10T16:00:00Z",
+        "end": "2025-10-10T16:30:00Z",
+        "priority": 45,
+        "current_grade": "40/50",
+        "completed": true,
+        "category": 2600,
+        "resources": [
+        931,
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7819,
+        "title": "Lectura (Capítulos 1-4)",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-10-11T06:00:00Z",
+        "end": "2025-10-12T06:00:00Z",
+        "priority": 26,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2607,
+        "resources": [
+        932
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7820,
+        "title": "Capítulos 1-2",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-10-12T06:00:00Z",
+        "end": "2025-10-13T06:00:00Z",
+        "priority": 25,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2606,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7821,
+        "title": "Cuestionario 2",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-13T16:00:00Z",
+        "end": "2025-10-13T16:30:00Z",
+        "priority": 47,
+        "current_grade": "41/50",
+        "completed": true,
+        "category": 2604,
+        "resources": [
+        931
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7822,
+        "title": "Estudio de caso 1",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-13T18:00:00Z",
+        "end": "2025-10-13T18:30:00Z",
+        "priority": 46,
+        "current_grade": "78/100",
+        "completed": true,
+        "category": 2595,
+        "resources": [
+        933,
+        934,
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7823,
+        "title": "Cuestionario 1",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-15T18:00:00Z",
+        "end": "2025-10-15T18:30:00Z",
+        "priority": 50,
+        "current_grade": "75/100",
+        "completed": true,
+        "category": 2605,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7824,
+        "title": "Ensayo 2",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-16T16:00:00Z",
+        "end": "2025-10-16T16:30:00Z",
+        "priority": 43,
+        "current_grade": "98/100",
+        "completed": true,
+        "category": 2596,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7825,
+        "title": "Tarea 2",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-17T16:00:00Z",
+        "end": "2025-10-17T16:30:00Z",
+        "priority": 48,
+        "current_grade": "44/50",
+        "completed": true,
+        "category": 2600,
+        "resources": [
+        931,
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7826,
+        "title": "Capítulos 3-4",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-10-19T06:00:00Z",
+        "end": "2025-10-20T06:00:00Z",
+        "priority": 26,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2606,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7827,
+        "title": "Cuestionario 3",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-20T16:00:00Z",
+        "end": "2025-10-20T16:30:00Z",
+        "priority": 48,
+        "current_grade": "41/50",
+        "completed": true,
+        "category": 2604,
+        "resources": [
+        931
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7828,
+        "title": "Cuentos cortos 2",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-21T16:00:00Z",
+        "end": "2025-10-21T16:30:00Z",
+        "priority": 45,
+        "current_grade": "96/100",
+        "completed": true,
+        "category": 2608,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7829,
+        "title": "Cuestionario 2",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-22T18:00:00Z",
+        "end": "2025-10-22T18:30:00Z",
+        "priority": 48,
+        "current_grade": "81.25/100",
+        "completed": true,
+        "category": 2605,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7830,
+        "title": "Ensayo 3",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-23T16:00:00Z",
+        "end": "2025-10-23T16:30:00Z",
+        "priority": 47,
+        "current_grade": "70/100",
+        "completed": true,
+        "category": 2596,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7831,
+        "title": "Proyecto 1",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-10-24T06:00:00Z",
+        "end": "2025-10-25T06:00:00Z",
+        "priority": 77,
+        "current_grade": "70/100",
+        "completed": true,
+        "category": 2603,
+        "resources": [
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7832,
+        "title": "Tarea 3",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-24T16:00:00Z",
+        "end": "2025-10-24T16:30:00Z",
+        "priority": 47,
+        "current_grade": "95/100",
+        "completed": true,
+        "category": 2600,
+        "resources": [
+        931,
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7833,
+        "title": "Lectura (Capítulos 5-8)",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-10-25T06:00:00Z",
+        "end": "2025-10-26T06:00:00Z",
+        "priority": 27,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2607,
+        "resources": [
+        932
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7834,
+        "title": "Capítulos 5-6",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-10-26T06:00:00Z",
+        "end": "2025-10-27T06:00:00Z",
+        "priority": 25,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2606,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7835,
+        "title": "Examen parcial",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-27T16:00:00Z",
+        "end": "2025-10-27T16:30:00Z",
+        "priority": 100,
+        "current_grade": "55/50",
+        "completed": true,
+        "category": 2601,
+        "resources": [
+        931
+        ],
+        "attachments": [],
+        "reminders": [
+        1316,
+        1324
+        ],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7836,
+        "title": "Estudio de caso 2",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-27T18:00:00Z",
+        "end": "2025-10-27T18:30:00Z",
+        "priority": 50,
+        "current_grade": "100/100",
+        "completed": true,
+        "category": 2595,
+        "resources": [
+        933,
+        934,
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7837,
+        "title": "Cuestionario 4",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-29T16:00:00Z",
+        "end": "2025-10-29T16:30:00Z",
+        "priority": 45,
+        "current_grade": "46.5/50",
+        "completed": true,
+        "category": 2604,
+        "resources": [
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7838,
+        "title": "Examen parcial",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-29T18:00:00Z",
+        "end": "2025-10-29T18:30:00Z",
+        "priority": 100,
+        "current_grade": "89.75/100",
+        "completed": true,
+        "category": 2602,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [
+        1315,
+        1319
+        ],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7839,
+        "title": "Ensayo 4",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-30T16:00:00Z",
+        "end": "2025-10-30T16:30:00Z",
+        "priority": 68,
+        "current_grade": "85/100",
+        "completed": true,
+        "category": 2596,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7840,
+        "title": "Tarea 4",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-10-31T16:00:00Z",
+        "end": "2025-10-31T16:30:00Z",
+        "priority": 34,
+        "current_grade": "49/50",
+        "completed": true,
+        "category": 2600,
+        "resources": [
+        931,
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7841,
+        "title": "Cuestionario 5",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-03T17:00:00Z",
+        "end": "2025-11-03T17:30:00Z",
+        "priority": 49,
+        "current_grade": "49/50",
+        "completed": true,
+        "category": 2604,
+        "resources": [
+        931
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7842,
+        "title": "Cuentos cortos 3",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-04T17:00:00Z",
+        "end": "2025-11-04T17:30:00Z",
+        "priority": 72,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2608,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7843,
+        "title": "Cuestionario 3",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-05T19:00:00Z",
+        "end": "2025-11-05T19:30:00Z",
+        "priority": 45,
+        "current_grade": "85/100",
+        "completed": true,
+        "category": 2605,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7844,
+        "title": "Ensayo 5",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-06T17:00:00Z",
+        "end": "2025-11-06T17:30:00Z",
+        "priority": 29,
+        "current_grade": "95/100",
+        "completed": true,
+        "category": 2596,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7845,
+        "title": "Proyecto 2",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-11-07T06:00:00Z",
+        "end": "2025-11-08T06:00:00Z",
+        "priority": 80,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2603,
+        "resources": [
+        933
+        ],
+        "attachments": [],
+        "reminders": [
+        1317,
+        1321
+        ],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7846,
+        "title": "Tarea 5",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-07T17:00:00Z",
+        "end": "2025-11-07T17:30:00Z",
+        "priority": 61,
+        "current_grade": "100/100",
+        "completed": true,
+        "category": 2600,
+        "resources": [
+        931,
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7847,
+        "title": "Lectura (Capítulos 9-12)",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-11-08T06:00:00Z",
+        "end": "2025-11-09T06:00:00Z",
+        "priority": 24,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2607,
+        "resources": [
+        932
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7848,
+        "title": "Capítulos 7-8",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-11-09T06:00:00Z",
+        "end": "2025-11-10T06:00:00Z",
+        "priority": 25,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2606,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7849,
+        "title": "Cuestionario 6",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-10T17:00:00Z",
+        "end": "2025-11-10T17:30:00Z",
+        "priority": 51,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2604,
+        "resources": [
+        931
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7850,
+        "title": "Cuestionario 4",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-12T19:00:00Z",
+        "end": "2025-11-12T19:30:00Z",
+        "priority": 49,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2605,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7851,
+        "title": "Ensayo 6",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-13T17:00:00Z",
+        "end": "2025-11-13T17:30:00Z",
+        "priority": 29,
+        "current_grade": "-1/100",
+        "completed": true,
+        "category": 2596,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7852,
+        "title": "Tarea 6",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-14T17:00:00Z",
+        "end": "2025-11-14T17:30:00Z",
+        "priority": 61,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2600,
+        "resources": [
+        931,
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7853,
+        "title": "Capítulos 9-10",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-11-16T06:00:00Z",
+        "end": "2025-11-17T06:00:00Z",
+        "priority": 26,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2606,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7854,
+        "title": "Cuestionario 7",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-17T17:00:00Z",
+        "end": "2025-11-17T17:30:00Z",
+        "priority": 28,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2604,
+        "resources": [
+        931
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7855,
+        "title": "Estudio de caso 3",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-17T19:00:00Z",
+        "end": "2025-11-17T19:30:00Z",
+        "priority": 50,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2595,
+        "resources": [
+        933,
+        934,
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7856,
+        "title": "Cuentos cortos 4",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-18T17:00:00Z",
+        "end": "2025-11-18T17:30:00Z",
+        "priority": 72,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2608,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7857,
+        "title": "Cuestionario 5",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-19T19:00:00Z",
+        "end": "2025-11-19T19:30:00Z",
+        "priority": 50,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2605,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7858,
+        "title": "Ensayo 7",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-20T17:00:00Z",
+        "end": "2025-11-20T17:30:00Z",
+        "priority": 29,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2596,
+        "resources": [
+        933,
+        934
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7859,
+        "title": "Tarea 7",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-21T17:00:00Z",
+        "end": "2025-11-21T17:30:00Z",
+        "priority": 61,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2600,
+        "resources": [
+        931,
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7860,
+        "title": "Lectura (Capítulos 13-16)",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-11-22T06:00:00Z",
+        "end": "2025-11-23T06:00:00Z",
+        "priority": 25,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2607,
+        "resources": [
+        932
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7861,
+        "title": "Capítulos 11-12",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-11-23T06:00:00Z",
+        "end": "2025-11-24T06:00:00Z",
+        "priority": 19,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2606,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7862,
+        "title": "Cuestionario 8",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-24T17:00:00Z",
+        "end": "2025-11-24T17:30:00Z",
+        "priority": 28,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2604,
+        "resources": [
+        931
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7863,
+        "title": "Estudio de caso final",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-11-26T19:00:00Z",
+        "end": "2025-11-26T19:30:00Z",
+        "priority": 100,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2594,
+        "resources": [
+        933,
+        934,
+        935
+        ],
+        "attachments": [],
+        "reminders": [
+        1312,
+        1322
+        ],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7864,
+        "title": "Proyecto final",
+        "all_day": true,
+        "show_end_time": false,
+        "start": "2025-11-28T06:00:00Z",
+        "end": "2025-11-29T06:00:00Z",
+        "priority": 81,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2603,
+        "resources": [
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 513,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7865,
+        "title": "Examen final",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-12-01T19:00:00Z",
+        "end": "2025-12-01T19:30:00Z",
+        "priority": 100,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2598,
+        "resources": [
+        935
+        ],
+        "attachments": [],
+        "reminders": [
+        1313,
+        1318
+        ],
+        "course": 514,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7866,
+        "title": "Portafolio final",
+        "all_day": false,
+        "show_end_time": false,
+        "start": "2025-12-04T17:00:00Z",
+        "end": "2025-12-04T17:30:00Z",
+        "priority": 100,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2599,
+        "resources": [
+        933
+        ],
+        "attachments": [],
+        "reminders": [],
+        "course": 512,
+        "calendar_item_type": 1
+    },
+    {
+        "id": 7867,
+        "title": "Examen final",
+        "all_day": false,
+        "show_end_time": true,
+        "start": "2025-12-05T17:00:00Z",
+        "end": "2025-12-05T17:30:00Z",
+        "priority": 100,
+        "current_grade": "-1/100",
+        "completed": false,
+        "category": 2597,
+        "resources": [
+        931
+        ],
+        "attachments": [],
+        "reminders": [
+        1314,
+        1323
+        ],
+        "course": 513,
+        "calendar_item_type": 1
+    }
+  ],
+  "reminders": [
+    {
+        "id": 1318,
+        "message": "90 minutos para completar el examen",
+        "start_of_range": "2025-12-01T18:30:00Z",
+        "offset": 30,
+        "offset_type": 0,
+        "type": 3,
+        "sent": true,
+        "dismissed": false,
+        "homework": 7865,
+        "event": null,
+        "user": 118
+    },
+    {
+        "id": 1319,
+        "message": "90 minutos para completar el examen",
+        "start_of_range": "2025-10-29T18:30:00Z",
+        "offset": 30,
+        "offset_type": 0,
+        "type": 3,
+        "sent": true,
+        "dismissed": false,
+        "homework": 7838,
+        "event": null,
+        "user": 118
+    },
+    {
+        "id": 1320,
+        "message": "Trae apuntes para el grupo",
+        "start_of_range": "2025-10-27T17:30:00Z",
+        "offset": 30,
+        "offset_type": 0,
+        "type": 3,
+        "sent": true,
+        "dismissed": false,
+        "homework": null,
+        "event": 1090,
+        "user": 118
+    },
+    {
+        "id": 1321,
+        "message": "Vence a medianoche",
+        "start_of_range": "2025-11-07T05:30:00Z",
+        "offset": 30,
+        "offset_type": 0,
+        "type": 3,
+        "sent": true,
+        "dismissed": false,
+        "homework": 7845,
+        "event": null,
+        "user": 118
+    },
+    {
+        "id": 1322,
+        "message": "Vence al inicio de la clase",
+        "start_of_range": "2025-11-26T18:30:00Z",
+        "offset": 30,
+        "offset_type": 0,
+        "type": 3,
+        "sent": true,
+        "dismissed": false,
+        "homework": 7863,
+        "event": null,
+        "user": 118
+    },
+    {
+        "id": 1323,
+        "message": "90 minutos para completar el examen",
+        "start_of_range": "2025-12-05T16:30:00Z",
+        "offset": 30,
+        "offset_type": 0,
+        "type": 3,
+        "sent": true,
+        "dismissed": false,
+        "homework": 7867,
+        "event": null,
+        "user": 118
+    },
+    {
+        "id": 1324,
+        "message": "Esta vez en ENG 305",
+        "start_of_range": "2025-10-27T16:30:00Z",
+        "offset": 30,
+        "offset_type": 0,
+        "type": 3,
+        "sent": true,
+        "dismissed": false,
+        "homework": 7835,
+        "event": null,
+        "course": null,
+        "user": 118
+    },
+    {
+        "id": 1325,
+        "message": "La clase empieza pronto",
+        "start_of_range": "2025-10-07T10:50:00Z",
+        "offset": 10,
+        "offset_type": 0,
+        "type": 3,
+        "sent": true,
+        "dismissed": false,
+        "repeating": true,
+        "homework": null,
+        "event": null,
+        "course": 512,
+        "user": 118
+    }
+  ],
+  "notes": [
+    {
+        "id": 1,
+        "title": "Plantilla para una sesión de estudio",
+        "content": {
+        "ops": [
+          {
+            "insert": "Plantilla para una sesión de estudio"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "header": 2
+            }
+          },
+          {
+            "insert": "\n"
+          },
+          {
+            "insert": "Las notas independientes no están vinculadas a ninguna clase ni tarea. Úsalas para cualquier cosa que abarque varias asignaturas o que no pertenezca a nada en concreto.",
+            "attributes": {
+              "italic": true
+            }
+          },
+          {
+            "insert": "\n\n"
+          },
+          {
+            "insert": "Antes de comenzar"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "header": 2
+            }
+          },
+          {
+            "insert": "\n"
+          },
+          {
+            "insert": "Despeja tu espacio de trabajo y cierra las pestañas que no necesites"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "Escribe lo que quieres lograr"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "Reserva un bloque de tiempo"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "\n"
+          },
+          {
+            "insert": "Durante la sesión"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "header": 2
+            }
+          },
+          {
+            "insert": "\nCaptura notas, preguntas e "
+          },
+          {
+            "insert": "ideas sobre la marcha",
+            "attributes": {
+              "background": "#FFBD42A4"
+            }
+          },
+          {
+            "insert": ". El color ayuda a repasar más tarde:\n\n"
+          },
+          {
+            "insert": "Concepto para recordar",
+            "attributes": {
+              "color": "#2196f3",
+              "italic": true
+            }
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          },
+          {
+            "insert": "Pregunta para dar seguimiento",
+            "attributes": {
+              "color": "#ab47bc",
+              "italic": true
+            }
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          },
+          {
+            "insert": "Acción pendiente",
+            "attributes": {
+              "color": "#26a69a",
+              "italic": true
+            }
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          },
+          {
+            "insert": "\n"
+          },
+          {
+            "insert": "Si surge algo que no tenga relación con el tema, anótalo aquí y vuelve a ello más tarde."
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "blockquote": true
+            }
+          },
+          {
+            "insert": "\n"
+          },
+          {
+            "insert": "Después de la sesión"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "header": 2
+            }
+          },
+          {
+            "insert": "\n"
+          },
+          {
+            "insert": "Repasa lo que anotaste"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "ordered"
+            }
+          },
+          {
+            "insert": "Vincula tus notas a la clase o tarea correspondiente"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "ordered"
+            }
+          },
+          {
+            "insert": "Agrega recordatorios para todo lo que tenga fecha límite"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "ordered"
+            }
+          },
+          {
+            "insert": "\n"
+          },
+          {
+            "insert": "Esta sesión"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "header": 2
+            }
+          },
+          {
+            "insert": "\n"
+          },
+          {
+            "insert": "Enfoque elegido"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Temporizador configurado"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Ideas clave anotadas"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "Notas revisadas y vinculadas"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          }
+        ]
+        },
+        "homework": [],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 2,
+        "title": "",
+        "content": {
+        "ops": [
+          {
+            "insert": "ISBN-13:",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": " 978-1718503403\n"
+          }
+        ]
+        },
+        "homework": [],
+        "events": [],
+        "resources": [
+        931
+        ]
+    },
+    {
+        "id": 3,
+        "title": "",
+        "content": {
+        "ops": [
+          {
+            "insert": "ISBN-13:",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": " 978-0385480017\n"
+          }
+        ]
+        },
+        "homework": [],
+        "events": [],
+        "resources": [
+        932
+        ]
+    },
+    {
+        "id": 4,
+        "title": "",
+        "content": {
+        "ops": [
+          {
+            "insert": "Inicia sesión con tu correo electrónico escolar para obtener acceso a Drive.\n"
+          }
+        ]
+        },
+        "homework": [],
+        "events": [],
+        "resources": [
+        933
+        ]
+    },
+    {
+        "id": 5,
+        "title": "",
+        "content": {
+        "ops": [
+          {
+            "insert": "ISBN-13:",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": " 978-0137988082\n"
+          }
+        ]
+        },
+        "homework": [],
+        "events": [],
+        "resources": [
+        935
+        ]
+    },
+    {
+        "id": 6,
+        "title": "Planificación del sprint",
+        "content": {
+        "ops": [
+          {
+            "insert": "Prepárate para hablar de:\n"
+          },
+          {
+            "insert": "Hitos del proyecto final"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Flujo de trabajo de merge en GitHub"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          }
+        ]
+        },
+        "homework": [],
+        "events": [
+        1088
+        ],
+        "resources": []
+    },
+    {
+        "id": 7,
+        "title": "Fundamentos de Python",
+        "content": {
+        "ops": [
+          {
+            "insert": "Prepárate para repasar:\n"
+          },
+          {
+            "insert": "Bucles"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Condicionales"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Estructuras de datos básicas"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          }
+        ]
+        },
+        "homework": [],
+        "events": [
+        1090
+        ],
+        "resources": []
+    },
+    {
+        "id": 8,
+        "title": "Comentarios sobre los cuentos",
+        "content": {
+        "ops": [
+          {
+            "insert": "Revisión por pares de cuentos cortos. "
+          },
+          {
+            "insert": "Trae copias impresas.",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": "\n"
+          }
+        ]
+        },
+        "homework": [],
+        "events": [
+        1091
+        ],
+        "resources": []
+    },
+    {
+        "id": 9,
+        "title": "Diálogo y voz",
+        "content": {
+        "ops": [
+          {
+            "insert": "Trae una página de diálogo de tu historia para leerla en voz alta.\n"
+          }
+        ]
+        },
+        "homework": [],
+        "events": [
+        1092
+        ],
+        "resources": []
+    },
+    {
+        "id": 10,
+        "title": "Desarrollo de personajes",
+        "content": {
+        "ops": [
+          {
+            "insert": "Trae un breve párrafo que describa a tu personaje principal: qué quiere y qué se interpone en su camino.\n"
+          }
+        ]
+        },
+        "homework": [],
+        "events": [
+        1089
+        ],
+        "resources": []
+    },
+    {
+        "id": 11,
+        "title": "Revisión del portafolio",
+        "content": {
+        "ops": [
+          {
+            "insert": "Revisión por pares del portafolio final. "
+          },
+          {
+            "insert": "Trae copias impresas.",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": "\n"
+          }
+        ]
+        },
+        "homework": [],
+        "events": [
+        1095
+        ],
+        "resources": []
+    },
+    {
+        "id": 12,
+        "title": "Revisión final",
+        "content": {
+        "ops": [
+          {
+            "insert": "Abarca los capítulos 7 al 12.",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": " Grupo de estudio:\n"
+          },
+          {
+            "insert": "Jenna"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          },
+          {
+            "insert": "Andrew"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          },
+          {
+            "insert": "Sara"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          }
+        ]
+        },
+        "homework": [],
+        "events": [
+        1093
+        ],
+        "resources": []
+    },
+    {
+        "id": 13,
+        "title": "Revisión de estructuras de datos",
+        "content": {
+        "ops": [
+          {
+            "insert": "Trae preguntas sobre:\n"
+          },
+          {
+            "insert": "Listas y diccionarios"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          },
+          {
+            "insert": "Lectura y escritura de archivos"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          },
+          {
+            "insert": "Errores del proyecto final"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "bullet"
+            }
+          }
+        ]
+        },
+        "homework": [],
+        "events": [
+        1096
+        ],
+        "resources": []
+    },
+    {
+        "id": 14,
+        "title": "El experimento del pequeño Albert",
+        "content": {
+        "ops": [
+          {
+            "insert": "Repasa el artículo de contexto (Canvas)"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Anota las cuestiones éticas para el debate"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Relaciónalo con el condicionamiento clásico (cap. 6)"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "Publica tu reflexión en la carpeta compartida de Google Drive"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          }
+        ]
+        },
+        "homework": [
+        7822
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 15,
+        "title": "Aprendizaje y memoria",
+        "content": {
+        "ops": [
+          {
+            "insert": "Abarca los capítulos 1 al 6.",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": " Se permite una página de notas manuscritas.\n"
+          }
+        ]
+        },
+        "homework": [
+        7838
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 16,
+        "title": "Análisis de Phineas Gage",
+        "content": {
+        "ops": [
+          {
+            "insert": "Lee la descripción del caso (libro de texto, cap. 2)"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Mira un video de 5 minutos sobre lesiones de la corteza prefrontal"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Resume los cambios de conducta (100 palabras)"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "Relaciona los hallazgos con la neuropsicología moderna"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          }
+        ]
+        },
+        "homework": [
+        7855
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 17,
+        "title": "Investigación sobre el cerebro dividido",
+        "content": {
+        "ops": [
+          {
+            "insert": "Reúne la sección de cada compañero antes de entregar:\n"
+          },
+          {
+            "insert": "Jenna"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Andrew"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "unchecked"
+            }
+          },
+          {
+            "insert": "Sara"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          }
+        ]
+        },
+        "homework": [
+        7863
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 18,
+        "title": "Teorías de la personalidad",
+        "content": {
+        "ops": [
+          {
+            "insert": "Abarca los capítulos 7 al 12.",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": "\n"
+          }
+        ]
+        },
+        "homework": [
+        7865
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 19,
+        "title": "Script para organizar archivos",
+        "content": {
+        "ops": [
+          {
+            "insert": "Vence a medianoche.",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": " Entrega el archivo .py y un README en Canvas.\n"
+          }
+        ]
+        },
+        "homework": [
+        7831
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 20,
+        "title": "Scraper web",
+        "content": {
+        "ops": [
+          {
+            "insert": "Obtener la página"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Analizar la tabla"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Guardar los resultados en CSV"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          }
+        ]
+        },
+        "homework": [
+        7845
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 21,
+        "title": "Automatización de correo electrónico",
+        "content": {
+        "ops": [
+          {
+            "insert": "Vence a medianoche.",
+            "attributes": {
+              "bold": true
+            }
+          },
+          {
+            "insert": " Prueba con una bandeja de entrada desechable, no con tu correo electrónico escolar.\n"
+          }
+        ]
+        },
+        "homework": [
+        7864
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 22,
+        "title": "Voz y tono",
+        "content": {
+        "ops": [
+          {
+            "insert": "Narra un momento con dos voces: la de un niño y la de un adulto. 500 palabras.\n"
+          }
+        ]
+        },
+        "homework": [
+        7824
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 23,
+        "title": "Ambiente y atmósfera",
+        "content": {
+        "ops": [
+          {
+            "insert": "Comienza con el lugar, no con un personaje. Usa al menos tres sentidos.\n"
+          }
+        ]
+        },
+        "homework": [
+        7830
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 24,
+        "title": "Arco narrativo",
+        "content": {
+        "ops": [
+          {
+            "insert": "Haz un esquema antes de redactar:\n"
+          },
+          {
+            "insert": "Planteamiento"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "ordered"
+            }
+          },
+          {
+            "insert": "Acción ascendente"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "ordered"
+            }
+          },
+          {
+            "insert": "Clímax"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "ordered"
+            }
+          },
+          {
+            "insert": "Resolución"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "ordered"
+            }
+          }
+        ]
+        },
+        "homework": [
+        7839
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 25,
+        "title": "Muestra, no cuentes",
+        "content": {
+        "ops": [
+          {
+            "insert": "Nada de \"estaba nerviosa\". Muéstralo: se tira de la manga y mira el reloj.\n"
+          }
+        ]
+        },
+        "homework": [
+        7844
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 26,
+        "title": "Notas de revisión",
+        "content": {
+        "ops": [
+          {
+            "insert": "Léelo en voz alta"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Elimina las palabras de relleno"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          },
+          {
+            "insert": "Pule la primera línea"
+          },
+          {
+            "insert": "\n",
+            "attributes": {
+              "list": "checked"
+            }
+          }
+        ]
+        },
+        "homework": [
+        7851
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 27,
+        "title": "Comentarios del taller",
+        "content": {
+        "ops": [
+          {
+            "insert": "Atiende un comentario de cada revisor antes de corregir.\n"
+          }
+        ]
+        },
+        "homework": [
+        7858
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 28,
+        "title": "Reflexión sobre el portafolio",
+        "content": {
+        "ops": [
+          {
+            "insert": "Agrega una reflexión de una página sobre cómo cambió tu escritura.\n"
+          }
+        ]
+        },
+        "homework": [
+        7866
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 29,
+        "title": "",
+        "content": {
+        "ops": [
+          {
+            "insert": "Sube el ensayo a la carpeta compartida de Google Drive antes de clase.\n"
+          }
+        ]
+        },
+        "homework": [
+        7817
+        ],
+        "events": [],
+        "resources": []
+    },
+    {
+        "id": 30,
+        "title": "",
+        "content": {
+        "ops": [
+          {
+            "insert": "Rayado universitario\n"
+          }
+        ]
+        },
+        "homework": [],
+        "events": [],
+        "resources": [
+        934
+        ]
+    }
+  ]
+}
