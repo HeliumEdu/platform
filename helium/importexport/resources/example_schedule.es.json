@@ -4,7 +4,7 @@
     {
         "id": 1,
         "title": "Días festivos en Estados Unidos",
-        "url": "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics",
+        "url": "https://calendar.google.com/calendar/ical/es.usa%23holiday%40group.v.calendar.google.com/public/basic.ics",
         "color": "#dc7d50",
         "shown_on_calendar": true
     }
@@ -486,7 +486,7 @@
         "status": 7,
         "condition": 8,
         "website": "https://workspace.google.com/",
-        "price": "Free",
+        "price": "Gratis",
         "resource_group": 493,
         "courses": [
         512,
