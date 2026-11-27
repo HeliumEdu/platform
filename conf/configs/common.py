@@ -537,6 +537,7 @@ SPECTACULAR_SETTINGS = {
 LANGUAGE_CODE = 'en-us'
 LANGUAGES = [
     ('en', 'English'),
+    ('es', 'Spanish'),
 ]
 LOCALE_PATHS = [os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', 'helium', 'locale'))]
 TIME_ZONE = 'UTC'

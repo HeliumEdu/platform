@@ -1,0 +1,1288 @@
+# AUTO-GENERATED — DO NOT EDIT.
+# Extracted from the platform's emails and messages by:
+#   platform: make build-messages
+msgid ""
+msgstr ""
+"Project-Id-Version: heliumedu\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-26 22:05+0000\n"
+"PO-Revision-Date: 2026-11-27 18:24\n"
+"Last-Translator: \n"
+"Language-Team: Spanish\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Crowdin-Project: heliumedu\n"
+"X-Crowdin-Project-ID: 949327\n"
+"X-Crowdin-Language: es-ES\n"
+"X-Crowdin-File: /[HeliumEdu.platform] develop/helium/locale/en/LC_MESSAGES/django.po\n"
+"X-Crowdin-File-ID: 20\n"
+
+#: auth/serializers/tokenserializer.py
+msgid "Check your credentials and try again."
+msgstr "Comprueba tus credenciales e inténtalo de nuevo."
+
+#: auth/serializers/tokenserializer.py
+msgid "Your account isn't active yet. Check your inbox for the verification email we sent when you registered."
+msgstr "Tu cuenta aún no está activa. Busca en tu bandeja de entrada el correo de verificación que te enviamos al registrarte."
+
+#: auth/serializers/tokenserializer.py
+msgid "Access denied. Please sign in again."
+msgstr "Acceso denegado. Vuelve a iniciar sesión."
+
+#: auth/serializers/userserializer.py
+msgid "Current password is required when changing your password."
+msgstr "Se requiere la contraseña actual para cambiar tu contraseña."
+
+#: auth/serializers/userserializer.py
+msgid "Current password is required when changing your email."
+msgstr "Se requiere la contraseña actual para cambiar tu correo electrónico."
+
+#: auth/serializers/userserializer.py
+msgid "The current password was entered incorrectly and did not match."
+msgstr "La contraseña actual es incorrecta."
+
+#: auth/serializers/usersettingsserializer.py
+msgid "Enter the GPA for your prior credits."
+msgstr "Ingresa el promedio de tus créditos anteriores."
+
+#: auth/services/authservice.py
+msgid "That sign-in method couldn't be removed right now. Try again in a moment."
+msgstr "No se pudo eliminar ese método de inicio de sesión en este momento. Inténtalo de nuevo en unos instantes."
+
+# 'email' is an API field name; keep it in English.
+#: auth/services/authservice.py
+msgid "'email' is required"
+msgstr "Se requiere 'email'"
+
+#: auth/services/authservice.py
+msgid "'uid', 'token', and 'password' are required"
+msgstr "Se requieren 'uid', 'token' y 'password'"
+
+#: auth/services/authservice.py
+msgid "Password reset is not available for this account."
+msgstr "El restablecimiento de contraseña no está disponible para esta cuenta."
+
+#: auth/services/authservice.py
+msgid "'email' and 'code' must be given as query parameters"
+msgstr "'email' y 'code' deben indicarse como parámetros de consulta"
+
+#: auth/services/authservice.py
+msgid "'email' must be given as a query parameter"
+msgstr "'email' debe indicarse como parámetro de consulta"
+
+#: auth/services/authservice.py
+msgid "'id_token' is required"
+msgstr "Se requiere 'id_token'"
+
+# 'provider' is an API field name; keep it in English.
+#: auth/services/authservice.py
+msgid "'provider' is required"
+msgstr "Se requiere 'provider'"
+
+# 'provider' is an API field name; keep it in English.
+#: auth/services/authservice.py
+#, python-format
+msgid "'provider' must be one of: %(providers)s"
+msgstr "'provider' debe ser uno de los siguientes: %(providers)s"
+
+#: auth/services/authservice.py
+#, python-format
+msgid "%(provider)s didn't share this account's email address."
+msgstr "%(provider)s no compartió la dirección de correo electrónico de esta cuenta."
+
+#: auth/services/authservice.py
+#, python-format
+msgid "%(provider)s hasn't verified this account's email address."
+msgstr "%(provider)s no ha verificado la dirección de correo electrónico de esta cuenta."
+
+#: auth/services/authservice.py
+#, python-format
+msgid "Sign in with %(provider)s failed because of an account conflict. Contact support for help."
+msgstr "No se pudo iniciar sesión con %(provider)s por un conflicto de cuentas. Ponte en contacto con el equipo de soporte para obtener ayuda."
+
+#: auth/services/authservice.py
+msgid "That email is already registered with a different sign-in method. Sign in that way instead."
+msgstr "Ese correo electrónico ya está registrado con otro método de inicio de sesión. Inicia sesión con ese método."
+
+#: auth/services/authservice.py
+msgid "Invalid Firebase ID token"
+msgstr "El token de ID de Firebase no es válido"
+
+#: auth/services/authservice.py
+msgid "That sign-in is not linked to this account."
+msgstr "Ese inicio de sesión no está vinculado a esta cuenta."
+
+#: auth/services/authservice.py
+msgid "This is the only way to sign in to this account, so it can't be removed."
+msgstr "Esta es la única forma de iniciar sesión en esta cuenta, por lo que no se puede eliminar."
+
+#: auth/services/oauthservice.py
+msgid "You switched Helium accounts since this page loaded. Reload it to see which account you're connecting."
+msgstr "Has cambiado de cuenta de Helium desde que se cargó esta página. Recárgala para ver con qué cuenta te estás conectando."
+
+#: auth/services/oauthservice.py
+#, python-format
+msgid "Not requested by the client: %(scopes)s."
+msgstr "El cliente no lo solicitó: %(scopes)s."
+
+#: auth/services/oauthservice.py
+#, python-format
+msgid "Required by the client: %(scopes)s."
+msgstr "El cliente lo requiere: %(scopes)s."
+
+#: auth/services/oauthservice.py
+msgid "Check at least one item to allow, or choose Deny."
+msgstr "Marca al menos un elemento para permitir o elige Denegar."
+
+#: auth/tasks.py
+msgid "Verify Your Email Address with Helium"
+msgstr "Verifica tu dirección de correo electrónico con Helium"
+
+#: auth/tasks.py
+msgid "Welcome to Helium"
+msgstr "Te damos la bienvenida a Helium"
+
+#: auth/tasks.py
+msgid "Reset Your Helium Password"
+msgstr "Restablece tu contraseña de Helium"
+
+#: auth/templates/email/dormant_warning.html
+#: auth/templates/email/dormant_warning.txt
+msgid "This is your final notice."
+msgstr "Este es tu último aviso."
+
+#: auth/templates/email/dormant_warning.html
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid "Your Helium account will be permanently deleted tomorrow due to %(years)s+ years of inactivity."
+msgstr "Tu cuenta de Helium se eliminará de forma permanente mañana por más de %(years)s años de inactividad."
+
+#: auth/templates/email/dormant_warning.html
+#, python-format
+msgid "Your Helium account is scheduled for deletion in <strong>%(days)s day</strong> due to %(years)s+ years of inactivity."
+msgid_plural "Your Helium account is scheduled for deletion in <strong>%(days)s days</strong> due to %(years)s+ years of inactivity."
+msgstr[0] "Tu cuenta de Helium se eliminará en <strong>%(days)s día</strong> por más de %(years)s años de inactividad."
+msgstr[1] "Tu cuenta de Helium se eliminará en <strong>%(days)s días</strong> por más de %(years)s años de inactividad."
+
+#: auth/templates/email/dormant_warning.html
+#: auth/templates/email/dormant_warning.txt
+msgid "When your account is deleted, all data stored in Helium will also be deleted and cannot be recovered, including your classes, assignments, grades, notes, and attachments."
+msgstr "Cuando se elimine tu cuenta, todos los datos almacenados en Helium también se eliminarán y no se podrán recuperar, incluidas tus clases, tareas, calificaciones, notas y archivos adjuntos."
+
+#: auth/templates/email/dormant_warning.html
+#, python-format
+msgid "<strong>To keep your free account,</strong> simply <a href=\"%(login_url)s\" target=\"_blank\">log in</a>. That's all it takes."
+msgstr "<strong>Para conservar tu cuenta gratuita,</strong> solo tienes que <a href=\"%(login_url)s\" target=\"_blank\">iniciar sesión</a>. Eso es todo."
+
+#: auth/templates/email/dormant_warning.html
+#, python-format
+msgid "If you'd like to delete your account, but also want a copy of your data, see our guide on <a href=\"%(export_url)s\" target=\"_blank\">exporting your data</a>, and our guide on <a href=\"%(delete_account_url)s\" target=\"_blank\">deleting your account manually</a>."
+msgstr "Si quieres eliminar tu cuenta pero también quieres una copia de tus datos, consulta nuestra guía para <a href=\"%(export_url)s\" target=\"_blank\">exportar tus datos</a> y nuestra guía para <a href=\"%(delete_account_url)s\" target=\"_blank\">eliminar tu cuenta manualmente</a>."
+
+#: auth/templates/email/dormant_warning.html
+#, python-format
+msgid "Questions? <a href=\"%(support_url)s\" target=\"_blank\">Contact support</a>."
+msgstr "¿Tienes preguntas? <a href=\"%(support_url)s\" target=\"_blank\">Ponte en contacto con el equipo de soporte</a>."
+
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid "Your Helium account is scheduled for deletion in %(days)s day due to %(years)s+ years of inactivity."
+msgid_plural "Your Helium account is scheduled for deletion in %(days)s days due to %(years)s+ years of inactivity."
+msgstr[0] "Tu cuenta de Helium se eliminará en %(days)s día por más de %(years)s años de inactividad."
+msgstr[1] "Tu cuenta de Helium se eliminará en %(days)s días por más de %(years)s años de inactividad."
+
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid "To keep your free account, simply log in at %(login_url)s. That's all it takes."
+msgstr "Para conservar tu cuenta gratuita, solo tienes que iniciar sesión en %(login_url)s. Eso es todo."
+
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid "If you'd like to delete your account, but also want a copy of your data, see our guide on exporting your data (%(export_url)s), and our guide on deleting your account manually (%(delete_account_url)s)."
+msgstr "Si quieres eliminar tu cuenta pero también quieres una copia de tus datos, consulta nuestra guía para exportar tus datos (%(export_url)s) y nuestra guía para eliminar tu cuenta manualmente (%(delete_account_url)s)."
+
+#: auth/templates/email/dormant_warning.txt
+#, python-format
+msgid "Questions? Contact support at %(support_url)s."
+msgstr "¿Tienes preguntas? Ponte en contacto con el equipo de soporte en %(support_url)s."
+
+#: auth/templates/email/dormant_warning.txt auth/templates/email/register.txt
+msgid "Thanks,"
+msgstr "Gracias,"
+
+#: auth/templates/email/dormant_warning.txt auth/templates/email/forgot.txt
+#: auth/templates/email/register.txt auth/templates/email/verification.txt
+#: common/templates/email/base.html planner/templates/email/reminder.txt
+msgid "The Helium Team"
+msgstr "El equipo de Helium"
+
+#: auth/templates/email/forgot.html auth/templates/email/forgot.txt
+msgid "Reset Your Password"
+msgstr "Restablece tu contraseña"
+
+#: auth/templates/email/forgot.html
+#, python-format
+msgid "We received a request to reset your Helium password. <a href=\"%(reset_url)s\" target=\"_blank\">Click here to choose a new password.</a>"
+msgstr "Hemos recibido una solicitud para restablecer tu contraseña de Helium. <a href=\"%(reset_url)s\" target=\"_blank\">Haz clic aquí para elegir una nueva contraseña.</a>"
+
+#: auth/templates/email/forgot.html auth/templates/email/forgot.txt
+msgid "If you did not request this, you can safely ignore this email."
+msgstr "Si no lo solicitaste, puedes ignorar este correo sin problema."
+
+#: auth/templates/email/forgot.html
+#, python-format
+msgid "If you have any trouble, <a href=\"%(support_url)s\" target=\"_blank\">contact support</a> and we'll get it sorted out."
+msgstr "Si tienes algún problema, <a href=\"%(support_url)s\" target=\"_blank\">ponte en contacto con el equipo de soporte</a> y lo resolveremos."
+
+#: auth/templates/email/forgot.txt
+msgid "We received a request to reset your Helium password. Use the link below to choose a new password."
+msgstr "Hemos recibido una solicitud para restablecer tu contraseña de Helium. Usa el siguiente enlace para elegir una nueva contraseña."
+
+#: auth/templates/email/forgot.txt
+#, python-format
+msgid "If you have any trouble, contact support at %(support_url)s and we'll get it sorted out."
+msgstr "Si tienes algún problema, ponte en contacto con el equipo de soporte en %(support_url)s y lo resolveremos."
+
+#: auth/templates/email/forgot.txt auth/templates/email/verification.txt
+#: common/templates/email/base.html planner/templates/email/reminder.txt
+msgid "Regards,"
+msgstr "Saludos,"
+
+#: auth/templates/email/register.html auth/templates/email/register.txt
+#: auth/templates/email/verification.html auth/templates/email/verification.txt
+msgid "Hey!"
+msgstr "¡Hola!"
+
+#: auth/templates/email/register.html
+#, python-format
+msgid "You've been successfully signed up for Helium. <a href=\"%(login_url)s\" target=\"_blank\">Click here</a> to get started."
+msgstr "Te has registrado correctamente en Helium. <a href=\"%(login_url)s\" target=\"_blank\">Haz clic aquí</a> para empezar."
+
+#: auth/templates/email/register.txt
+msgid "You've been successfully registered for Helium! To log in and get started, visit the link below."
+msgstr "¡Te has registrado correctamente en Helium! Para iniciar sesión y empezar, visita el siguiente enlace."
+
+#: auth/templates/email/verification.html
+#, python-format
+msgid "You're almost there. Your verification code is: <strong>%(code)s</strong>"
+msgstr "Ya casi terminas. Tu código de verificación es: <strong>%(code)s</strong>"
+
+#: auth/templates/email/verification.html
+#, python-format
+msgid "<a href=\"%(url)s?email=%(email)s&code=%(code)s\" target=\"_blank\">Click here</a> to verify this email address with Helium."
+msgstr "<a href=\"%(url)s?email=%(email)s&code=%(code)s\" target=\"_blank\">Haz clic aquí</a> para verificar esta dirección de correo electrónico con Helium."
+
+#: auth/templates/email/verification.txt
+#, python-format
+msgid "You're almost there. Your verification code is: %(code)s."
+msgstr "Ya casi terminas. Tu código de verificación es: %(code)s."
+
+#: auth/templates/email/verification.txt
+msgid "Paste the link below into your browser to verify this email address with Helium."
+msgstr "Pega el siguiente enlace en tu navegador para verificar esta dirección de correo electrónico con Helium."
+
+#: auth/utils/userutils.py
+#, python-format
+msgid "Your Account Will Be Deleted in %(days)s Day"
+msgid_plural "Your Account Will Be Deleted in %(days)s Days"
+msgstr[0] "Tu cuenta se eliminará en %(days)s día"
+msgstr[1] "Tu cuenta se eliminará en %(days)s días"
+
+#: auth/utils/userutils.py
+#, python-format
+msgid "Reminder: %(days)s Day Until Account Deletion"
+msgid_plural "Reminder: %(days)s Days Until Account Deletion"
+msgstr[0] "Recordatorio: %(days)s día para la eliminación de la cuenta"
+msgstr[1] "Recordatorio: %(days)s días para la eliminación de la cuenta"
+
+#: auth/utils/userutils.py
+#, python-format
+msgid "Reminder: Only %(days)s Day Left"
+msgid_plural "Reminder: Only %(days)s Days Left"
+msgstr[0] "Recordatorio: solo queda %(days)s día"
+msgstr[1] "Recordatorio: solo quedan %(days)s días"
+
+#: auth/utils/userutils.py
+msgid "Final Notice: Account Deletion Tomorrow"
+msgstr "Último aviso: tu cuenta se eliminará mañana"
+
+#: auth/views/apis/userdeleteexamplescheduleviews.py
+msgid "The example schedule was cleared, except for anything that changed."
+msgstr "Se borró el horario de ejemplo, excepto lo que modificaste."
+
+#: auth/views/apis/userviews.py
+msgid "This field is required."
+msgstr "Este campo es obligatorio."
+
+#: auth/views/apis/userviews.py
+msgid "The password is incorrect."
+msgstr "La contraseña es incorrecta."
+
+# A permission on the consent screen for a connected app: it lets the app view this data.
+#: common/enums.py
+msgid "Read your assignments, events, classes, resources, and grades"
+msgstr "Ver tus tareas, eventos, clases, recursos y calificaciones"
+
+# A permission on the consent screen for a connected app: it lets the app view this data.
+#: common/enums.py
+msgid "Read your notes"
+msgstr "Ver tus notas"
+
+#: common/enums.py
+msgid "Import new terms and classes with their assignments, events, and class schedules"
+msgstr "Importar nuevos periodos y clases con sus tareas, eventos y horarios de clase"
+
+#: common/errormessages.py
+msgid "That email is already in use. Try signing in instead."
+msgstr "Ese correo electrónico ya está en uso. Intenta iniciar sesión."
+
+#: common/errormessages.py
+msgid "Exception dates must fall within the date range."
+msgstr "Las fechas de excepción deben estar dentro del rango de fechas."
+
+#: common/errormessages.py
+msgid "Exception dates must fall within the class date range."
+msgstr "Las fechas de excepción deben estar dentro del rango de fechas de la clase."
+
+#: common/errormessages.py
+msgid "Exception dates must fall within the group date range."
+msgstr "Las fechas de excepción deben estar dentro del rango de fechas del grupo."
+
+#: common/errormessages.py
+msgid "Exception dates must fall within the schedule date range."
+msgstr "Las fechas de excepción deben estar dentro del rango de fechas del horario."
+
+#: common/errormessages.py
+msgid "Please wait a moment and try again."
+msgstr "Espera un momento e inténtalo de nuevo."
+
+#: common/errormessages.py
+msgid "This reset link is invalid or has expired. Please request a new one."
+msgstr "Este enlace de restablecimiento no es válido o ha caducado. Solicita uno nuevo."
+
+#: common/errormessages.py
+msgid "Please sign in to continue."
+msgstr "Inicia sesión para continuar."
+
+#: common/errormessages.py
+msgid "That code doesn't look right. Please check and try again."
+msgstr "Ese código no parece correcto. Revísalo e inténtalo de nuevo."
+
+#: common/errormessages.py
+#, python-format
+msgid "Admin email must be within an allowed domain (%(domains)s)."
+msgstr "El correo electrónico del administrador debe pertenecer a un dominio permitido (%(domains)s)."
+
+#: common/errormessages.py
+#, python-format
+msgid "Attachment \"%(name)s\" file type is not allowed."
+msgstr "No se permite el tipo de archivo del adjunto \"%(name)s\"."
+
+#: common/errormessages.py
+#, python-format
+msgid "This class already has a category named \"%(title)s\"."
+msgstr "Esta clase ya tiene una categoría llamada \"%(title)s\"."
+
+#: common/errormessages.py
+msgid "Not an occurrence of this event."
+msgstr "No es una repetición de este evento."
+
+#: common/errormessages.py
+msgid "Not an occurrence of this assignment."
+msgstr "No es una repetición de esta tarea."
+
+#: common/errormessages.py
+msgid "Class not found."
+msgstr "Clase no encontrada."
+
+#: common/errormessages.py
+msgid "Group not found."
+msgstr "Grupo no encontrado."
+
+#: common/errormessages.py
+msgid "Resource not found."
+msgstr "Recurso no encontrado."
+
+#: common/errormessages.py
+msgid "Item not found."
+msgstr "Elemento no encontrado."
+
+#: common/errormessages.py
+msgid "This event doesn't repeat."
+msgstr "Este evento no se repite."
+
+#: common/errormessages.py
+msgid "This assignment doesn't repeat."
+msgstr "Esta tarea no se repite."
+
+#: common/errormessages.py
+#, python-format
+msgid "Sign in with %(provider)s failed. Please try again."
+msgstr "No se pudo iniciar sesión con %(provider)s. Inténtalo de nuevo."
+
+#: common/errormessages.py
+msgid "Too many attempts. Try again later."
+msgstr "Demasiados intentos. Inténtalo de nuevo más tarde."
+
+#: common/errormessages.py
+msgid "Too many attempts. Try again in a minute."
+msgstr "Demasiados intentos. Inténtalo de nuevo en un minuto."
+
+#: common/errormessages.py
+#, python-format
+msgid "Too many attempts. Try again in %(count)s minute."
+msgid_plural "Too many attempts. Try again in %(count)s minutes."
+msgstr[0] "Demasiados intentos. Inténtalo de nuevo en %(count)s minuto."
+msgstr[1] "Demasiados intentos. Inténtalo de nuevo en %(count)s minutos."
+
+#: common/errormessages.py
+msgid "Too many attempts. Try again in about an hour."
+msgstr "Demasiados intentos. Inténtalo de nuevo en aproximadamente una hora."
+
+#: common/errormessages.py
+#, python-format
+msgid "Too many attempts. Try again in about %(count)s hour."
+msgid_plural "Too many attempts. Try again in about %(count)s hours."
+msgstr[0] "Demasiados intentos. Inténtalo de nuevo en aproximadamente %(count)s hora."
+msgstr[1] "Demasiados intentos. Inténtalo de nuevo en aproximadamente %(count)s horas."
+
+#: common/errormessages.py
+#, python-format
+msgid "\"%(title)s\": %(error)s"
+msgstr "\"%(title)s\": %(error)s"
+
+#: common/handlers/views.py
+msgid "Bad request."
+msgstr "Solicitud incorrecta."
+
+#: common/handlers/views.py
+msgid "Permission denied."
+msgstr "Permiso denegado."
+
+#: common/handlers/views.py
+msgid "Route not found."
+msgstr "Ruta no encontrada."
+
+#: common/handlers/views.py
+msgid "Server error. Please try again later."
+msgstr "Error del servidor. Inténtalo de nuevo más tarde."
+
+#: common/serializers/supportcontactserializer.py
+#, python-format
+msgid "Attachment \"%(name)s\" exceeds the max upload size of %(size)s."
+msgstr "El archivo adjunto \"%(name)s\" supera el tamaño máximo de carga de %(size)s."
+
+# 'start' and 'end' are API field names; keep them in English.
+#: common/serializers/validation.py
+msgid "The 'start' must be before the 'end'"
+msgstr "'start' debe ser anterior a 'end'"
+
+#: common/serializers/validation.py
+#: planner/serializers/coursescheduleserializer.py
+msgid "The 'start_date' must be before the 'end_date'"
+msgstr "'start_date' debe ser anterior a 'end_date'"
+
+#: common/services/uploadfileservice.py
+#, python-format
+msgid "File type \"%(ext)s\" not supported."
+msgstr "El tipo de archivo \"%(ext)s\" no es compatible."
+
+#: common/services/uploadfileservice.py
+#, python-format
+msgid "The expanded archive exceeds the max import size of %(size)s."
+msgstr "El archivo comprimido descomprimido supera el tamaño máximo de importación de %(size)s."
+
+#: common/services/uploadfileservice.py
+msgid "The archive must contain exactly one file."
+msgstr "El archivo comprimido debe contener exactamente un archivo."
+
+#: common/services/uploadfileservice.py
+msgid "Encrypted archives are not supported."
+msgstr "No se admiten archivos comprimidos cifrados."
+
+#: common/services/uploadfileservice.py
+msgid "The archive must not contain another archive."
+msgstr "El archivo comprimido no debe contener otro archivo comprimido."
+
+#: common/services/uploadfileservice.py
+msgid "The archive could not be read."
+msgstr "No se pudo leer el archivo comprimido."
+
+#: common/services/uploadfileservice.py
+#: planner/serializers/attachmentserializer.py
+#, python-format
+msgid "The uploaded file exceeds the max upload size of %(size)s."
+msgstr "El archivo subido supera el tamaño máximo de carga de %(size)s."
+
+#: common/templates/email/base.html
+msgid "Logo"
+msgstr "Logotipo"
+
+# Image text for a link to donate to Helium on Patreon.
+#: common/templates/email/base.html
+msgid "Support on Patreon"
+msgstr "Apóyanos en Patreon"
+
+# A reminder's date and time in emails, e.g. "Fri, Sep 4 at 3:05 PM".
+#: common/utils/datetimeutils.py
+#, python-format
+msgid "%(date)s at %(time)s"
+msgstr "%(date)s, %(time)s"
+
+# A reminder's date or time range in emails, e.g. "Fri, Sep 4 to Sun, Sep 6" or "Fri, Sep 4 at 3:05 PM to 4:00 PM".
+#: common/utils/datetimeutils.py
+#, python-format
+msgid "%(start)s to %(end)s"
+msgstr "%(start)s a %(end)s"
+
+#: common/utils/validators.py
+msgid "Enter a valid fraction of the format 'x/y'."
+msgstr "Ingresa una fracción válida con el formato 'x/y'."
+
+#: common/utils/validators.py
+msgid "The fraction must contain valid integers."
+msgstr "La fracción debe contener números enteros válidos."
+
+#: common/utils/validators.py
+#, python-format
+msgid "Values must be less than or equal to %(max)s."
+msgstr "Los valores deben ser menores o iguales a %(max)s."
+
+#: common/utils/validators.py
+msgid "The denominator must be greater than zero."
+msgstr "El denominador debe ser mayor que cero."
+
+#: common/utils/validators.py
+msgid "The grade does not appear to be valid."
+msgstr "La calificación no parece ser válida."
+
+#: common/utils/validators.py
+msgid "The value must be a valid hex color code."
+msgstr "El valor debe ser un código de color hexadecimal válido."
+
+#: common/utils/validators.py
+#, python-format
+msgid "A grade scale must have between %(min)s and %(max)s bands."
+msgstr "Una escala de calificaciones debe tener entre %(min)s y %(max)s rangos."
+
+#: common/utils/validators.py
+msgid "The first band's 'min_grade' must be 0."
+msgstr "El 'min_grade' del primer rango debe ser 0."
+
+#: common/utils/validators.py
+msgid "Each band's 'min_grade' must be greater than the band before it."
+msgstr "El 'min_grade' de cada rango debe ser mayor que el del rango anterior."
+
+#: common/utils/validators.py
+msgid "The bands' 'grade_point' values must only rise or only fall."
+msgstr "Los valores de 'grade_point' de los rangos solo pueden subir o solo bajar."
+
+#: common/utils/validators.py
+msgid "Quill content must be an object."
+msgstr "El contenido de Quill debe ser un objeto."
+
+#: common/utils/validators.py
+msgid "Quill content must have an `ops` list."
+msgstr "El contenido de Quill debe tener una lista `ops`."
+
+#: common/utils/validators.py
+msgid "Quill content `ops` must each be an `insert` (text or an embed object), with optional `attributes`."
+msgstr "Cada elemento de `ops` del contenido de Quill debe ser un `insert` (texto o un objeto incrustado), con `attributes` opcionales."
+
+#: common/utils/validators.py
+#, python-format
+msgid "Multiple %(key)s values are not supported for FREQ=%(freq)s."
+msgstr "No se admiten múltiples valores %(key)s para FREQ=%(freq)s."
+
+#: common/utils/validators.py
+msgid "BYMONTH is not supported for FREQ=MONTHLY."
+msgstr "BYMONTH no se admite con FREQ=MONTHLY."
+
+#: common/utils/validators.py
+msgid "BYDAY with BYMONTHDAY is not supported."
+msgstr "No se admite BYDAY con BYMONTHDAY."
+
+#: common/utils/validators.py
+msgid "BYDAY with both an ordinal and BYSETPOS is not supported."
+msgstr "No se admite BYDAY con un ordinal y BYSETPOS a la vez."
+
+#: common/utils/validators.py
+#, python-format
+msgid "BYDAY without an ordinal or BYSETPOS is not supported for FREQ=%(freq)s."
+msgstr "No se admite BYDAY sin un ordinal o BYSETPOS para FREQ=%(freq)s."
+
+#: common/utils/validators.py
+#, python-format
+msgid "A BYDAY position of %(position)s is not supported."
+msgstr "No se admite una posición BYDAY de %(position)s."
+
+#: common/utils/validators.py
+msgid "BYSETPOS without BYDAY is not supported."
+msgstr "No se admite BYSETPOS sin BYDAY."
+
+#: common/utils/validators.py
+#, python-format
+msgid "A BYMONTHDAY of %(by_month_day)s is not supported."
+msgstr "No se admite un BYMONTHDAY de %(by_month_day)s."
+
+#: common/utils/validators.py
+msgid "BYDAY or BYMONTHDAY without BYMONTH is not supported for FREQ=YEARLY."
+msgstr "No se admite BYDAY o BYMONTHDAY sin BYMONTH para FREQ=YEARLY."
+
+#: common/utils/validators.py
+#, python-format
+msgid "FREQ=%(freq)s is not supported."
+msgstr "No se admite FREQ=%(freq)s."
+
+#: common/utils/validators.py
+#, python-format
+msgid "%(key)s is not supported."
+msgstr "No se admite %(key)s."
+
+#: common/utils/validators.py
+#, python-format
+msgid "Invalid RRULE: %(error)s"
+msgstr "RRULE no válida: %(error)s"
+
+#: common/utils/validators.py
+#, python-format
+msgid "Invalid RRULE: it has no dates within %(years)s year."
+msgid_plural "Invalid RRULE: it has no dates within %(years)s years."
+msgstr[0] "RRULE no válida: no tiene fechas dentro de %(years)s año."
+msgstr[1] "RRULE no válida: no tiene fechas dentro de %(years)s años."
+
+#: common/utils/validators.py
+#, python-format
+msgid "Invalid date format: %(token)s"
+msgstr "Formato de fecha no válido: %(token)s"
+
+#: common/views/apis/supportcontactview.py
+#, python-format
+msgid "We were unable to deliver your message. Please email %(email)s directly."
+msgstr "No pudimos entregar tu mensaje. Envía un correo electrónico directamente a %(email)s."
+
+#: common/views/base.py
+msgid "The If-Match header must be the updated_at of the item being changed."
+msgstr "El encabezado If-Match debe ser el updated_at del elemento que se está modificando."
+
+# An assignment's category (such as Homework) and its class title.
+#: feed/services/feedservice.py planner/templates/email/reminder.html
+#: planner/templates/email/reminder.txt
+#, python-format
+msgid "%(category)s for %(course)s"
+msgstr "%(category)s de %(course)s"
+
+# A class (and category) followed by its room.
+#: feed/services/feedservice.py
+#, python-format
+msgid "%(class_info)s in %(room)s"
+msgstr "%(class_info)s en %(room)s"
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Class Info: %(class_info)s"
+msgstr "Información de la clase: %(class_info)s"
+
+# Resources is the Helium feature for books and materials.
+#: feed/services/feedservice.py
+#, python-format
+msgid "Resources: %(titles)s"
+msgstr "Recursos: %(titles)s"
+
+# A link to the item's note in the Notebook, not a remark.
+#: feed/services/feedservice.py
+#, python-format
+msgid "Note: %(url)s"
+msgstr "Nota: %(url)s"
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Open in Helium: %(url)s"
+msgstr "Abrir en Helium: %(url)s"
+
+# Complete as in finished: the assignment is done.
+#: feed/services/feedservice.py
+msgid "Status: Complete"
+msgstr "Estado: Completada"
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Grade: %(grade)s"
+msgstr "Calificación: %(grade)s"
+
+#: feed/services/feedservice.py
+#, python-format
+msgid "Class Website: %(url)s"
+msgstr "Sitio web de la clase: %(url)s"
+
+# The name of a calendar feed; project_name is Helium.
+#: feed/services/feedservice.py
+#, python-format
+msgid "%(project_name)s Events"
+msgstr "Eventos de %(project_name)s"
+
+# The name of a calendar feed; project_name is Helium.
+#: feed/services/feedservice.py
+#, python-format
+msgid "%(project_name)s Assignments"
+msgstr "Tareas de %(project_name)s"
+
+# The name of a calendar feed; project_name is Helium.
+#: feed/services/feedservice.py
+#, python-format
+msgid "%(project_name)s Class Schedules"
+msgstr "Horarios de clases de %(project_name)s"
+
+#: feed/services/icalexternalcalendarservice.py
+msgid "The URL did not return a valid response."
+msgstr "La URL no devolvió una respuesta válida."
+
+#: feed/services/icalexternalcalendarservice.py
+msgid "The URL is not reachable."
+msgstr "No se puede acceder a la URL."
+
+#: feed/services/icalexternalcalendarservice.py
+msgid "The URL did not return a valid calendar."
+msgstr "La URL no devolvió un calendario válido."
+
+#: feed/views/apis/externalcalendaraseventsviews.py
+#, python-format
+msgid "External Calendar %(id)s is not a valid calendar, disabled."
+msgstr "El calendario externo %(id)s no es un calendario válido; se deshabilitó."
+
+#: importexport/serializers/importerializer.py
+msgid "`course` is required when `target_type` is `course`."
+msgstr "`course` es obligatorio cuando `target_type` es `course`."
+
+#: importexport/serializers/importerializer.py
+msgid "`course_group` is required when `target_type` is `new_course`."
+msgstr "`course_group` es obligatorio cuando `target_type` es `new_course`."
+
+#: importexport/services/examplescheduleimportservice.py
+msgid "Invalid JSON."
+msgstr "JSON no válido."
+
+#: importexport/services/icsimportservice.py
+#, python-format
+msgid "`target_type` must be one of %(choices)s."
+msgstr "`target_type` debe ser uno de los siguientes: %(choices)s."
+
+#: importexport/services/icsimportservice.py
+msgid "No events in the calendar file could be imported."
+msgstr "No se pudo importar ningún evento del archivo de calendario."
+
+#: importexport/services/icsimportservice.py
+#, python-format
+msgid "Unresolved `course` reference `%(id)s`."
+msgstr "Referencia de `course` sin resolver: `%(id)s`."
+
+#: importexport/services/icsimportservice.py
+#: importexport/services/importservice.py
+#: importexport/views/apis/importviews.py
+#, python-format
+msgid "Unresolved `course_group` reference `%(id)s`."
+msgstr "Referencia de `course_group` sin resolver: `%(id)s`."
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "%(section)s id %(id)s: %(error)s"
+msgstr "%(section)s id %(id)s: %(error)s"
+
+#: importexport/services/importservice.py
+#: importexport/services/legacyimportparity.py
+#, python-format
+msgid "%(section)s id %(id)s, %(field)s: %(error)s"
+msgstr "%(section)s id %(id)s, %(field)s: %(error)s"
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Invalid `%(key)s` value: %(value)s is not a valid id."
+msgstr "Valor `%(key)s` no válido: %(value)s no es un ID válido."
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Section `%(section)s` must be a list."
+msgstr "La sección `%(section)s` debe ser una lista."
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Row %(index)s in `%(section)s` must be an object."
+msgstr "La fila %(index)s en `%(section)s` debe ser un objeto."
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Row %(index)s in `%(section)s` is missing required key `id`."
+msgstr "A la fila %(index)s de `%(section)s` le falta la clave obligatoria `id`."
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Duplicate id `%(id)s` in `%(section)s`."
+msgstr "ID duplicado `%(id)s` en `%(section)s`."
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Missing required parent reference `%(parent_key)s` in section `%(section)s`."
+msgstr "Falta la referencia obligatoria al elemento superior `%(parent_key)s` en la sección `%(section)s`."
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Unresolved `%(parent_key)s` reference `%(id)s` in section `%(section)s`."
+msgstr "Referencia de `%(parent_key)s` sin resolver: `%(id)s` en la sección `%(section)s`."
+
+#: importexport/services/importservice.py
+#, python-format
+msgid "Field `%(field)s` must be a list."
+msgstr "El campo `%(field)s` debe ser una lista."
+
+#: importexport/services/importservice.py
+msgid "Each note must be an object."
+msgstr "Cada nota debe ser un objeto."
+
+#: importexport/services/importservice.py
+msgid "Import payload must be a JSON object."
+msgstr "El contenido de la importación debe ser un objeto JSON."
+
+# 'resources' and 'materials' are import file keys; keep them in English.
+#: importexport/services/legacyimportparity.py
+msgid "Provide either 'resources' or 'materials' on a homework row, not both."
+msgstr "Indica 'resources' o 'materials' en una fila de tarea, no ambos."
+
+# 'resources' and 'materials' are import file keys; keep them in English.
+#: importexport/services/legacyimportparity.py
+msgid "Provide either 'resources' or 'materials' on a note, not both."
+msgstr "Indica 'resources' o 'materials' en una nota, no ambos."
+
+#: importexport/services/legacyimportparity.py
+#, python-format
+msgid "Provide either '%(new)s' or '%(old)s', not both."
+msgstr "Indica '%(new)s' o '%(old)s', no ambos."
+
+#: importexport/views/apis/exportviews.py
+#, python-format
+msgid "Must be one of: %(calendars)s."
+msgstr "Debe ser uno de los siguientes: %(calendars)s."
+
+#: importexport/views/apis/importviews.py
+msgid "Upload exactly one file per request."
+msgstr "Sube exactamente un archivo por solicitud."
+
+#: importexport/views/apis/importviews.py
+#, python-format
+msgid "Invalid JSON structure: %(file)s."
+msgstr "Estructura JSON no válida: %(file)s."
+
+#: importexport/views/apis/importviews.py
+#, python-format
+msgid "Invalid JSON in file: %(file)s."
+msgstr "JSON no válido en el archivo: %(file)s."
+
+#: importexport/views/apis/importviews.py
+#, python-format
+msgid "Invalid iCalendar in file: %(file)s."
+msgstr "iCalendar no válido en el archivo: %(file)s."
+
+#: importexport/views/apis/importviews.py
+msgid "The example schedule has already been imported. Please clear it before importing it again."
+msgstr "El horario de ejemplo ya se importó. Bórralo antes de volver a importarlo."
+
+#: planner/serializers/attachmentserializer.py
+msgid "This file type is not allowed."
+msgstr "Este tipo de archivo no está permitido."
+
+#: planner/serializers/attachmentserializer.py
+msgid "One of `course`, `event`, `homework`, or `resource` must be given."
+msgstr "Se debe indicar uno de estos campos: `course`, `event`, `homework` o `resource`."
+
+#: planner/serializers/attachmentserializer.py
+msgid "Only one of `course`, `event`, `homework`, or `resource` may be given."
+msgstr "Solo se puede indicar uno de estos campos: `course`, `event`, `homework` o `resource`."
+
+# 'Uncategorized' is the built-in category's name; translate it as categoryUncategorizedTitle in the Helium frontend's lib/l10n/app_en.arb.
+#: planner/serializers/categoryserializer.py
+msgid "The 'Uncategorized' category cannot be renamed"
+msgstr "La categoría 'Sin categoría' no se puede renombrar"
+
+# 'Uncategorized' is the built-in category's name; translate it as categoryUncategorizedTitle in the Helium frontend's lib/l10n/app_en.arb.
+#: planner/serializers/categoryserializer.py
+msgid "The 'Uncategorized' category cannot be given a weight"
+msgstr "No se puede asignar un peso a la categoría 'Sin categoría'"
+
+#: planner/serializers/categoryserializer.py
+msgid "The cumulative weights of all categories associated with a class cannot exceed 100%."
+msgstr "La suma de los pesos de todas las categorías asociadas a una clase no puede superar el 100%."
+
+#: planner/serializers/coursegroupserializer.py
+msgid "Doesn't match 'grade_scale'. Send one or the other, or values that match the preset."
+msgstr "No coincide con 'grade_scale'. Envía uno u otro, o valores que coincidan con el preajuste."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "A schedule cannot be both a day cycle ('cycle_length') and a week-based rotation ('is_week_based')."
+msgstr "Un horario no puede ser a la vez un ciclo de días ('cycle_length') y una rotación semanal ('is_week_based')."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "'anchor_date', 'cycle_slots', and 'week_offset' are only valid on a rotating schedule."
+msgstr "'anchor_date', 'cycle_slots' y 'week_offset' solo son válidos en un horario rotativo."
+
+# 'template' is an API field name; keep it in English.
+#: planner/serializers/coursescheduleserializer.py
+msgid "'template' doesn't match the rotation fields. Send one or the other, or fields that match the template."
+msgstr "'template' no coincide con los campos de rotación. Envía uno u otro, o campos que coincidan con la plantilla."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "'anchor_date' is required for a week-based rotation."
+msgstr "Se requiere 'anchor_date' para una rotación semanal."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "'week_offset' must be 0 (Week A) or 1 (Week B)."
+msgstr "'week_offset' debe ser 0 (Semana A) o 1 (Semana B)."
+
+#: planner/serializers/coursescheduleserializer.py
+#, python-format
+msgid "'cycle_length' must be between 2 and %(max)s."
+msgstr "'cycle_length' debe estar entre 2 y %(max)s."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "'anchor_date' is required for a cycle schedule."
+msgstr "Se requiere 'anchor_date' para un horario cíclico."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "'cycle_slots' must be a non-empty list for a cycle schedule."
+msgstr "'cycle_slots' debe ser una lista no vacía en un horario cíclico."
+
+#: planner/serializers/coursescheduleserializer.py
+#, python-format
+msgid "Each cycle slot's 'indices' must be a non-empty list of integers in [1, %(cycle_length)s]."
+msgstr "Los 'indices' de cada franja del ciclo deben ser una lista no vacía de enteros en [1, %(cycle_length)s]."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "A cycle-day index cannot appear in more than one slot."
+msgstr "Un índice de día del ciclo no puede aparecer en más de una franja."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "Each cycle slot needs 'start_time' and 'end_time' as 'HH:MM:SS'."
+msgstr "Cada franja del ciclo necesita 'start_time' y 'end_time' en formato 'HH:MM:SS'."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "A cycle slot's 'start_time' must be before its 'end_time'."
+msgstr "El 'start_time' de una franja del ciclo debe ser anterior a su 'end_time'."
+
+#: planner/serializers/coursescheduleserializer.py
+#, python-format
+msgid "The 'start_time' of '%(day)s' must be before 'end_time'"
+msgstr "El 'start_time' de '%(day)s' debe ser anterior al 'end_time'"
+
+#: planner/serializers/coursescheduleserializer.py
+#, python-format
+msgid "Class times can't start or end at midnight. Pick other times for %(day)s."
+msgstr "Las clases no pueden empezar ni terminar a medianoche. Elige otras horas para %(day)s."
+
+#: planner/serializers/coursescheduleserializer.py
+msgid "A schedule must meet on at least one day."
+msgstr "Un horario debe tener clases al menos un día."
+
+#: planner/serializers/courseserializer.py
+#, python-format
+msgid "Doesn't fit the group's grade scale: a class's preset can only award grades the group's scale does. Compatible presets: %(presets)s."
+msgstr "No se ajusta a la escala de calificaciones del grupo: el preajuste de una clase solo puede otorgar calificaciones que otorgue la escala del grupo. Preajustes compatibles: %(presets)s."
+
+#: planner/serializers/courseserializer.py
+msgid "Doesn't fit the group's grade scale: a class's preset can only award grades the group's scale does. The group has no grade scale."
+msgstr "No se ajusta a la escala de calificaciones del grupo: el preajuste de una clase solo puede otorgar calificaciones que otorgue la escala del grupo. El grupo no tiene escala de calificaciones."
+
+#: planner/serializers/homeworkserializer.py
+msgid "A repeating Homework isn't completed or graded itself; complete or grade an occurrence with `scope=this`."
+msgstr "Una tarea recurrente no se completa ni se califica en sí misma; completa o califica una repetición con `scope=this`."
+
+# 'category' is an API field name; keep it in English.
+#: planner/serializers/homeworkserializer.py
+msgid "The 'category' must belong to the same class."
+msgstr "La 'category' debe pertenecer a la misma clase."
+
+#: planner/serializers/noteserializer.py
+#, python-format
+msgid "This note is %(percent)s%% of the max note size."
+msgstr "Esta nota ocupa el %(percent)s%% del tamaño máximo de una nota."
+
+#: planner/serializers/noteserializer.py
+msgid "A note can only be linked to one type of entity (homework, event, resource, or course)."
+msgstr "Una nota solo puede estar vinculada a un tipo de elemento (tarea, evento, recurso o clase)."
+
+#: planner/serializers/noteserializer.py
+msgid "A note can only be linked to one homework assignment."
+msgstr "Una nota solo puede estar vinculada a una tarea."
+
+#: planner/serializers/noteserializer.py
+msgid "A note can only be linked to one event."
+msgstr "Una nota solo puede estar vinculada a un evento."
+
+#: planner/serializers/noteserializer.py
+msgid "A note can only be linked to one resource."
+msgstr "Una nota solo puede estar vinculada a un recurso."
+
+#: planner/serializers/noteserializer.py
+msgid "A note can only be linked to one class."
+msgstr "Una nota solo puede estar vinculada a una clase."
+
+#: planner/serializers/noteserializer.py
+msgid "This homework assignment already has a linked note."
+msgstr "Esta tarea ya tiene una nota vinculada."
+
+#: planner/serializers/noteserializer.py
+msgid "This event already has a linked note."
+msgstr "Este evento ya tiene una nota vinculada."
+
+#: planner/serializers/noteserializer.py
+msgid "This resource already has a linked note."
+msgstr "Este recurso ya tiene una nota vinculada."
+
+#: planner/serializers/noteserializer.py
+msgid "This class already has a linked note."
+msgstr "Esta clase ya tiene una nota vinculada."
+
+#: planner/serializers/reminderserializer.py
+msgid "One of `event`, `homework`, or `course` must be given."
+msgstr "Se debe indicar uno de estos campos: `event`, `homework` o `course`."
+
+#: planner/serializers/reminderserializer.py
+msgid "Only one of `event`, `homework`, or `course` may be given."
+msgstr "Solo se puede indicar uno de estos campos: `event`, `homework` o `course`."
+
+#: planner/serializers/reminderserializer.py
+msgid "A reminder cannot be `dismissed` unless it has been `sent`."
+msgstr "Un recordatorio no puede estar `dismissed` si no está `sent`."
+
+#: planner/serializers/reminderserializer.py
+msgid "This class already has the same reminder."
+msgstr "Esta clase ya tiene el mismo recordatorio."
+
+#: planner/serializers/reminderserializer.py
+msgid "This repeating assignment already has the same reminder."
+msgstr "Esta tarea recurrente ya tiene el mismo recordatorio."
+
+#: planner/serializers/reminderserializer.py
+msgid "This repeating event already has the same reminder."
+msgstr "Este evento recurrente ya tiene el mismo recordatorio."
+
+#: planner/services/neededgradeservice.py
+msgid "One of 'desired_grade' or 'desired_gpa' must be given."
+msgstr "Se debe indicar 'desired_grade' o 'desired_gpa'."
+
+#: planner/services/neededgradeservice.py
+msgid "Only one of 'desired_grade' or 'desired_gpa' may be given."
+msgstr "Solo se puede indicar 'desired_grade' o 'desired_gpa', no ambos."
+
+#: planner/services/neededgradeservice.py
+msgid "Enter a valid grade between 0 and 100."
+msgstr "Ingresa una calificación válida entre 0 y 100."
+
+#: planner/services/neededgradeservice.py
+msgid "Enter a valid GPA."
+msgstr "Ingresa un promedio válido."
+
+#: planner/services/neededgradeservice.py
+msgid "Select a category that is down to its last ungraded assignment."
+msgstr "Selecciona una categoría a la que solo le quede una tarea sin calificar."
+
+#: planner/services/neededgradeservice.py
+msgid "Select an ungraded assignment in this class."
+msgstr "Selecciona una tarea sin calificar de esta clase."
+
+#: planner/services/neededgradeservice.py
+msgid "Set a grade scale on the class's group to plan for a GPA."
+msgstr "Establece una escala de calificaciones en el grupo de la clase para planificar un promedio."
+
+#: planner/services/neededgradeservice.py
+msgid "Add credits to this class to plan for a GPA."
+msgstr "Agrega créditos a esta clase para planificar un promedio."
+
+#: planner/services/recurrenceservice.py
+msgid "It has no dates by the class's last day."
+msgstr "No tiene fechas antes del último día de la clase."
+
+#: planner/services/recurrenceservice.py
+#, python-format
+msgid "It repeats more than %(count)s time."
+msgid_plural "It repeats more than %(count)s times."
+msgstr[0] "Se repite más de %(count)s vez."
+msgstr[1] "Se repite más de %(count)s veces."
+
+# Push reminder title: the assignment, its class, then the time until it's due.
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(course)s in %(count)s minute"
+msgid_plural "%(title)s in %(course)s in %(count)s minutes"
+msgstr[0] "%(title)s de %(course)s en %(count)s minuto"
+msgstr[1] "%(title)s de %(course)s en %(count)s minutos"
+
+# Push reminder title: the assignment, its class, then the time until it's due.
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(course)s in %(count)s hour"
+msgid_plural "%(title)s in %(course)s in %(count)s hours"
+msgstr[0] "%(title)s de %(course)s en %(count)s hora"
+msgstr[1] "%(title)s de %(course)s en %(count)s horas"
+
+# Push reminder title: the assignment, its class, then the time until it's due.
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(course)s in %(count)s day"
+msgid_plural "%(title)s in %(course)s in %(count)s days"
+msgstr[0] "%(title)s de %(course)s en %(count)s día"
+msgstr[1] "%(title)s de %(course)s en %(count)s días"
+
+# Push reminder title: the assignment, its class, then the time until it's due.
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(course)s in %(count)s week"
+msgid_plural "%(title)s in %(course)s in %(count)s weeks"
+msgstr[0] "%(title)s de %(course)s en %(count)s semana"
+msgstr[1] "%(title)s de %(course)s en %(count)s semanas"
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(count)s minute"
+msgid_plural "%(title)s in %(count)s minutes"
+msgstr[0] "%(title)s en %(count)s minuto"
+msgstr[1] "%(title)s en %(count)s minutos"
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(count)s hour"
+msgid_plural "%(title)s in %(count)s hours"
+msgstr[0] "%(title)s en %(count)s hora"
+msgstr[1] "%(title)s en %(count)s horas"
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(count)s day"
+msgid_plural "%(title)s in %(count)s days"
+msgstr[0] "%(title)s en %(count)s día"
+msgstr[1] "%(title)s en %(count)s días"
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(title)s in %(count)s week"
+msgid_plural "%(title)s in %(count)s weeks"
+msgstr[0] "%(title)s en %(count)s semana"
+msgstr[1] "%(title)s en %(count)s semanas"
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(course)s in %(count)s minute"
+msgid_plural "%(course)s in %(count)s minutes"
+msgstr[0] "%(course)s en %(count)s minuto"
+msgstr[1] "%(course)s en %(count)s minutos"
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(course)s in %(count)s hour"
+msgid_plural "%(course)s in %(count)s hours"
+msgstr[0] "%(course)s en %(count)s hora"
+msgstr[1] "%(course)s en %(count)s horas"
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(course)s in %(count)s day"
+msgid_plural "%(course)s in %(count)s days"
+msgstr[0] "%(course)s en %(count)s día"
+msgstr[1] "%(course)s en %(count)s días"
+
+#: planner/services/reminderservice.py
+#, python-format
+msgid "%(course)s in %(count)s week"
+msgid_plural "%(course)s in %(count)s weeks"
+msgstr[0] "%(course)s en %(count)s semana"
+msgstr[1] "%(course)s en %(count)s semanas"
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "When:"
+msgstr "Cuándo:"
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "Info:"
+msgstr "Información:"
+
+# An assignment's category (such as Homework) and its class title, linked to the class website.
+#: planner/templates/email/reminder.html
+#, python-format
+msgid "%(category)s for <a target=\"_blank\" href=\"%(url)s\">%(course)s</a>"
+msgstr "%(category)s de <a target=\"_blank\" href=\"%(url)s\">%(course)s</a>"
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "Location:"
+msgstr "Ubicación:"
+
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "Teacher:"
+msgstr "Docente:"
+
+# A link to the item's note in the Notebook, not a remark.
+#: planner/templates/email/reminder.html planner/templates/email/reminder.txt
+msgid "Note:"
+msgstr "Nota:"
+
+# A link that opens the item's note or attachments.
+#: planner/templates/email/reminder.html
+msgid "Open"
+msgstr "Abrir"
+
+# Resources is the Helium feature for books and materials.
+#: planner/templates/email/reminder.html
+msgid "Resources"
+msgstr "Recursos"
+
+#: planner/templates/email/reminder.html
+msgid "Attachments"
+msgstr "Archivos adjuntos"
+
+#: planner/templates/email/reminder.html
+msgid "Open in Helium"
+msgstr "Abrir en Helium"
+
+# Resources is the Helium feature for books and materials.
+#: planner/templates/email/reminder.txt
+msgid "Resources:"
+msgstr "Recursos:"
+
+#: planner/templates/email/reminder.txt
+msgid "Attachments:"
+msgstr "Archivos adjuntos:"
+
+#: planner/templates/email/reminder.txt
+msgid "Open in Helium:"
+msgstr "Abrir en Helium:"
+
+#: planner/views/apis/attachmentviews.py
+msgid "An unknown error occurred."
+msgstr "Se ha producido un error desconocido."
+
+# 'Uncategorized' is the built-in category's name; translate it as categoryUncategorizedTitle in the Helium frontend's lib/l10n/app_en.arb.
+#: planner/views/apis/categoryviews.py
+msgid "The 'Uncategorized' category cannot be deleted"
+msgstr "La categoría 'Sin categoría' no se puede eliminar"
+
+#: planner/views/apis/graderesourceviews.py
+msgid "'course', 'target', 'desired_grade', and 'desired_gpa' must be given as numbers"
+msgstr "'course', 'target', 'desired_grade' y 'desired_gpa' deben indicarse como números"
+
+#: planner/views/base.py
+#, python-format
+msgid "`scope` must be `%(this)s` or `%(all)s`."
+msgstr "`scope` debe ser `%(this)s` o `%(all)s`."
+
+#: planner/views/base.py
+msgid "`occurrence_start` is required with this `scope`."
+msgstr "`occurrence_start` es obligatorio con este `scope`."
+
+# 'from' and 'to' are API query parameters; keep them in English.
+#: planner/views/base.py
+msgid "Both 'from' and 'to' must be provided together."
+msgstr "'from' y 'to' deben indicarse juntos."
+
+#: planner/views/base.py
+msgid "Change `recurrence_rule` or `exception_dates` with `scope=all`."
+msgstr "Para cambiar `recurrence_rule` o `exception_dates`, usa `scope=all`."
+
