@@ -155,7 +155,6 @@ def _bulk_import_example_schedule(data, user):
             course_group_id=course_group_remap[c['course_group']],
         )
         course_remap[c['id']] = instance.pk
-        Category.objects.get_uncategorized(instance.pk)
 
     # --- CourseSchedule ---
     schedule_objects = []
@@ -195,6 +194,8 @@ def _bulk_import_example_schedule(data, user):
         )
         for cat in categories
     ])
+    for course_id in course_remap.values():
+        Category.objects.get_uncategorized(course_id)
     category_pks_by_key = {
         (course_id, title): pk
         for pk, course_id, title in Category.objects.filter(
