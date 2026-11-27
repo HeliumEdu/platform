@@ -397,6 +397,42 @@
       "course": 512,
       "num_homework": 4,
       "num_homework_graded": 2
+    },
+    {
+      "id": 2609,
+      "title": "Uncategorized",
+      "weight": "0.00",
+      "average_grade": "-1.0000",
+      "grade_by_weight": "0.0000",
+      "trend": null,
+      "color": "#bd42a4",
+      "course": 512,
+      "num_homework": 0,
+      "num_homework_graded": 0
+    },
+    {
+      "id": 2610,
+      "title": "Uncategorized",
+      "weight": "0.00",
+      "average_grade": "-1.0000",
+      "grade_by_weight": "0.0000",
+      "trend": null,
+      "color": "#05cc90",
+      "course": 513,
+      "num_homework": 0,
+      "num_homework_graded": 0
+    },
+    {
+      "id": 2611,
+      "title": "Uncategorized",
+      "weight": "0.00",
+      "average_grade": "-1.0000",
+      "grade_by_weight": "0.0000",
+      "trend": null,
+      "color": "#3033cf",
+      "course": 514,
+      "num_homework": 0,
+      "num_homework_graded": 0
     }
   ],
   "resource_groups": [
