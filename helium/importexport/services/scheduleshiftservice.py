@@ -81,6 +81,26 @@ def _get_most_recent_course_occurrence_start(reminder):
     return None
 
 
+def _shift_reminders(calendar_items, parent_field):
+    items_by_pk = {calendar_item.pk: calendar_item for calendar_item in calendar_items}
+    one_time_reminders = []
+    repeating_items = {}
+    for reminder in Reminder.objects.filter(**{f'{parent_field}__in': items_by_pk.keys()}):
+        calendar_item = items_by_pk[getattr(reminder, f'{parent_field}_id')]
+        if calendar_item.recurrence_rule:
+            repeating_items[calendar_item.pk] = calendar_item
+        else:
+            reminder.start_of_range = calendar_item.start - datetimeutils.offset_to_timedelta(reminder.offset,
+                                                                                              reminder.offset_type)
+            one_time_reminders.append(reminder)
+
+    if one_time_reminders:
+        Reminder.objects.bulk_update(one_time_reminders, ['start_of_range'])
+
+    for calendar_item in repeating_items.values():
+        adjust_reminder_times(calendar_item.pk, calendar_item.calendar_item_type)
+
+
 def _days_until_monday(dt):
     days_ahead = 0 - dt.weekday()
     if days_ahead < 0:
@@ -145,13 +165,7 @@ def shift_schedule_to_month(user, adjust_month, imported, source_tz=None):
 
             if homework_to_update:
                 Homework.objects.bulk_update(homework_to_update, ['start', 'end', 'recurrence_rule', 'exception_dates'])
-                hw_ids_with_reminders = set(
-                    Reminder.objects.filter(homework__in=[h.pk for h in homework_to_update])
-                    .values_list('homework_id', flat=True).distinct()
-                )
-                for homework in homework_to_update:
-                    if homework.pk in hw_ids_with_reminders:
-                        adjust_reminder_times(homework.pk, homework.calendar_item_type)
+                _shift_reminders(homework_to_update, 'homework')
 
             first_event_start = Event.objects.for_user(user.pk).filter(
                 pk__in=imported.event_remap.values()).first().start
@@ -183,13 +197,7 @@ def shift_schedule_to_month(user, adjust_month, imported, source_tz=None):
 
             if events_to_update:
                 Event.objects.bulk_update(events_to_update, ['start', 'end', 'recurrence_rule', 'exception_dates'])
-                event_ids_with_reminders = set(
-                    Reminder.objects.filter(event__in=[e.pk for e in events_to_update])
-                    .values_list('event_id', flat=True).distinct()
-                )
-                for event in events_to_update:
-                    if event.pk in event_ids_with_reminders:
-                        adjust_reminder_times(event.pk, event.calendar_item_type)
+                _shift_reminders(events_to_update, 'event')
 
             courses_to_update = []
             for course in (Course.objects.for_user(user.pk)

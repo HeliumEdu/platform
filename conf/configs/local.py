@@ -41,6 +41,10 @@ SERVE_LOCAL = config('PROJECT_SERVE_LOCAL', 'True') == 'True'
 EMAIL_ADDRESS = f'contact@dev-local.heliumedu.com'
 DEFAULT_FROM_EMAIL = f'{PROJECT_NAME} <{EMAIL_ADDRESS}>'
 
+# Push settings
+
+DISABLE_PUSH = common.DISABLE_PUSH or not common.FIREBASE_CREDENTIALS
+
 # Security
 
 INTERNAL_IPS = (
