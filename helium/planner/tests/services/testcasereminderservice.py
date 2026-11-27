@@ -6,6 +6,7 @@ from django.conf import settings
 from django.test import TestCase
 from kombu.exceptions import OperationalError
 from django.utils import timezone, translation
+from django.utils.translation import ngettext
 
 from helium.auth.tests.helpers import userhelper
 from helium.common import enums
@@ -544,7 +545,10 @@ class TestCaseReminderService(TestCase):
 
         # THEN
         self.assertEqual(subject_languages, ['es'])
-        self.assertEqual(mock_send_notifications.call_args.args[1], 'Study group in 15 minutes')
+        with translation.override('es'):
+            self.assertEqual(mock_send_notifications.call_args.args[1],
+                             ngettext('%(title)s in %(count)s minute', '%(title)s in %(count)s minutes',
+                                      15) % {'title': 'Study group', 'count': 15})
 
     @mock.patch('helium.common.tasks.send_notifications')
     def test_process_push_reminder_with_the_default_language_renders_english(self, mock_send_notifications):
