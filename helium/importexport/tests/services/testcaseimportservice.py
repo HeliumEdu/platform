@@ -64,7 +64,7 @@ class TestCaseImportService(TestCase):
 
     def test_example_schedule_path_falls_back_to_english(self):
         # WHEN
-        path = examplescheduleimportservice.example_schedule_path('es')
+        path = examplescheduleimportservice.example_schedule_path('fr')
 
         # THEN
         self.assertEqual(os.path.basename(path), 'example_schedule.json')
