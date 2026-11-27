@@ -2,7 +2,7 @@
 Settings common to all deployment methods.
 """
 
-__version__ = "2.9.22"
+__version__ = "2.9.23"
 
 import json
 import os
@@ -537,6 +537,7 @@ SPECTACULAR_SETTINGS = {
 LANGUAGE_CODE = 'en-us'
 LANGUAGES = [
     ('en', 'English'),
+    ('es', 'Spanish'),
 ]
 LOCALE_PATHS = [os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', 'helium', 'locale'))]
 TIME_ZONE = 'UTC'

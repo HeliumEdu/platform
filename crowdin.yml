@@ -3,3 +3,7 @@ files:
     translation: /helium/locale/%two_letters_code%/LC_MESSAGES/django.po
     skip_untranslated_files: true
     export_only_approved: true
+  - source: /helium/importexport/resources/example_schedule.json
+    translation: /helium/importexport/resources/example_schedule.%two_letters_code%.json
+    skip_untranslated_files: true
+    export_only_approved: true

@@ -378,9 +378,11 @@ def clear_delivered_push(reminder):
     if not push_tokens:
         return
 
-    taskutils.safe_apply_async(send_dismiss_pushes,
-                               args=(push_tokens, reminder.pk),
-                               priority=settings.CELERY_PRIORITY_HIGH)
+    reminder_id = reminder.pk
+    transaction.on_commit(lambda: taskutils.safe_apply_async(send_dismiss_pushes,
+                                                             args=(push_tokens, reminder_id),
+                                                             priority=settings.CELERY_PRIORITY_HIGH),
+                          robust=True)
 
 
 def _delete_excess_past_reminders(just_fired):

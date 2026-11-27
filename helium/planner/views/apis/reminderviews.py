@@ -263,13 +263,27 @@ class RemindersApiDismissAllView(ViewSet, HeliumAPIView):
 
             push_tokens = pushservice.get_push_tokens(request.user, silent=True)
             if push_tokens:
-                for reminder_id in reminder_ids:
-                    taskutils.safe_apply_async(
-                        send_dismiss_pushes,
-                        args=(push_tokens, reminder_id),
-                        priority=settings.CELERY_PRIORITY_HIGH,
-                    )
+                self._dispatch_dismiss_pushes(request.user, push_tokens, reminder_ids)
 
         logger.info(f"{len(reminder_ids)} Reminder(s) dismissed for user {request.user.pk}")
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @staticmethod
+    def _dispatch_dismiss_pushes(user, push_tokens, reminder_ids):
+        dispatched = 0
+        consecutive_failures = 0
+        for index, reminder_id in enumerate(reminder_ids):
+            if taskutils.safe_apply_async(send_dismiss_pushes,
+                                          args=(push_tokens, reminder_id),
+                                          priority=settings.CELERY_PRIORITY_HIGH) is None:
+                consecutive_failures += 1
+                if consecutive_failures == 2:
+                    attempted = index + 1
+                    logger.warning(f"Stopped dispatching dismiss pushes for user {user.pk} after 2 consecutive "
+                                   f"failures: {dispatched} dispatched, {attempted - dispatched} failed, "
+                                   f"{len(reminder_ids) - attempted} skipped of {len(reminder_ids)}")
+                    return
+            else:
+                dispatched += 1
+                consecutive_failures = 0

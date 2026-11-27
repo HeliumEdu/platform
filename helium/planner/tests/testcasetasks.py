@@ -547,7 +547,8 @@ class TestCasePlannerTasks(TestCase):
             start=new_start, end=new_start + datetime.timedelta(minutes=30))
 
         # WHEN
-        adjust_reminder_times(event.pk, enums.EVENT)
+        with self.captureOnCommitCallbacks(execute=True):
+            adjust_reminder_times(event.pk, enums.EVENT)
 
         # THEN
         reminder.refresh_from_db()
@@ -570,7 +571,8 @@ class TestCasePlannerTasks(TestCase):
             start=new_start, end=new_start + datetime.timedelta(minutes=30))
 
         # WHEN
-        adjust_reminder_times(event.pk, enums.EVENT)
+        with self.captureOnCommitCallbacks(execute=True):
+            adjust_reminder_times(event.pk, enums.EVENT)
 
         # THEN
         reminder.refresh_from_db()
