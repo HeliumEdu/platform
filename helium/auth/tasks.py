@@ -381,13 +381,14 @@ def rollup_client_activity(self):
 
 def _count_by_latest_app_platform(user_ids):
     """
-    Count users by the platform of their most recently updated app push token (`ios` or `android`), or `unknown`
-    when they have none.
+    Count users by the platform of their most recent mobile app activity (`ios` or `android`), or `unknown` when the
+    app didn't report one.
     """
     latest_platform_by_user = {}
-    for user_id, platform in (UserPushToken.objects
-                              .filter(user_id__in=user_ids, platform__in=settings.APP_CLIENT_PLATFORMS)
-                              .order_by('user_id', 'updated_at')
+    for user_id, platform in (UserClientActivity.objects
+                              .filter(user_id__in=user_ids, client=UserClientActivity.CLIENT_MOBILE_APP,
+                                      platform__in=settings.APP_CLIENT_PLATFORMS)
+                              .order_by('user_id', 'date')
                               .values_list('user_id', 'platform')):
         latest_platform_by_user[user_id] = platform
 

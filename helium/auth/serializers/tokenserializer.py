@@ -23,6 +23,7 @@ from helium.common import enums, errorcodes
 from helium.common.errormessages import SIGN_IN_TO_CONTINUE_MESSAGE
 from helium.common.utils import metricutils, taskutils
 from helium.common.utils.metricutils import _normalize_user_agent_tag
+from helium.common.utils.versionutils import get_client_platform
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,12 @@ def _record_client_activity(user, request):
     ua = request.headers.get('User-Agent', '')
     client = _CLIENT_UA_MAP.get(_normalize_user_agent_tag(ua))
     if client:
-        UserClientActivity.objects.get_or_create(user=user, date=timezone.now().date(), client=client)
+        platform = get_client_platform(request)
+        activity, created = UserClientActivity.objects.get_or_create(user=user, date=timezone.now().date(),
+                                                                     client=client, defaults={'platform': platform})
+        if not created and platform and activity.platform != platform:
+            activity.platform = platform
+            activity.save(update_fields=['platform'])
 
 
 @extend_schema_serializer(component_name='TokenResponse')

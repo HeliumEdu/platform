@@ -138,7 +138,7 @@ def _create_calendar(name):
     """
     calendar = icalendar.Calendar()
 
-    calendar.add("PRODID", f"-//Helium Edu, LLC//{settings.PROJECT_VERSION}//EN")
+    calendar.add("PRODID", f"-//Inert Labs, LLC//{settings.PROJECT_VERSION}//EN")
     calendar.add("VERSION", "2.0")
     calendar.add("CALSCALE", "GREGORIAN")
     calendar.add("METHOD", "PUBLISH")
