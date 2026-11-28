@@ -7,6 +7,7 @@ from django.utils.translation import gettext
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated, NotFound, ValidationError
+from rest_framework.fields import Field
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -113,7 +114,7 @@ class UserDeleteResourceView(HeliumAPIView):
         # Only require password verification if user has a usable password
         if user.has_usable_password():
             if 'password' not in request.data:
-                raise ValidationError({'password': [gettext('This field is required.')]}, code=errorcodes.REQUIRED)
+                raise ValidationError({'password': [Field.default_error_messages['required']]}, code=errorcodes.REQUIRED)
 
             if not user.check_password(request.data['password']):
                 raise ValidationError({'password': [gettext('The password is incorrect.')]},
@@ -148,10 +149,10 @@ class UserDeleteInactiveResourceView(HeliumAPIView):
         can only be used to delete users that never finished setting up their account.
         """
         if 'email' not in request.data:
-            raise ValidationError({'email': ['This field is required.']}, code=errorcodes.REQUIRED)
+            raise ValidationError({'email': [Field.default_error_messages['required']]}, code=errorcodes.REQUIRED)
 
         if 'password' not in request.data:
-            raise ValidationError({'password': ['This field is required.']}, code=errorcodes.REQUIRED)
+            raise ValidationError({'password': [Field.default_error_messages['required']]}, code=errorcodes.REQUIRED)
 
         user = self.get_object()
 

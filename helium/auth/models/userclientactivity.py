@@ -22,6 +22,10 @@ class UserClientActivity(models.Model):
 
     client = models.CharField(max_length=20, choices=CLIENT_CHOICES)
 
+    platform = models.CharField(max_length=20, blank=True, null=True,
+                                help_text='The platform the client reported (`ios`, `android`, or `web`), or null if '
+                                          'unknown.')
+
     class Meta:
         app_label = 'helium_auth'
         unique_together = ('user', 'date', 'client')

@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heliumedu\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-26 22:05+0000\n"
-"PO-Revision-Date: 2026-11-27 18:24\n"
+"POT-Creation-Date: 2026-11-27 22:25+0000\n"
+"PO-Revision-Date: 2026-11-27 23:00\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -312,10 +312,6 @@ msgstr "Último aviso: tu cuenta se eliminará mañana"
 #: auth/views/apis/userdeleteexamplescheduleviews.py
 msgid "The example schedule was cleared, except for anything that changed."
 msgstr "Se borró el horario de ejemplo, excepto lo que modificaste."
-
-#: auth/views/apis/userviews.py
-msgid "This field is required."
-msgstr "Este campo es obligatorio."
 
 #: auth/views/apis/userviews.py
 msgid "The password is incorrect."

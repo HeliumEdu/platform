@@ -13,7 +13,7 @@ from unittest import mock
 
 from django.utils import timezone
 
-from helium.auth.models import UserClientActivity, UserPushToken
+from helium.auth.models import UserClientActivity
 from helium.auth.tasks import (
     sweep_dangling_users, purge_refresh_tokens, blacklist_refresh_token, emit_nightly_metrics,
     emit_online_users, evaluate_review_prompts, delete_user, process_dormant_users, purge_oauth_tokens,
@@ -726,15 +726,13 @@ class TestCaseTasks(APITestCase):
         self.assertFalse(user.settings.prompt_for_review)
 
     @mock.patch('helium.auth.tasks.metricutils.increment')
-    def test_evaluate_review_prompts_counts_flagged_users_by_latest_app_push_token(self, mock_increment):
+    def test_evaluate_review_prompts_counts_flagged_users_by_latest_app_activity_platform(self, mock_increment):
         # GIVEN
         switched_to_ios = self.given_a_user_due_for_a_review_prompt()
-        UserPushToken.objects.create(user=switched_to_ios, token='old', device_id='android-phone', platform='android')
-        UserPushToken.objects.create(user=switched_to_ios, token='new', device_id='iphone', platform='ios')
-        UserPushToken.objects.filter(user=switched_to_ios, platform='android').update(
-            updated_at=timezone.now() - timedelta(days=30))
-        UserPushToken.objects.filter(user=switched_to_ios, platform='ios').update(updated_at=timezone.now())
-        self.given_a_user_due_for_a_review_prompt(username='no_token', email='no-token@test.com')
+        UserClientActivity.objects.filter(user=switched_to_ios).update(platform='ios')
+        UserClientActivity.objects.create(user=switched_to_ios, date=timezone.now().date() - timedelta(days=30),
+                                          client=UserClientActivity.CLIENT_MOBILE_APP, platform='android')
+        self.given_a_user_due_for_a_review_prompt(username='no_platform', email='no-platform@test.com')
 
         # WHEN
         evaluate_review_prompts()
