@@ -22,10 +22,10 @@
 
 # Helium Platform
 
-[![Coverage](https://img.shields.io/codecov/c/github/HeliumEdu/platform)](https://codecov.io/gh/HeliumEdu/platform)
-[![Build](https://img.shields.io/github/actions/workflow/status/HeliumEdu/platform/build.yml)](https://github.com/HeliumEdu/platform/actions/workflows/build.yml)
-[![Code Quality](https://app.codacy.com/project/badge/Grade/0cb1b256044e43739735987214f3a796)](https://app.codacy.com/gh/HeliumEdu/platform/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-![GitHub License](https://img.shields.io/github/license/heliumedu/platform)
+[![Coverage](https://img.shields.io/codecov/c/github/inertlabs/platform)](https://codecov.io/gh/inertlabs/platform)
+[![Build](https://img.shields.io/github/actions/workflow/status/inertlabs/platform/build.yml)](https://github.com/inertlabs/platform/actions/workflows/build.yml)
+[![Code Quality](https://app.codacy.com/project/badge/Grade/0cb1b256044e43739735987214f3a796)](https://app.codacy.com/gh/inertlabs/platform/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+![GitHub License](https://img.shields.io/github/license/inertlabs/platform)
 
 The backend `platform` for Helium - Student Planner, including API and worker functionality. Docs for
 integrating with the API can be found [here](https://api.heliumedu.com/docs/).
@@ -117,10 +117,10 @@ make test
 
 ### Frontend
 
-The `frontend` is served from a separate repository and can be found [here](https://github.com/HeliumEdu/frontend#readme).
+The `frontend` is served from a separate repository and can be found [here](https://github.com/inertlabs/frontend#readme).
 The `frontend` and `platform` containers can be started alongside each other to almost entirely
 emulate a `prod`-like environment locally. For functionality that still requires Internet-connected external
-services (e.g. emails and text messages), provision [the `dev-local` Terraform Workspace](https://github.com/HeliumEdu/infra/tree/main/terraform/environments/dev-local),
+services (e.g. emails and text messages), provision [the `dev-local` Terraform Workspace](https://github.com/inertlabs/infra/tree/main/terraform/environments/dev-local),
 which is meant to work alongside local Docker development.
 
 ### Documentation

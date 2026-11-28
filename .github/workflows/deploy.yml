@@ -93,7 +93,7 @@ jobs:
   deploy:
     name: Deploy
     needs: [determine-version, verify]
-    uses: HeliumEdu/.github/.github/workflows/terraform-deploy.yml@main
+    uses: inertlabs/.github/.github/workflows/terraform-deploy.yml@main
     with:
       component: platform
       version: ${{ needs.determine-version.outputs.version_number }}
@@ -119,7 +119,7 @@ jobs:
         with:
           client-id: ${{ secrets.HELIUM_BOT_APP_ID }}
           private-key: ${{ secrets.HELIUM_BOT_PRIVATE_KEY }}
-          owner: HeliumEdu
+          owner: ${{ github.repository_owner }}
           skip-token-revoke: true
 
       - name: Checkout platform repository
@@ -143,7 +143,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           gh workflow run integration.yml \
-            --repo HeliumEdu/frontend \
+            --repo "$GITHUB_REPOSITORY_OWNER/frontend" \
             -f suite=full \
             -f environment=${{ inputs.environment }}
 
@@ -152,7 +152,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           gh workflow run canary.yml \
-            --repo HeliumEdu/frontend \
+            --repo "$GITHUB_REPOSITORY_OWNER/frontend" \
             -f environment=${{ inputs.environment }}
 
       - name: Deployment summary

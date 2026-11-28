@@ -20,7 +20,7 @@ set -euo pipefail
 
 PLATFORM="${PLATFORM:-arm64}"
 PLATFORM_BRANCH="${PLATFORM_BRANCH:-main}"
-GITHUB_RAW_URL="https://raw.githubusercontent.com/HeliumEdu/platform/${PLATFORM_BRANCH}"
+GITHUB_RAW_URL="https://raw.githubusercontent.com/inertlabs/platform/${PLATFORM_BRANCH}"
 WORK_DIR="${TMPDIR:-/tmp}/helium-platform"
 
 echo "Starting platform containers ..."

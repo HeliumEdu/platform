@@ -89,7 +89,7 @@ jobs:
       - name: Checkout frontend
         uses: actions/checkout@v6
         with:
-          repository: HeliumEdu/frontend
+          repository: ${{ github.repository_owner }}/frontend
           ref: ${{ inputs.frontend_ref || 'main' }}
           path: frontend
 
