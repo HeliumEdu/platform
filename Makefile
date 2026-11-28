@@ -143,12 +143,12 @@ start-frontend:
 	@if curl -s http://localhost:8080 > /dev/null 2>&1; then \
 		echo "Frontend already running"; \
 	else \
-		curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/start-frontend.sh?$$(date +%s)" | \
+		curl -fsSL "https://raw.githubusercontent.com/inertlabs/frontend/main/bin/start-frontend.sh?$$(date +%s)" | \
 			FRONTEND_IMAGE=$(FRONTEND_IMAGE) PLATFORM=$(PLATFORM) bash; \
 	fi
 
 stop-frontend:
-	@curl -fsSL "https://raw.githubusercontent.com/HeliumEdu/frontend/main/bin/stop-frontend.sh?$$(date +%s)" | bash
+	@curl -fsSL "https://raw.githubusercontent.com/inertlabs/frontend/main/bin/stop-frontend.sh?$$(date +%s)" | bash
 
 test-with-frontend: run-docker start-frontend
 	@echo "Platform and frontend are running"
